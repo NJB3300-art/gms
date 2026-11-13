@@ -153,6 +153,25 @@ input[type=range]{width:100%;accent-color:var(--fountain)}
 .tools,.sizes,.padbtns{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
 .tools .chip{font-size:12px;padding:5px 9px;display:inline-flex;align-items:center;gap:5px}
 .dot{display:inline-block;width:12px;height:12px;border-radius:50%;border:1px solid rgba(0,0,0,.2);position:relative;z-index:1}
+
+/* ===== left-side editor ===== */
+main{grid-template-columns:500px 1fr!important}
+#panel{order:-1;border-left:0!important;border-right:1.5px solid var(--line);display:grid!important;grid-template-columns:86px 1fr;grid-template-rows:1fr auto;min-height:0}
+.tabs{grid-row:1 / span 2;display:flex!important;flex-direction:column;gap:6px;padding:12px 8px;border-bottom:0!important;border-right:1.5px solid var(--line);overflow:auto;background:linear-gradient(180deg,#fff0f6,#ffe4ef)}
+.tab{border-radius:16px!important;border-bottom:0!important;margin:0!important;padding:8px 2px 7px!important;display:flex;flex-direction:column;align-items:center;gap:2px;position:relative;overflow:hidden;
+  background:linear-gradient(180deg,#fff,#fff3f8);border:1.5px solid #f6c6da!important;box-shadow:0 2px 0 rgba(214,69,127,.1);font-size:12.5px!important}
+.tab::before{content:"";position:absolute;left:12%;right:12%;top:2px;height:30%;border-radius:999px;background:linear-gradient(180deg,rgba(255,255,255,.95),rgba(255,255,255,0));pointer-events:none}
+.tab .ic{font-size:21px;line-height:1.1}
+.tab.on{background:linear-gradient(180deg,#ff9cc6,#f06aa4 50%,#d6457f)!important;border-color:#c93a74!important}
+.pane{grid-column:2;min-height:0}
+.wear{grid-column:2}
+.layers{display:flex;flex-direction:column;gap:4px;margin-bottom:8px}
+.layer{display:flex;gap:4px;align-items:center}
+.layer .lname{flex:1;text-align:left}
+.layer.on .lname{background:linear-gradient(180deg,#ff9cc6 0%,#f06aa4 45%,#d6457f 100%)!important;border-color:#c93a74!important}
+.layer .eye{width:40px;padding:5px 0!important}
+@media (max-width:860px){main{grid-template-columns:1fr!important}#panel{order:1;grid-template-columns:1fr;grid-template-rows:auto 1fr auto;border-right:0}
+  .tabs{grid-row:auto;flex-direction:row;overflow-x:auto;border-right:0;border-bottom:1.5px solid var(--line)!important}.tab{min-width:70px}.pane,.wear{grid-column:1}}
 </style>
 <script type="importmap">
 {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}
@@ -248,8 +267,8 @@ const HAIRS=['None','Buzz','Bob','Pixie','Wolf Cut','Long','Curtains','Ponytail'
 const FRAMES=['Boy','Girl'];
 const STYLES=['Toon','Retro'];
 const EYE_SHAPES=['Round','Almond','Sleepy','Sharp','Cat','Droopy','Sparkle','Happy','Wide','Narrow','Hooded','Upturned','Downturned','Fierce','Worried','Shocked','Dot','Hollow Iris','Star Pupil','Heart Pupil','Glassy','Teary','Wink L','Wink R','Smiling','Lashy','Doll','Heavy Lid','Squint','Glow','Two-tone','Double Shine','Monolid','Tired','Dizzy','Knocked Out','Determined','Soft','Feline','Starry'];
-const BROWS=['Soft','Straight','Thick','Arched','Fierce','Worried'];
-const MOUTHS=['Smile','Neutral','Smirk','Open','Grin','Pout','Oh','Cat','Frown'];
+const BROWS=['Soft','Straight','Thick','Arched','Fierce','Worried','Thin','Bushy','Short','Angled','Raised','Flat Thick'];
+const MOUTHS=['Smile','Neutral','Smirk','Open','Grin','Pout','Oh','Cat','Frown','Wide Smile','Fang','Tongue Out','Gritted','Kiss','Wobbly','Tiny'];
 const MARKS=['None','Freckles','Rosy','Beauty mark','Bandage'];
 
 /* ================= paint helpers ================= */
@@ -358,7 +377,7 @@ function loft(R,seg=10,caps=[true,true],opts={}){
 function mesh(geo,m,name){const o=new THREE.Mesh(geo,m);o.name=name;return o}
 
 /* ================= anatomy (stylised: long legs, narrow waist, slightly larger head) ================= */
-const state={eyeY:0,eyeGap:12,eyeSize:1,eyeTilt:0,mouthY:0,mouthX:0,mouthSize:1,noseY:0,noseSize:1,customEyes:false,eyeShape:0,brow:0,mouth:0,mark:0,style:'Toon',frame:0,skin:2,hair:0,hairColor:1,eyes:0,height:1,build:1,shirt:0,pants:0,jacket:0,shoes:0,socks:0};
+const state={browY:0,browGap:0,browTilt:0,browThick:1,customMouth:false,eyeY:0,eyeGap:12,eyeSize:1,eyeTilt:0,mouthY:0,mouthX:0,mouthSize:1,noseY:0,noseSize:1,customEyes:false,eyeShape:0,brow:0,mouth:0,mark:0,style:'Toon',frame:0,skin:2,hair:0,hairColor:1,eyes:0,height:1,build:1,shirt:0,pants:0,jacket:0,shoes:0,socks:0};
 const H0=1.585,HS=1.22,HV=1.08,HEADZ=.02,HY=y=>H0+(y-1.565)*HV;   // wider than tall = rounder anime head   // head-space helper (y measured on the original 1.565–1.828 head)
 const LEG_END=-.885;
 
@@ -553,6 +572,13 @@ function drawEyes(c,ey,skin,shapeIdx=state.eyeShape){
     else{c.translate(-x,-ey);one(sx,x)}
     c.restore()}
 }
+function browThumb(i){const key='b'+[i,state.hairColor,state.skin,state.frame].join(',');if(eyeThumbCache.has(key))return eyeThumbCache.get(key);
+  const K=3,c=document.createElement('canvas');c.width=c.height=128*K;const x=c.getContext('2d');x.setTransform(K,0,0,K,0,0);x.fillStyle=SKINS[state.skin];x.fillRect(0,0,128,128);
+  const keep=EA;EA={x:1,y:1};FACE_DEFAULTS=true;drawBrows(x,80,SKINS[state.skin],i);FACE_DEFAULTS=false;EA=keep;
+  const o=document.createElement('canvas');o.width=168;o.height=60;o.getContext('2d').drawImage(c,36*K,58*K,56*K,20*K,0,0,168,60);const u=o.toDataURL();eyeThumbCache.set(key,u);return u}
+function mouthThumb(i){const key='m'+[i,state.skin,state.frame].join(',');if(eyeThumbCache.has(key))return eyeThumbCache.get(key);
+  const K=4,c=document.createElement('canvas');c.width=c.height=128*K;const x=c.getContext('2d');x.setTransform(K,0,0,K,0,0);x.fillStyle=SKINS[state.skin];x.fillRect(0,0,128,128);drawMouth0(x,64,SKINS[state.skin],i);
+  const o=document.createElement('canvas');o.width=144;o.height=72;o.getContext('2d').drawImage(c,52*K,58*K,24*K,12*K,0,0,144,72);const u=o.toDataURL();eyeThumbCache.set(key,u);return u}
 // preview of an eye preset for the Face tab
 const eyeThumbCache=new Map();
 function eyeThumb(i){
@@ -562,19 +588,35 @@ function eyeThumb(i){
   const o=document.createElement('canvas');o.width=168;o.height=84;o.getContext('2d').drawImage(c,36*K,50*K,56*K,28*K,0,0,168,84);
   const u=o.toDataURL();eyeThumbCache.set(key,u);return u;
 }
-function drawBrows(c,ey,skin){
-  const st=BROWS[state.brow],col=HAIRC[state.hairColor],girl=state.frame===1;
-  const prof={Soft:t=>-(1-t*t)*1.5,Straight:t=>0,Thick:t=>-(1-t*t),Arched:t=>-(1-Math.abs(t-.2))*3,Fierce:t=>(1-t)*2.2-1,Worried:t=>-(1-t)*2.2+1}[st];
-  const th=st==='Thick'?2.2:(girl&&st!=='Fierce'?.9:1.4);
+const BR=()=>FACE_DEFAULTS?{y:0,gap:0,tilt:0,thick:1}:{y:state.browY,gap:state.browGap,tilt:state.browTilt,thick:state.browThick};
+function drawBrows(c,ey,skin,idx=state.brow){
+  const st=BROWS[idx],col=HAIRC[state.hairColor],girl=state.frame===1,b=BR();
+  const prof={Soft:t=>-(1-t*t)*1.5,Straight:t=>0,Thick:t=>-(1-t*t),Arched:t=>-(1-Math.abs(t-.2))*3,Fierce:t=>(1-t)*2.2-1,Worried:t=>-(1-t)*2.2+1,
+    Thin:t=>-(1-t*t)*1.2,Bushy:t=>-(1-t*t)*.8,Short:t=>-(1-t*t),Angled:t=>t<.3?-(t+1)*1.6:-(1.3*1.6)+(t-.3)*2.4,Raised:t=>-(1-t*t)*1.5-2,'Flat Thick':t=>0}[st];
+  const base={Thick:2.2,Bushy:2.8,'Flat Thick':2.4,Thin:.6,Short:1.6}[st]??(girl&&st!=='Fierce'?.9:1.4);
+  const th=base*b.thick,len=st==='Short'?.6:1;
   c.fillStyle=col;
-  for(const sx of [-1,1]){const x=64+sx*GAP(),by=ey-(14+(EA.y-1)*8)*SZ();
+  for(const sx of [-1,1]){const x=64+sx*(GAP()+b.gap),by=ey-(14+(EA.y-1)*8)*SZ()+b.y;
+    c.save();c.translate(x,by);c.rotate(sx*b.tilt);c.translate(-x,-by);
     // tapered brow: thick at the inner end, thin at the outer tip
-    const pts=[];for(let k=0;k<=12;k++){const t=k/12;pts.push([x+sx*(-6+12*t),by+prof(t*2-1),th*(1-t*.75)])}
-    c.beginPath();pts.forEach(([px,py,w],k)=>k?c.lineTo(px,py-w/2):c.moveTo(px,py-w/2));for(let k=pts.length-1;k>=0;k--){const [px,py,w]=pts[k];c.lineTo(px,py+w/2)}c.closePath();c.fill()}
+    const pts=[];for(let k=0;k<=12;k++){const t=k/12;pts.push([x+sx*(-6+12*t)*len,by+prof(t*2-1),th*(1-t*(st==='Flat Thick'?.3:.75))])}
+    c.beginPath();pts.forEach(([px,py,w],k)=>k?c.lineTo(px,py-w/2):c.moveTo(px,py-w/2));for(let k=pts.length-1;k>=0;k--){const [px,py,w]=pts[k];c.lineTo(px,py+w/2)}c.closePath();c.fill();
+    if(st==='Bushy'){c.strokeStyle=col;c.lineWidth=.35;for(let k=1;k<11;k+=2){const [px,py,w]=pts[k];c.beginPath();c.moveTo(px,py-w/2);c.lineTo(px+sx*.8,py-w/2-.9);c.stroke()}}
+    c.restore()}
 }
-function drawMouth(c,my,skin){c.save();c.translate(64+state.mouthX,my);c.scale(EA.x*state.mouthSize,EA.y*state.mouthSize);c.translate(-64,-my);drawMouth0(c,my,skin);c.restore()}
-function drawMouth0(c,my,skin){
-  const st=MOUTHS[state.mouth],girl=state.frame===1,lip=mix(skin,'#c0505c',girl?.45:.18),line=mix(skin,'#4a1c22',.75),inside='#6a2630',tongue='#e07a86';
+// mouth drawing: 3 layers, 24 x 14 face units at 10px per unit, composited bottom (1) to top (3)
+const MOUTHBOX={w:24,h:14},mouthLayers=[0,1,2].map(()=>{const c=document.createElement('canvas');c.width=MOUTHBOX.w*PAD_PX;c.height=MOUTHBOX.h*PAD_PX;return c}),mouthVis=[true,true,true];
+function drawMouth(c,my,skin){c.save();c.translate(64+state.mouthX,my);c.scale(EA.x*state.mouthSize,EA.y*state.mouthSize);
+  if(state.customMouth){mouthLayers.forEach((L,k)=>{if(mouthVis[k])c.drawImage(L,-MOUTHBOX.w/2,-MOUTHBOX.h/2,MOUTHBOX.w,MOUTHBOX.h)})}
+  else{c.translate(-64,-my);drawMouth0(c,my,skin)}
+  c.restore()}
+function stampMouthOnLayer(idx,layer){
+  const K=PAD_PX,t=document.createElement('canvas');t.width=t.height=128*K;const x=t.getContext('2d');x.setTransform(K,0,0,K,0,0);drawMouth0(x,64,SKINS[state.skin],idx);
+  const L=mouthLayers[layer].getContext('2d');L.clearRect(0,0,mouthLayers[layer].width,mouthLayers[layer].height);
+  L.drawImage(t,(64-MOUTHBOX.w/2)*K,(64-MOUTHBOX.h/2)*K,MOUTHBOX.w*K,MOUTHBOX.h*K,0,0,mouthLayers[layer].width,mouthLayers[layer].height);
+}
+function drawMouth0(c,my,skin,idx=state.mouth){
+  const st=MOUTHS[idx],girl=state.frame===1,lip=mix(skin,'#c0505c',girl?.45:.18),line=mix(skin,'#4a1c22',.75),inside='#6a2630',tongue='#e07a86';
   c.lineCap='round';c.strokeStyle=line;c.lineWidth=.6;const L=(f)=>{c.beginPath();f();c.stroke()};
   if(st==='Smile'){L(()=>{c.moveTo(59.5,my-.6);c.quadraticCurveTo(64,my+2.6,68.5,my-.6)})}
   if(st==='Neutral'){L(()=>{c.moveTo(60.5,my+.3);c.quadraticCurveTo(64,my+.9,67.5,my+.3)})}
@@ -587,6 +629,13 @@ function drawMouth0(c,my,skin){
   if(st==='Grin'){c.fillStyle=inside;c.beginPath();c.moveTo(58.5,my-.8);c.quadraticCurveTo(64,my-.2,69.5,my-.8);c.quadraticCurveTo(64,my+4.6,58.5,my-.8);c.fill();
     c.save();c.clip();c.fillStyle='#fbf8f6';c.fillRect(57,my-1.5,14,2.4);c.restore();c.stroke()}
   if(st==='Pout'){c.fillStyle=lip;c.beginPath();c.ellipse(64,my+.6,2.2,1.5,0,0,7);c.fill();L(()=>{c.moveTo(62,my+.4);c.lineTo(66,my+.4)})}
+  if(st==='Wide Smile'){c.fillStyle=inside;c.beginPath();c.moveTo(57.5,my-1.4);c.quadraticCurveTo(64,my-.4,70.5,my-1.4);c.quadraticCurveTo(64,my+4,57.5,my-1.4);c.fill();c.stroke()}
+  if(st==='Fang'){L(()=>{c.moveTo(59.5,my-.6);c.quadraticCurveTo(64,my+2.6,68.5,my-.6)});c.fillStyle='#fbf8f6';c.beginPath();c.moveTo(65.2,my+.7);c.lineTo(66.6,my+.4);c.lineTo(66,my+2.1);c.closePath();c.fill();c.lineWidth=.25;c.stroke()}
+  if(st==='Tongue Out'){L(()=>{c.moveTo(59.5,my);c.quadraticCurveTo(64,my+1.6,68.5,my)});c.fillStyle=tongue;c.beginPath();c.ellipse(65,my+1.8,1.9,1.7,0,0,Math.PI);c.fill();c.lineWidth=.35;c.stroke()}
+  if(st==='Gritted'){c.fillStyle='#fbf8f6';c.beginPath();c.roundRect(59,my-1.2,10,3,1);c.fill();c.lineWidth=.5;c.stroke();c.lineWidth=.3;for(let x=61;x<68;x+=2){c.beginPath();c.moveTo(x,my-1.2);c.lineTo(x,my+1.8);c.stroke()}c.beginPath();c.moveTo(59,my+.3);c.lineTo(69,my+.3);c.stroke()}
+  if(st==='Kiss'){c.fillStyle=lip;c.beginPath();c.ellipse(64,my+.4,1.7,1.4,0,0,7);c.fill();L(()=>{c.moveTo(62.4,my+.4);c.quadraticCurveTo(64,my-.6,65.6,my+.4)})}
+  if(st==='Wobbly'){L(()=>{c.moveTo(59.5,my+.6);for(let x=60;x<=68.5;x+=1.5)c.lineTo(x,my+((x-60)/1.5%2?-.6:.6))})}
+  if(st==='Tiny'){L(()=>{c.moveTo(62.8,my+.2);c.quadraticCurveTo(64,my+1,65.2,my+.2)})}
   if(girl&&['Smile','Neutral','Smirk','Cat'].includes(st)){c.strokeStyle=lip;c.lineWidth=.5;L(()=>{c.moveTo(62.5,my+2);c.quadraticCurveTo(64,my+2.6,65.5,my+2)})}
 }
 function drawMarks(c,ey,skin){
@@ -1014,10 +1063,11 @@ function tryOff(){if(tryCat===null)return;state[tryCat]=tryPrev;BUILD[tryCat]();
 const canHover=matchMedia('(hover:hover)').matches;
 
 /* ================= UI ================= */
-const TABS=[['body','Body'],['face','Face'],['shirt','Shirts'],['pants','Pants'],['jacket','Jackets'],['shoes','Shoes'],['socks','Socks']];
+const TABS=[['body','Body','🧍'],['face','Face','🙂'],['eyes','Eyes','👁️'],['brows','Brows','〰️'],['mouth','Mouth','👄'],['shirt','Shirts','👕'],['pants','Pants','👖'],['jacket','Jackets','🧥'],['shoes','Shoes','👟'],['socks','Socks','🧦']];
+const FACE_TABS=new Set(['face','eyes','brows','mouth']);
 let tab='body',query='',cutFilter='';
 const tabsEl=document.getElementById('tabs'),pane=document.getElementById('pane');
-function renderTabs(){tabsEl.innerHTML='';for(const [k,l] of TABS){const b=document.createElement('button');b.className='tab'+(tab===k?' on':'');b.innerHTML=gl(l);b.onclick=()=>{tryOff();tab=k;query='';cutFilter='';renderTabs();renderPane();if(k==='face')view('face')};tabsEl.appendChild(b)}}
+function renderTabs(){tabsEl.innerHTML='';for(const [k,l,ic] of TABS){const b=document.createElement('button');b.className='tab'+(tab===k?' on':'');b.innerHTML=`<span class="ic">${ic}</span>${gl(l)}`;b.onclick=()=>{tryOff();tab=k;query='';cutFilter='';renderTabs();renderPane();if(FACE_TABS.has(k))view('face')};tabsEl.appendChild(b)}}
 const gl=t=>`<span class="g">${t}</span>`;
 function el(h){const t=document.createElement('template');t.innerHTML=h.trim();return t.content.firstChild}
 function swatches(label,list,key,onPick){
@@ -1030,62 +1080,89 @@ function slider(label,key,min,max){
   const r=el(`<div class="row"><label>${gl(label)}</label></div>`),s=document.createElement('input');s.type='range';s.min=min;s.max=max;s.step=.01;s.value=state[key];s.oninput=()=>{state[key]=+s.value;applyShape()};r.appendChild(s);return r}
 function renderPane(){
   pane.innerHTML='';
+  let raf=0;const later=f=>{cancelAnimationFrame(raf);raf=requestAnimationFrame(f)};
+  const fs=(label,key,min,max,step,heavy)=>{const r=el(`<div class="row frow"><label>${gl(label)}</label></div>`),i=document.createElement('input');i.type='range';i.min=min;i.max=max;i.step=step;i.value=state[key];
+    i.oninput=()=>{state[key]=+i.value;later(heavy?buildBody:paintFace)};r.appendChild(i);return r};
+  const boxOf=(title,...kids)=>{const b=el(`<div class="facebox"><h3>${gl(title)}</h3></div>`);b.append(...kids);return b};
+  const resetBtn=(keys,label='Reset placement')=>{const b=el(`<button class="chip">${gl(label)}</button>`);b.onclick=()=>{Object.assign(state,keys);buildBody();renderPane()};return b};
+  const presetGrid=(label,names,key,thumb,onPick)=>{const r=el(`<div class="row"><label>${gl(label)}</label><div class="eyegrid"></div></div>`),g=r.lastChild;
+    names.forEach((n,i)=>{const b=el(`<button class="eyecard${state[key]===i?' on':''}" title="${n}"><img alt="${n}" src="${thumb(i)}"><span>${n}</span></button>`);
+      b.onclick=()=>{state[key]=i;onPick&&onPick();buildBody();g.querySelectorAll('.eyecard').forEach(x=>x.classList.toggle('on',x===b))};g.appendChild(b)});return r};
+  // generic drawing pad: one visible canvas over a stack of layer canvases
+  function drawPad({title,hint,layers,vis,aspect,mirror,stampLabel,stamp,useKey,useLabels,colors}){
+    const ed=el(`<div class="facebox"><h3>${gl(title)}</h3><p class="hint">${hint}</p>${layers.length>1?'<div class="layers"></div>':''}
+      <div class="padwrap"><canvas class="pad"></canvas></div>${mirror?'<canvas class="both"></canvas>':''}<div class="tools"></div><div class="sizes"></div><div class="padbtns"></div></div>`);
+    const view=ed.querySelector('.pad'),both=ed.querySelector('.both'),wrap=ed.querySelector('.padwrap');const W=layers[0].width,H=layers[0].height;
+    view.width=W;view.height=H;view.style.aspectRatio=aspect;wrap.style.background=SKINS[state.skin];
+    if(both){both.width=W*2;both.height=H;both.style.aspectRatio=`${2*W}/${H}`}
+    let active=layers.length-1;
+    const redraw=()=>{const v=view.getContext('2d');v.clearRect(0,0,W,H);layers.forEach((L,k)=>{if(vis[k]){v.globalAlpha=k===active?1:.85;v.drawImage(L,0,0)}});v.globalAlpha=1;
+      if(both){const b=both.getContext('2d');b.fillStyle=SKINS[state.skin];b.fillRect(0,0,2*W,H);b.save();b.translate(W,0);b.scale(-1,1);b.drawImage(view,0,0);b.restore();b.drawImage(view,W,0)}};
+    if(layers.length>1){const lw=ed.querySelector('.layers');
+      const paint=()=>{lw.innerHTML='';layers.forEach((L,k)=>{const row=el(`<div class="layer${k===active?' on':''}"><button class="chip lname">${gl('Layer '+(k+1))}</button><button class="chip eye">${vis[k]?'👁️':'🚫'}</button><button class="chip">${gl('Clear')}</button></div>`);
+        const [nb,eb,cb]=row.querySelectorAll('button');nb.onclick=()=>{active=k;paint();redraw()};eb.onclick=()=>{vis[k]=!vis[k];paint();redraw();later(paintFace)};
+        cb.onclick=()=>{push();L.getContext('2d').clearRect(0,0,W,H);redraw();later(paintFace)};lw.appendChild(row)})};
+      paint()}
+    let brush=colors[0][1],size=6,down=false,last=null;const undo=[];
+    const push=()=>{undo.push([active,layers[active].getContext('2d').getImageData(0,0,W,H)]);if(undo.length>25)undo.shift()};
+    const tools=ed.querySelector('.tools');
+    colors.forEach(([n,cl],k)=>{const b=el(`<button class="chip${k===0?' on':''}">${cl?`<i class="dot" style="background:${cl}"></i>`:''}${gl(n)}</button>`);b.onclick=()=>{brush=cl;tools.querySelectorAll('.chip').forEach(x=>x.classList.toggle('on',x===b))};tools.appendChild(b)});
+    const sizes=ed.querySelector('.sizes');
+    [3,6,10,18].forEach(z=>{const b=el(`<button class="chip${z===size?' on':''}">${gl(z+'px')}</button>`);b.onclick=()=>{size=z;sizes.querySelectorAll('.chip').forEach(x=>x.classList.toggle('on',x===b))};sizes.appendChild(b)});
+    const pt=e=>{const r=view.getBoundingClientRect();return[(e.clientX-r.left)/r.width*W,(e.clientY-r.top)/r.height*H]};
+    const stroke=(a,b)=>{const p=layers[active].getContext('2d');p.save();p.lineCap=p.lineJoin='round';p.lineWidth=size;
+      if(brush===null){p.globalCompositeOperation='destination-out';p.strokeStyle='#000'}else p.strokeStyle=brush;p.beginPath();p.moveTo(...a);p.lineTo(...b);p.stroke();p.restore()};
+    const setUse=v=>{state[useKey]=v;useBtn.classList.toggle('on',v);useBtn.innerHTML=gl(v?useLabels[1]:useLabels[0])};
+    const live=()=>{if(!state[useKey])setUse(true);redraw();later(paintFace)};
+    view.addEventListener('pointerdown',e=>{e.preventDefault();if(!vis[active]){vis[active]=true;layers.length>1&&ed.querySelector('.layer.on .eye')&&(ed.querySelector('.layer.on .eye').textContent='👁️')}
+      view.setPointerCapture(e.pointerId);down=true;push();last=pt(e);stroke(last,last);live()});
+    view.addEventListener('pointermove',e=>{if(!down)return;const q=pt(e);stroke(last,q);last=q;live()});
+    view.addEventListener('pointerup',()=>{down=false});view.addEventListener('pointercancel',()=>{down=false});
+    const btns=ed.querySelector('.padbtns');const mk=(t,f)=>{const b=el(`<button class="chip">${gl(t)}</button>`);b.onclick=f;btns.appendChild(b);return b};
+    mk(stampLabel,()=>{push();stamp(active);live()});
+    mk('Undo',()=>{const u=undo.pop();if(u){layers[u[0]].getContext('2d').putImageData(u[1],0,0);redraw();later(paintFace)}});
+    if(layers.length===1)mk('Clear',()=>{push();layers[0].getContext('2d').clearRect(0,0,W,H);live()});
+    const useBtn=mk(useLabels[0],()=>{setUse(!state[useKey]);paintFace()});setUse(state[useKey]);
+    redraw();return ed;
+  }
+  const lashCols=c=>[['Line',c],['Dark','#120c0b'],['White','#fbf8f6'],['Shine','#ffffff']];
   if(tab==='face'){
     const n=EYE_SHAPES.length*BROWS.length*MOUTHS.length*EYES.length*MARKS.length;
     pane.appendChild(el(`<div class="ph"><h2>${gl('Face')}</h2><span>${gl(n.toLocaleString()+' combos')}</span></div>`));
     const rf=el(`<div class="row"><button class="chip">${gl('🎲 Random face')}</button></div>`);
-    rf.firstChild.onclick=()=>{const r=k=>Math.floor(Math.random()*k);Object.assign(state,{customEyes:false,eyeShape:r(EYE_SHAPES.length),brow:r(BROWS.length),mouth:r(MOUTHS.length),eyes:r(EYES.length),mark:r(MARKS.length)});buildBody();renderPane()};
+    rf.firstChild.onclick=()=>{const r=k=>Math.floor(Math.random()*k);Object.assign(state,{customEyes:false,customMouth:false,eyeShape:r(EYE_SHAPES.length),brow:r(BROWS.length),mouth:r(MOUTHS.length),eyes:r(EYES.length),mark:r(MARKS.length)});buildBody();renderPane()};
     pane.appendChild(rf);
-    {const r=el(`<div class="row"><label>${gl('Eyes · '+EYE_SHAPES.length+' styles')}</label><div class="eyegrid"></div></div>`),g=r.lastChild;
-     EYE_SHAPES.forEach((n,i)=>{const b=el(`<button class="eyecard${state.eyeShape===i?' on':''}" title="${n}"><img alt="${n}" src="${eyeThumb(i)}"><span>${n}</span></button>`);
-       b.onclick=()=>{state.eyeShape=i;state.customEyes=false;buildBody();g.querySelectorAll('.eyecard').forEach(x=>x.classList.toggle('on',x===b))};g.appendChild(b)});
-     pane.appendChild(r)}
-    pane.appendChild(swatches('Eye color',EYES,'eyes',buildBody));
-    pane.appendChild(chips('Brows',BROWS,'brow',buildBody));
-    pane.appendChild(chips('Mouth',MOUTHS,'mouth',buildBody));
     pane.appendChild(chips('Details',MARKS,'mark',buildBody));
-    // placement
-    let raf=0;const later=f=>{cancelAnimationFrame(raf);raf=requestAnimationFrame(f)};
-    const fs=(label,key,min,max,step,heavy)=>{const r=el(`<div class="row frow"><label>${gl(label)}</label></div>`),i=document.createElement('input');i.type='range';i.min=min;i.max=max;i.step=step;i.value=state[key];
-      i.oninput=()=>{state[key]=+i.value;later(heavy?buildBody:paintFace)};r.appendChild(i);return r};
-    const box=el(`<div class="facebox"><h3>${gl('Placement')}</h3></div>`);
-    box.append(fs('Eyes up / down','eyeY',-8,8,.25),fs('Eye spacing','eyeGap',8,17,.25),fs('Eye size','eyeSize',.7,1.35,.01),fs('Eye tilt','eyeTilt',-.35,.35,.01),
-      fs('Mouth up / down','mouthY',-8,10,.25),fs('Mouth left / right','mouthX',-8,8,.25),fs('Mouth size','mouthSize',.6,1.6,.01),
-      fs('Nose up / down','noseY',-.03,.03,.001,true),fs('Nose size','noseSize',0,1.8,.01,true));
-    const rs=el(`<button class="chip">${gl('Reset placement')}</button>`);rs.onclick=()=>{Object.assign(state,{eyeY:0,eyeGap:12,eyeSize:1,eyeTilt:0,mouthY:0,mouthX:0,mouthSize:1,noseY:0,noseSize:1});buildBody();renderPane()};
-    box.appendChild(rs);pane.appendChild(box);
-    // draw your own eye
-    const ed=el(`<div class="facebox"><h3>${gl('Draw your eyes')}</h3><p class="hint">Draw the right eye — the left one mirrors it.</p>
-      <div class="padwrap"><canvas class="pad"></canvas></div><canvas class="both"></canvas>
-      <div class="tools"></div><div class="sizes"></div><div class="padbtns"></div></div>`);
-    const view=ed.querySelector('.pad'),both=ed.querySelector('.both'),wrap=ed.querySelector('.padwrap');
-    view.width=eyePad.width;view.height=eyePad.height;both.width=eyePad.width*2;both.height=eyePad.height;wrap.style.background=SKINS[state.skin];
-    const redraw=()=>{const v=view.getContext('2d');v.clearRect(0,0,view.width,view.height);v.drawImage(eyePad,0,0);
-      const b=both.getContext('2d');b.fillStyle=SKINS[state.skin];b.fillRect(0,0,both.width,both.height);
-      b.save();b.translate(eyePad.width,0);b.scale(-1,1);b.drawImage(eyePad,0,0);b.restore();b.drawImage(eyePad,eyePad.width,0)};
+    pane.appendChild(boxOf('Nose',fs('Nose up / down','noseY',-.03,.03,.001,true),fs('Nose size','noseSize',0,1.8,.01,true),resetBtn({noseY:0,noseSize:1},'Reset nose')));
+    pane.appendChild(el(`<p class="hint">Eyes, brows and mouth each have their own tab on the left.</p>`));
+    return;
+  }
+  if(tab==='eyes'){
+    pane.appendChild(el(`<div class="ph"><h2>${gl('Eyes')}</h2><span>${gl(EYE_SHAPES.length+' styles')}</span></div>`));
+    pane.appendChild(presetGrid('Eye style',EYE_SHAPES,'eyeShape',eyeThumb,()=>{state.customEyes=false}));
+    pane.appendChild(swatches('Eye color',EYES,'eyes',buildBody));
+    pane.appendChild(boxOf('Eye placement',fs('Up / down','eyeY',-8,8,.25),fs('Spacing','eyeGap',8,17,.25),fs('Size','eyeSize',.7,1.35,.01),fs('Tilt','eyeTilt',-.35,.35,.01),resetBtn({eyeY:0,eyeGap:12,eyeSize:1,eyeTilt:0})));
     const ir=EYES[state.eyes];
-    const COLS=[['Lash',LASH],['White','#fbf8f6'],['Iris',ir],['Iris dark',shade(ir,-.3)],['Iris light',shade(ir,.3)],['Pupil','#120c0b'],['Shine','#ffffff'],['Blush','rgba(255,120,140,.45)'],['Eraser',null]];
-    let brush=COLS[0][1],size=6,down=false,last=null;const undo=[];
-    const tools=ed.querySelector('.tools');
-    COLS.forEach(([n,cl],k)=>{const b=el(`<button class="chip${k===0?' on':''}">${cl?`<i class="dot" style="background:${cl}"></i>`:''}${gl(n)}</button>`);b.onclick=()=>{brush=cl;tools.querySelectorAll('.chip').forEach(x=>x.classList.toggle('on',x===b))};tools.appendChild(b)});
-    const sizes=ed.querySelector('.sizes');
-    [3,6,10,18].forEach(z=>{const b=el(`<button class="chip${z===size?' on':''}">${gl(z+'px')}</button>`);b.onclick=()=>{size=z;sizes.querySelectorAll('.chip').forEach(x=>x.classList.toggle('on',x===b))};sizes.appendChild(b)});
-    const pt=e=>{const r=view.getBoundingClientRect();return[(e.clientX-r.left)/r.width*view.width,(e.clientY-r.top)/r.height*view.height]};
-    const stroke=(a,b)=>{const p=eyePad.getContext('2d');p.save();p.lineCap=p.lineJoin='round';p.lineWidth=size;
-      if(brush===null){p.globalCompositeOperation='destination-out';p.strokeStyle='#000'}else p.strokeStyle=brush;
-      p.beginPath();p.moveTo(...a);p.lineTo(...b);p.stroke();p.restore()};
-    const live=()=>{if(!state.customEyes){state.customEyes=true;useBtn.classList.add('on');useBtn.innerHTML=gl('Using my eyes ✓')}redraw();later(paintFace)};
-    view.addEventListener('pointerdown',e=>{e.preventDefault();view.setPointerCapture(e.pointerId);down=true;undo.push(eyePad.getContext('2d').getImageData(0,0,eyePad.width,eyePad.height));if(undo.length>25)undo.shift();last=pt(e);stroke(last,last);live()});
-    view.addEventListener('pointermove',e=>{if(!down)return;const q=pt(e);stroke(last,q);last=q;live()});
-    view.addEventListener('pointerup',()=>{down=false});view.addEventListener('pointercancel',()=>{down=false});
-    const btns=ed.querySelector('.padbtns');
-    const mk=(t,f)=>{const b=el(`<button class="chip">${gl(t)}</button>`);b.onclick=f;btns.appendChild(b);return b};
-    mk('Start from preset: '+EYE_SHAPES[state.eyeShape],()=>{undo.push(eyePad.getContext('2d').getImageData(0,0,eyePad.width,eyePad.height));stampPresetOnPad(state.eyeShape);live()});
-    mk('Undo',()=>{const u=undo.pop();if(u){eyePad.getContext('2d').putImageData(u,0,0);redraw();later(paintFace)}});
-    mk('Clear',()=>{undo.push(eyePad.getContext('2d').getImageData(0,0,eyePad.width,eyePad.height));eyePad.getContext('2d').clearRect(0,0,eyePad.width,eyePad.height);live()});
-    const useBtn=mk(state.customEyes?'Using my eyes ✓':'Use my drawn eyes',()=>{state.customEyes=!state.customEyes;useBtn.classList.toggle('on',state.customEyes);useBtn.innerHTML=gl(state.customEyes?'Using my eyes ✓':'Use my drawn eyes');paintFace()});
-    if(state.customEyes)useBtn.classList.add('on');
-    redraw();pane.appendChild(ed);
+    pane.appendChild(drawPad({title:'Draw your eyes',hint:'Draw the right eye — the left one mirrors it.',layers:[eyePad],vis:[true],aspect:'28/20',mirror:true,
+      stampLabel:'Stamp selected eye preset',stamp:()=>stampPresetOnPad(state.eyeShape),useKey:'customEyes',useLabels:['Use my drawn eyes','Using my eyes ✓'],
+      colors:[['Lash',LASH],['White','#fbf8f6'],['Iris',ir],['Iris dark',shade(ir,-.3)],['Iris light',shade(ir,.3)],['Pupil','#120c0b'],['Shine','#ffffff'],['Blush','rgba(255,120,140,.45)'],['Eraser',null]]}));
+    return;
+  }
+  if(tab==='brows'){
+    pane.appendChild(el(`<div class="ph"><h2>${gl('Brows')}</h2><span>${gl(BROWS.length+' styles')}</span></div>`));
+    pane.appendChild(presetGrid('Brow style',BROWS,'brow',browThumb));
+    pane.appendChild(boxOf('Brow placement',fs('Up / down','browY',-6,6,.25),fs('Spacing','browGap',-4,5,.25),fs('Tilt','browTilt',-.4,.4,.01),fs('Thickness','browThick',.5,2,.01),resetBtn({browY:0,browGap:0,browTilt:0,browThick:1})));
+    pane.appendChild(el(`<p class="hint">Brows use your hair colour.</p>`));
+    return;
+  }
+  if(tab==='mouth'){
+    pane.appendChild(el(`<div class="ph"><h2>${gl('Mouth')}</h2><span>${gl(MOUTHS.length+' styles')}</span></div>`));
+    pane.appendChild(presetGrid('Mouth style',MOUTHS,'mouth',mouthThumb,()=>{state.customMouth=false}));
+    pane.appendChild(boxOf('Mouth placement',fs('Up / down','mouthY',-8,10,.25),fs('Left / right','mouthX',-8,8,.25),fs('Size','mouthSize',.6,1.6,.01),resetBtn({mouthY:0,mouthX:0,mouthSize:1})));
+    const skin=SKINS[state.skin],lip=mix(skin,'#c0505c',.45);
+    pane.appendChild(drawPad({title:'Draw your mouth',hint:'Up to 3 layers — pick a layer to draw on, hide it with 👁️. Layer 3 is on top.',layers:mouthLayers,vis:mouthVis,aspect:'24/14',mirror:false,
+      stampLabel:'Stamp selected mouth preset on this layer',stamp:a=>stampMouthOnLayer(state.mouth,a),useKey:'customMouth',useLabels:['Use my drawn mouth','Using my mouth ✓'],
+      colors:[['Line',mix(skin,'#4a1c22',.75)],['Inside','#6a2630'],['Tongue','#e07a86'],['Teeth','#fbf8f6'],['Lip',lip],['Lip light',shade(lip,.15)],['Skin',skin],['Eraser',null]]}));
     return;
   }
   if(tab==='body'){
