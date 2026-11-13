@@ -8,9 +8,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --fountain:#0d4f7c;--fountain-2:#156ea8;--sky:#cfe3ef;
-  --limestone:#efe8da;--stone-2:#e4dac6;--paper:#faf6ee;
-  --brick:#a8432a;--brass:#c9a24a;--ink:#16202a;--muted:#5f6b75;--line:#d6cbb5
+  --fountain:#d6457f;--fountain-2:#ec6fa2;--sky:#ffd9e8;
+  --limestone:#ffe7f0;--stone-2:#ffdbe9;--paper:#fff7fa;
+  --brick:#b8326a;--brass:#f4c56a;--ink:#2a1420;--muted:#8a5a70;--line:#f3cadb
 }
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;background:var(--limestone);color:var(--ink);font-family:Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
@@ -18,7 +18,7 @@ button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
 #app{display:grid;grid-template-rows:auto 1fr;height:100vh}
 
 /* header */
-header{background:var(--fountain);color:#fff;display:flex;align-items:center;gap:18px;padding:0 22px;height:64px;position:relative}
+header{background:linear-gradient(90deg,#c93a74,#e8609a);color:#fff;display:flex;align-items:center;gap:18px;padding:0 22px;height:64px;position:relative}
 header::after{content:"";position:absolute;left:0;right:0;bottom:-6px;height:6px;background:repeating-linear-gradient(90deg,var(--brass) 0 18px,transparent 18px 24px,var(--brick) 24px 42px,transparent 42px 48px)}
 .logo{font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:32px;letter-spacing:.06em;text-transform:uppercase;line-height:1;display:flex;align-items:center;gap:10px}
 .logo svg{width:28px;height:28px}
@@ -26,33 +26,36 @@ header::after{content:"";position:absolute;left:0;right:0;bottom:-6px;height:6px
 .hspace{flex:1}
 .hbtn{font-weight:600;font-size:14px;padding:10px 16px;border-radius:4px;border:1.5px solid rgba(255,255,255,.55)}
 .hbtn:hover{background:rgba(255,255,255,.1)}
-.hbtn.primary{background:var(--brass);border-color:var(--brass);color:var(--ink)}
-.hbtn.primary:hover{background:#d8b45c}
+.hbtn.primary{background:#fff;border-color:#fff;color:var(--fountain)}
+.hbtn.primary:hover{background:#ffe3ee}
 .hbtn:disabled{opacity:.45;cursor:default}
 
 /* body */
 main{display:grid;grid-template-columns:1fr 420px;min-height:0}
 #stage{position:relative;min-width:0;background:
-  linear-gradient(180deg,var(--sky) 0%,#e9eef0 58%,var(--stone-2) 58.2%,var(--limestone) 100%)}
+  radial-gradient(ellipse 70% 45% at 50% 38%,rgba(255,255,255,.65),transparent 70%),
+  linear-gradient(180deg,#ffc6dd 0%,#ffd9e8 45%,#ffeaf2 75%,#fffafc 100%)}
+#stage::after{content:"";position:absolute;left:0;right:0;bottom:0;height:14%;pointer-events:none;
+  background:linear-gradient(180deg,rgba(255,250,252,0),rgba(255,250,252,.85))}
 #stage canvas{display:block;width:100%;height:100%;touch-action:none;image-rendering:pixelated}
-.deco{position:absolute;inset:16px;border:1.5px solid rgba(13,79,124,.18);pointer-events:none}
+.deco{position:absolute;inset:16px;border:1.5px solid rgba(214,69,127,.22);pointer-events:none;z-index:1}
 .deco::before,.deco::after{content:"";position:absolute;width:26px;height:26px;border:3px solid var(--fountain);opacity:.55}
 .deco::before{top:-3px;left:-3px;border-right:0;border-bottom:0}
 .deco::after{bottom:-3px;right:-3px;border-left:0;border-top:0}
 #empty{position:absolute;left:50%;top:26px;transform:translateX(-50%);background:var(--paper);border:1.5px solid var(--line);border-radius:4px;padding:9px 16px;font-size:13px;color:var(--muted);box-shadow:0 2px 0 var(--line);white-space:nowrap}
 #empty b{color:var(--ink)}
-#status{position:absolute;left:28px;bottom:26px;font-size:12px;color:var(--muted);letter-spacing:.02em}
-.viewbtns{position:absolute;right:28px;bottom:22px;display:flex;gap:6px}
+#status{position:absolute;z-index:2;left:28px;bottom:26px;font-size:12px;color:var(--muted);letter-spacing:.02em}
+.viewbtns{position:absolute;z-index:2;right:28px;bottom:22px;display:flex;gap:6px}
 .viewbtns button{background:var(--paper);border:1.5px solid var(--line);border-radius:4px;padding:7px 11px;font-size:12px;font-weight:600}
 .viewbtns button:hover{border-color:var(--fountain)}
 
 /* panel */
-#panel{background:var(--paper);border-left:1.5px solid var(--line);display:flex;flex-direction:column;min-height:0}
+#panel{background:linear-gradient(180deg,var(--paper) 0%,#ffeef5 100%);border-left:1.5px solid var(--line);display:flex;flex-direction:column;min-height:0}
 .tabs{display:grid;grid-template-columns:repeat(6,1fr);border-bottom:1.5px solid var(--line)}
 .tab{padding:14px 2px 12px;font-family:'Big Shoulders Display',sans-serif;font-weight:800;font-size:15px;letter-spacing:.03em;text-transform:uppercase;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-1.5px}
 .tab.on{color:var(--fountain);border-bottom-color:var(--brick)}
 .tab:hover{color:var(--ink)}
-.pane{flex:1;overflow:auto;padding:18px}
+.pane{flex:1;overflow:auto;padding:18px 18px 48px;-webkit-mask-image:linear-gradient(180deg,#000 82%,transparent);mask-image:linear-gradient(180deg,#000 82%,transparent)}
 .ph{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px}
 .ph h2{margin:0;font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:26px;letter-spacing:.04em;text-transform:uppercase}
 .ph span{font-size:12px;color:var(--muted)}
@@ -105,7 +108,7 @@ input[type=range]{width:100%;accent-color:var(--fountain)}
       <svg viewBox="0 0 28 28" aria-hidden="true"><path d="M14 2 L26 14 L14 26 L2 14 Z" fill="none" stroke="#c9a24a" stroke-width="2.5"/><path d="M14 8 L20 14 L14 20 L8 14 Z" fill="#fff"/></svg>
       Heemsworld
     </div>
-    <div class="tag">Character Maker · City of Fountains</div>
+    <div class="tag">Character Maker</div>
     <div class="hspace"></div>
     <button class="hbtn" id="random">Randomize</button>
     <button class="hbtn" id="reset">Strip</button>
@@ -115,7 +118,7 @@ input[type=range]{width:100%;accent-color:var(--fountain)}
     <div id="stage">
       <div class="deco"></div>
       <div id="empty">Your Heem starts <b>blank</b>. Pick a shirt, pants, jacket, shoes or socks.</div>
-      <div id="status">Drag to rotate · scroll to zoom</div>
+      <div id="status">Drag to rotate · scroll to zoom where you point · right-drag to move</div>
       <div class="viewbtns"><button data-v="front">Front</button><button data-v="side">Side</button><button data-v="back">Back</button><button data-v="face">Face</button><button data-v="feet">Feet</button></div>
     </div>
     <aside id="panel">
@@ -131,6 +134,7 @@ input[type=range]{width:100%;accent-color:var(--fountain)}
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {GLTFExporter} from 'three/addons/exporters/GLTFExporter.js';
+import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 
 /* ================= catalog ================= */
 const COLORS=[['Black','#1d1d1f'],['White','#f2f2ee'],['Red','#c8323c'],['Crimson','#8e1b2b'],['Orange','#e8742a'],['Mustard','#d6a72b'],['Lime','#8cc63f'],['Forest','#2f6b3a'],['Teal','#1f8a8a'],['Sky','#5bb4e8'],['Navy','#1f2f5c'],['Royal','#3b55c9'],['Violet','#6f42c1'],['Pink','#e77fb0'],['Tan','#c9a77c'],['Gray','#7d8088']];
@@ -157,9 +161,9 @@ const CAT={
   ]
 };
 const SKINS=['#f3d6c1','#e8bf9f','#d39f7b','#b57a52','#8a5838','#5e3b27','#3d2619'];
-const HAIRC=['#151211','#3a2417','#6b4226','#a8743f','#e2c178','#b8b4ad','#a8432a','#0d4f7c'];
+const HAIRC=['#151211','#3a2417','#6b4226','#a8743f','#e2c178','#b8b4ad','#a8432a','#f27aa8','#7a4fd0','#2b6fd6','#3fb58a'];
 const EYES=['#3b2414','#2f6b3a','#2f63a8','#6b7178','#7a3fa8'];
-const HAIRS=['None','Buzz','Bob','Pixie','Long','Bun','Puff','Spiky'];
+const HAIRS=['None','Buzz','Bob','Pixie','Wolf Cut','Long','Curtains','Ponytail','Twin Tails','Bun','Space Buns','Braids','Dreads','Puff','Mohawk','Spiky'];
 const FRAMES=['Frame A','Frame B'];
 const STYLES=['Toon','Retro'];
 
@@ -351,19 +355,29 @@ renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.outputColorSpace=T
 stage.prepend(renderer.domElement);
 const scene=new THREE.Scene();
 const camera=new THREE.PerspectiveCamera(30,1,.05,50);
-const controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.minDistance=.6;controls.maxDistance=6;controls.enablePan=false;
+const controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.dampingFactor=.12;controls.minDistance=.35;controls.maxDistance=6;
+controls.zoomToCursor=true;controls.zoomSpeed=.9;controls.rotateSpeed=.8;
+controls.enablePan=true;controls.screenSpacePanning=true;controls.panSpeed=.7;   // right-drag / two-finger drag to move
+controls.minPolarAngle=.15;controls.maxPolarAngle=Math.PI*.62;
+renderer.domElement.addEventListener('wheel',e=>e.preventDefault(),{passive:false});
+function clampTarget(){const t=controls.target;t.x=THREE.MathUtils.clamp(t.x,-.5,.5);t.z=THREE.MathUtils.clamp(t.z,-.5,.5);t.y=THREE.MathUtils.clamp(t.y,.05,1.95)}
 function view(v){
-  const T={front:[[0,1.25,4],[0,.98,0]],side:[[4,1.25,0],[0,.98,0]],back:[[0,1.25,-4],[0,.98,0]],feet:[[.7,.45,1.3],[0,.15,0]],face:[[.2,1.78,.8],[0,1.75,0]],start:[[1.3,1.3,3.7],[0,.98,0]]}[v];
-  camera.position.set(...T[0]);controls.target.set(...T[1]);controls.update();
+  const T={front:[[0,1.25,4],[0,.98,0]],side:[[4,1.25,0],[0,.98,0]],back:[[0,1.25,-4],[0,.98,0]],feet:[[.7,.45,1.3],[0,.15,0]],face:[[.15,1.8,.75],[0,1.76,0]],start:[[1.3,1.3,3.7],[0,.98,0]]}[v];
+  flyTo(T[0],T[1]);
 }
-view('start');
+let fly=null;
+function flyTo(p,t){fly={p0:camera.position.clone(),t0:controls.target.clone(),p1:new THREE.Vector3(...p),t1:new THREE.Vector3(...t),k:0}}
+function stepFly(){if(!fly)return;fly.k=Math.min(1,fly.k+.06);const e=1-Math.pow(1-fly.k,3);
+  camera.position.lerpVectors(fly.p0,fly.p1,e);controls.target.lerpVectors(fly.t0,fly.t1,e);if(fly.k>=1)fly=null}
+controls.addEventListener('start',()=>{fly=null});
+camera.position.set(1.3,1.3,3.7);controls.target.set(0,.98,0);controls.update();
 document.querySelectorAll('.viewbtns button').forEach(b=>b.onclick=()=>view(b.dataset.v));
 scene.add(new THREE.HemisphereLight(0xfdf7ec,0x6d6250,1.5));
 const key=new THREE.DirectionalLight(0xffffff,2.1);key.position.set(1.5,3,3);scene.add(key);
 const rim=new THREE.DirectionalLight(0xcfe3ef,.9);rim.position.set(-2,2.5,-3);scene.add(rim);
 const plinth=new THREE.Group();
-{const base=new THREE.Mesh(new THREE.CylinderGeometry(.5,.54,.06,8),new THREE.MeshStandardMaterial({color:0xe9e0cd,flatShading:true,roughness:1}));base.position.y=-.03;plinth.add(base);
- const ring=new THREE.Mesh(new THREE.TorusGeometry(.5,.012,4,8),new THREE.MeshStandardMaterial({color:0x0d4f7c,flatShading:true}));ring.rotation.set(Math.PI/2,0,Math.PI/8);plinth.add(ring);}
+{const base=new THREE.Mesh(new THREE.CylinderGeometry(.5,.54,.06,8),new THREE.MeshStandardMaterial({color:0xfbe1ec,flatShading:true,roughness:1}));base.position.y=-.03;plinth.add(base);
+ const ring=new THREE.Mesh(new THREE.TorusGeometry(.5,.012,4,8),new THREE.MeshStandardMaterial({color:0xd6457f,flatShading:true}));ring.rotation.set(Math.PI/2,0,Math.PI/8);plinth.add(ring);}
 scene.add(plinth);
 
 const root=new THREE.Group();root.name='Heemsworld_Character';scene.add(root);
@@ -408,6 +422,56 @@ function buildHair(){
   if(st==='Long'){H.add(cap(1.735,.017));H.add(mesh(hairShell(HY(1.77),1.42,.019,.05,[.85,2*P-.85],.04,-.05),m,'LongShell'));H.add(fringe(1.73,-.2))}
   if(st==='Bun'){H.add(cap(1.7,.01));const b=mesh(new THREE.IcosahedronGeometry(.05,1),m,'Bun');b.position.set(0,HY(1.8),-.095);H.add(b)}
   if(st==='Puff'){const p=mesh(new THREE.IcosahedronGeometry(.145,1),m,'Puff');p.position.set(0,HY(1.775),-.02);p.scale.set(1,.88,1);H.add(p)}
+  // point on the head surface at angle a (0 = front) and original-head height y
+  const onHead=(a,y,out=0)=>{const r=ringAt(R,HY(y));return[Math.sin(a)*(r.w+out),HY(y),Math.cos(a)*(r.d+out)+(r.z||0)]};
+  // a tube that starts at p and travels along dir with drift, as merged-friendly geometry
+  const tube=(p,len,r0,r1,dx,dz,steps=6,seg=6)=>{const rs=[];for(let i=0;i<=steps;i++){const t=i/steps;rs.push({y:p[1]-len*t,w:r0+(r1-r0)*t,d:r0+(r1-r0)*t,x:p[0]+dx*t*t,z:p[2]+dz*t})}return loft(rs,seg)};
+  const merged=(geos,name)=>{const g=mergeGeometries(geos);geos.forEach(x=>x.dispose());return mesh(g,m,name)};
+  if(st==='Wolf Cut'){
+    H.add(cap(1.725,.024));
+    H.add(mesh(hairShell(HY(1.8),HY(1.67),.024,.036,[.7,2*P-.7],.034),m,'WolfLayer1'));
+    H.add(mesh(hairShell(HY(1.72),HY(1.555),.03,.05,[1.5,2*P-1.5],.04,-.025),m,'WolfMullet'));
+    H.add(mesh(hairShell(HY(1.82),HY(1.715),.026,.032,[-1.15,1.15],.03),m,'WolfFringe'));
+  }
+  if(st==='Curtains'){
+    H.add(cap(1.735,.017));H.add(mesh(hairShell(HY(1.77),HY(1.62),.019,.03,[.85,2*P-.85],.02),m,'CurtainBack'));
+    H.add(mesh(hairShell(HY(1.81),HY(1.64),.022,.032,[.5,1.45],.024),m,'CurtainL'));
+    H.add(mesh(hairShell(HY(1.81),HY(1.64),.022,.032,[-1.45,-.5],.024),m,'CurtainR'));
+  }
+  if(st==='Ponytail'){
+    H.add(cap(1.715,.013));H.add(mesh(hairShell(HY(1.8),HY(1.745),.016,.02,[-1,1],.014),m,'Fringe'));
+    const p=onHead(P,1.77,.01);H.add(mesh(tube([p[0],p[1],p[2]-.01],.36,.034,.012,0,-.06,8,8),m,'Ponytail'));
+    const band=mesh(new THREE.TorusGeometry(.03,.009,6,10),plain(shade(HAIRC[state.hairColor],-.25),'HairTie'),'HairTie');band.position.set(p[0],p[1]-.02,p[2]-.012);band.rotation.x=Math.PI/2;H.add(band);
+  }
+  if(st==='Twin Tails'){
+    H.add(cap(1.72,.014));H.add(fringe(1.735));
+    for(const sx of [-1,1]){const p=onHead(sx*P*.62,1.79,.012);H.add(mesh(tube(p,.42,.034,.01,sx*.07,-.03,8,8),m,'TwinTail'))}
+  }
+  if(st==='Space Buns'){
+    H.add(cap(1.715,.013));H.add(fringe(1.74));
+    for(const sx of [-1,1]){const b=mesh(new THREE.IcosahedronGeometry(.055,1),m,'SpaceBun');const p=onHead(sx*1.15,1.81,.02);b.position.set(...p);H.add(b)}
+  }
+  if(st==='Braids'){
+    H.add(cap(1.715,.014));H.add(mesh(hairShell(HY(1.81),HY(1.735),.018,.022,[-1.05,1.05],.016),m,'Fringe'));
+    const geos=[];
+    for(const sx of [-1,1]){const p=onHead(sx*P*.58,1.69,.01);
+      for(let i=0;i<9;i++){const g=new THREE.IcosahedronGeometry(.024-i*.0011,0);g.translate(p[0]+sx*.006*(i%2?1:-1),p[1]-i*.038,p[2]-.01);geos.push(g)}}
+    H.add(merged(geos,'Braids'));
+  }
+  if(st==='Dreads'){
+    H.add(cap(1.715,.016));
+    const geos=[],r=rng(state.hairColor*13+7);
+    for(let i=0;i<26;i++){const a=.55+i/25*(2*P-1.1),row=i%2;
+      const p=onHead(a,1.78-row*.05,.014),len=.26+r()*.12-(Math.abs(Math.sin(a))>.9?.04:0);
+      geos.push(tube(p,len,.013,.009,Math.sin(a)*.025,Math.cos(a)*.025-.01,6,5))}
+    for(let i=0;i<7;i++){const a=-.55+i/6*1.1,p=onHead(a,1.8,.014);geos.push(tube(p,.07+r()*.03,.012,.009,Math.sin(a)*.02,.03,4,5))}
+    H.add(merged(geos,'Dreads'));
+  }
+  if(st==='Mohawk'){
+    H.add(cap(1.722,.004));
+    for(let i=0;i<7;i++){const a=-.45+i/6*1.9,c=mesh(new THREE.ConeGeometry(.035,.1,4),m,'MohawkSpike');
+      const y=HY(1.8)+Math.cos(a)*.05,z=Math.sin(a)*.09-.01;c.position.set(0,y,z);c.rotation.x=a*.8;c.scale.set(.4,1,1);H.add(c)}
+  }
   if(st==='Spiky'){H.add(cap(1.73,.012));for(let i=0;i<10;i++){const a=(i/10-.5)*P*1.5,c=mesh(new THREE.ConeGeometry(.032,.09,4),m,'Spike');c.position.set(Math.sin(a)*.055,HY(1.815),Math.cos(a)*.055-.02);c.rotation.set(Math.cos(a)*.65,0,-Math.sin(a)*.65);H.add(c)}}
   outline(H);
 }
@@ -561,7 +625,7 @@ document.getElementById('export').onclick=()=>{
 /* ================= loop ================= */
 function resize(){const w=stage.clientWidth,h=stage.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}
 new ResizeObserver(resize).observe(stage);resize();
-renderer.setAnimationLoop(()=>{controls.update();renderer.render(scene,camera)});
+renderer.setAnimationLoop(()=>{stepFly();clampTarget();controls.update();renderer.render(scene,camera)});
 buildAll();renderTabs();renderPane();
 window.__heems={root,state,CAT,buildAll,camera,controls,view,exportTest:()=>new Promise((res,rej)=>{setOutlines(false);new GLTFExporter().parse(root,b=>{setOutlines(true);res(b.byteLength)},rej,{binary:true,onlyVisible:true})})};
 </script>
