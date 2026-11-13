@@ -343,7 +343,7 @@ function mesh(geo,m,name){const o=new THREE.Mesh(geo,m);o.name=name;return o}
 
 /* ================= anatomy (stylised: long legs, narrow waist, slightly larger head) ================= */
 const state={eyeShape:0,brow:0,mouth:0,mark:0,style:'Toon',frame:0,skin:2,hair:0,hairColor:1,eyes:0,height:1,build:1,shirt:0,pants:0,jacket:0,shoes:0,socks:0};
-const H0=1.625,HS=1.22,HV=1.08,HEADZ=.02,HY=y=>H0+(y-1.565)*HV;   // wider than tall = rounder anime head   // head-space helper (y measured on the original 1.565–1.828 head)
+const H0=1.585,HS=1.22,HV=1.08,HEADZ=.02,HY=y=>H0+(y-1.565)*HV;   // wider than tall = rounder anime head   // head-space helper (y measured on the original 1.565–1.828 head)
 const LEG_END=-.885;
 
 function anatomy(){
@@ -367,7 +367,7 @@ function anatomy(){
     {y:-.43,w:.045,d:.049,z:.002},{y:-.49,w:.046,d:.051,z:.008},{y:-.6,w:.051,d:.057,z:-.014},{y:-.75,w:.032,d:.035,z:-.004},{y:-.84,w:.025,d:.028},{y:LEG_END,w:.026,d:.029}
   ];leg.forEach((r,i)=>{if(i>0){r.w*=legK;r.d*=legK}});
   const foot0=[{y:0,w:.028,d:.032},{y:-.04,w:.036,d:.038,z:.004},{y:-.12,w:.042,d:.028,z:-.006},{y:-.2,w:.04,d:.019,z:-.015},{y:-.24,w:.03,d:.013,z:-.02},{y:-.255,w:.014,d:.007,z:-.022}];const foot=foot0.map(r=>({...r,y:r.y*.86,w:r.w*.88,d:r.d*.86,z:r.z?r.z*.86:0}));
-  const neck=B?[{y:1.52,w:.04,d:.041,z:-.026},{y:1.6,w:.035,d:.037,z:-.018},{y:1.71,w:.033,d:.036,z:-.008}]:[{y:1.52,w:.047,d:.048,z:-.026},{y:1.6,w:.042,d:.044,z:-.018},{y:1.71,w:.039,d:.042,z:-.008}];
+  const neck=B?[{y:1.52,w:.04,d:.041,z:-.026},{y:1.58,w:.035,d:.037,z:-.018},{y:1.67,w:.033,d:.036,z:-.008}]:[{y:1.52,w:.047,d:.048,z:-.026},{y:1.58,w:.042,d:.044,z:-.018},{y:1.67,w:.039,d:.042,z:-.008}];
   const head=[
     [1.565,.008,.006,.046],[1.575,.026,.013,.043],[1.598,.046,.0315,.0315],[1.617,.056,.0418,.0228],[1.632,.064,.0505,.0155],[1.645,.072,.0695,-.0015],[1.66,.078,.0802,-.0102],[1.698,.084,.0942,-.0202],[1.731,.086,.1,-.02],[1.76,.082,.0957,-.02],[1.79,.07,.0807,-.02],[1.81,.053,.0613,-.02],[1.825,.03,.0346,-.02],[1.831,.001,.001,-.02]
   ].map(([y,w,d,z])=>({y:HY(y),w:(w+(!B&&y>1.59&&y<1.66?.007:0))*HS,d:d*HS,z:z*HS+HEADZ}));  // boys: slightly squarer jaw
@@ -503,7 +503,7 @@ controls.minPolarAngle=.15;controls.maxPolarAngle=Math.PI*.62;
 renderer.domElement.addEventListener('wheel',e=>e.preventDefault(),{passive:false});
 function clampTarget(){const t=controls.target;t.x=THREE.MathUtils.clamp(t.x,-.5,.5);t.z=THREE.MathUtils.clamp(t.z,-.5,.5);t.y=THREE.MathUtils.clamp(t.y,.05,1.95)}
 function view(v){
-  const T={front:[[0,1.25,4],[0,.98,0]],side:[[4,1.25,0],[0,.98,0]],back:[[0,1.25,-4],[0,.98,0]],feet:[[.7,.45,1.3],[0,.15,0]],face:[[.15,1.8,.75],[0,1.76,0]],start:[[1.3,1.3,3.7],[0,.98,0]]}[v];
+  const T={front:[[0,1.25,4],[0,.98,0]],side:[[4,1.25,0],[0,.98,0]],back:[[0,1.25,-4],[0,.98,0]],feet:[[.7,.45,1.3],[0,.15,0]],face:[[.15,1.76,.75],[0,1.72,0]],start:[[1.3,1.3,3.7],[0,.98,0]]}[v];
   flyTo(T[0],T[1]);
 }
 let fly=null;
@@ -526,7 +526,7 @@ const G={};for(const n of ['body','hair','socks','shoes','pants','shirt','jacket
 function clear(g){const geos=new Set();g.traverse(o=>{if(o.geometry)geos.add(o.geometry)});geos.forEach(x=>x.dispose());g.clear()}
 function outline(g){
   if(state.style!=='Toon')return;
-  const ms=[];g.traverse(o=>{if(o.isMesh&&!o.userData.outline&&!['Nose','Ear','Thumb'].includes(o.name))ms.push(o)});
+  const ms=[];g.traverse(o=>{if(o.isMesh&&!o.userData.outline&&!['Nose','EarInner','EarLobe','Thumb'].includes(o.name))ms.push(o)});
   for(const m of ms){const o=new THREE.Mesh(m.geometry,outlineMat);o.userData.outline=true;o.name='Outline';o.raycast=()=>{};m.add(o)}
 }
 
@@ -548,7 +548,15 @@ function buildBody(){
   onLimbs(B,'leg',()=>mesh(loft(A.leg,8),legM,'Leg'),'Leg');
   onFeet(B,()=>mesh(loft(A.foot,8),skin,'Foot'),'Foot');
   // tiny anime nose: barely there from the front, a small point in profile
-  for(const sx of [1,-1]){const ey2=HY(1.665),r=ringAt(A.head,ey2);const ear=mesh(new THREE.IcosahedronGeometry(1,1),skin,'Ear');ear.scale.set(.008,.036,.022);ear.position.set(sx*(r.w*.93),ey2,(r.z||0)-.012);ear.rotation.set(-.15,sx*.25,0);B.add(ear)}
+  const earIn=plain(shade(SKINS[state.skin],-.16),'EarInner');
+  for(const sx of [1,-1]){const ey2=HY(1.664),r=ringAt(A.head,ey2);
+    const ear=new THREE.Group();ear.name='Ear';
+    const rim=mesh(new THREE.IcosahedronGeometry(1,1),skin,'EarRim');rim.scale.set(.009,.027,.018);ear.add(rim);   // outer ear
+    const hol=mesh(new THREE.IcosahedronGeometry(1,1),earIn,'EarInner');hol.scale.set(.004,.018,.011);hol.position.set(sx*.007,.002,.002);ear.add(hol); // hollow
+    const lobe=mesh(new THREE.IcosahedronGeometry(1,0),skin,'EarLobe');lobe.scale.set(.007,.009,.008);lobe.position.set(sx*.002,-.022,.004);ear.add(lobe);
+    ear.position.set(sx*(r.w*.96+.004),ey2,(r.z||0)-.014);
+    ear.rotation.order='YXZ';ear.rotation.set(-.22,sx*-.55,sx*-.08);   // back edge out, top tilted back
+    B.add(ear)}
   outline(B);
 }
 function hairShell(yTop,yBot,off0,off1,arc,jag,extraZ=0){
