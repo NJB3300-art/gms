@@ -189,7 +189,7 @@ function thumbFor(it){
   const c=document.createElement('canvas');c.width=c.height=32;drawPattern(c.getContext('2d'),32,it);
   const u=c.toDataURL();thumbCache.set(k,u);return u;
 }
-const MAT_OPTS={flatShading:true,roughness:.9,metalness:0};
+const MAT_OPTS={flatShading:false,roughness:.9,metalness:0};
 const clothMat=(it,name)=>{const m=new THREE.MeshStandardMaterial({...MAT_OPTS,map:texFor(it)});m.name=name;return m};
 const plain=(hex,name,r=.9)=>{const m=new THREE.MeshStandardMaterial({...MAT_OPTS,color:hex,roughness:r});m.name=name;return m};
 
@@ -208,13 +208,13 @@ function sub(R,y0,y1,off=0,extra={}){
 }
 function loft(R,seg=10,caps=[true,true]){
   const asc=R.at(-1).y>R[0].y,y0=R[0].y,y1=R.at(-1).y,S=seg+1,P=[],U=[],I=[];
-  R.forEach(r=>{for(let i=0;i<=seg;i++){const a=i/seg*Math.PI*2;P.push(Math.sin(a)*r.w+(r.x||0),r.y,Math.cos(a)*r.d+(r.z||0));U.push(i/seg,(r.y-y0)/(y1-y0||1))}});
+  R.forEach(r=>{for(let i=0;i<=seg;i++){const a=i/seg*Math.PI*2+Math.PI;P.push(Math.sin(a)*r.w+(r.x||0),r.y,Math.cos(a)*r.d+(r.z||0));U.push(i/seg,(r.y-y0)/(y1-y0||1))}});
   const tri=(a,b,c)=>asc?I.push(a,b,c):I.push(a,c,b);
   for(let j=0;j<R.length-1;j++)for(let i=0;i<seg;i++){const a=j*S+i,b=a+1,c=a+S,d=c+1;tri(a,b,c);tri(b,d,c)}
   const cap=(j,top)=>{const r=R[j],ci=P.length/3;P.push(r.x||0,r.y,r.z||0);U.push(.5,top?1:0);for(let i=0;i<seg;i++){const a=j*S+i,b=a+1;top?tri(ci,a,b):tri(ci,b,a)}};
   if(caps[0])cap(0,false);if(caps[1])cap(R.length-1,true);
   const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(P,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(U,2));g.setIndex(I);
-  const n=g.toNonIndexed();n.computeVertexNormals();g.dispose();return n;
+  g.computeVertexNormals();return g;
 }
 function mesh(geo,mat,name){const m=new THREE.Mesh(geo,mat);m.name=name;return m}
 
@@ -224,10 +224,10 @@ const state={frame:0,skin:2,hair:0,hairColor:1,eyes:0,height:1,build:1,shirt:0,p
 function anatomy(){
   const B=state.frame===1;
   const torso=B?[
-    {y:.86,w:.15,d:.1},{y:.92,w:.185,d:.12,z:-.008},{y:1.0,w:.172,d:.112,z:-.006},{y:1.08,w:.133,d:.09},
+    {y:.8,w:.07,d:.06},{y:.84,w:.14,d:.095},{y:.9,w:.185,d:.118,z:-.008},{y:.95,w:.185,d:.118,z:-.008},{y:1.0,w:.172,d:.112,z:-.006},{y:1.08,w:.133,d:.09},
     {y:1.18,w:.142,d:.098,z:.004},{y:1.27,w:.156,d:.118,z:.02},{y:1.35,w:.164,d:.11,z:.012},{y:1.41,w:.172,d:.09},{y:1.46,w:.11,d:.066},{y:1.49,w:.056,d:.05}
   ]:[
-    {y:.86,w:.145,d:.098},{y:.92,w:.168,d:.112,z:-.006},{y:1.0,w:.16,d:.104,z:-.004},{y:1.08,w:.145,d:.094},
+    {y:.8,w:.07,d:.06},{y:.84,w:.138,d:.094},{y:.9,w:.172,d:.112,z:-.006},{y:.95,w:.17,d:.11,z:-.006},{y:1.0,w:.16,d:.104,z:-.004},{y:1.08,w:.145,d:.094},
     {y:1.18,w:.156,d:.104,z:.006},{y:1.27,w:.172,d:.116,z:.016},{y:1.35,w:.182,d:.11,z:.01},{y:1.41,w:.192,d:.094},{y:1.46,w:.12,d:.07},{y:1.49,w:.06,d:.054}
   ];
   const sh=ringAt(torso,1.41).w-.012;
@@ -235,10 +235,10 @@ function anatomy(){
     {y:.035,w:.03,d:.034},{y:0,w:.05,d:.054},{y:-.07,w:(B?.048:.055),d:(B?.05:.056)},{y:-.15,w:(B?.04:.046),d:(B?.042:.048)},
     {y:-.27,w:.034,d:.036},{y:-.31,w:(B?.036:.04),d:(B?.037:.041)},{y:-.4,w:(B?.033:.037),d:(B?.031:.034)},{y:-.5,w:.027,d:.023},{y:-.56,w:.024,d:.019}
   ];
-  const hand=[{y:-.555,w:.02,d:.024},{y:-.6,w:.017,d:.04},{y:-.66,w:.016,d:.044},{y:-.7,w:.013,d:.04},{y:-.745,w:.012,d:.034},{y:-.77,w:.01,d:.026},{y:-.78,w:.007,d:.014}];
+  const hand=[{y:-.55,w:.022,d:.026},{y:-.585,w:.021,d:.04},{y:-.64,w:.02,d:.046},{y:-.69,w:.017,d:.044},{y:-.73,w:.014,d:.036},{y:-.755,w:.009,d:.022},{y:-.762,w:.003,d:.006}];
   const leg=[
-    {y:.02,w:.06,d:.06},{y:0,w:(B?.09:.085),d:.09},{y:-.1,w:(B?.085:.08),d:.086,z:.006},{y:-.25,w:.066,d:.072,z:.004},
-    {y:-.4,w:.05,d:.054},{y:-.46,w:.05,d:.055,z:.007},{y:-.55,w:.053,d:.058,z:-.012},{y:-.7,w:.036,d:.04,z:-.004},{y:-.8,w:.029,d:.032},{y:-.845,w:.03,d:.033}
+    {y:.07,w:.05,d:.05},{y:.03,w:(B?.078:.074),d:.082},{y:0,w:(B?.084:.08),d:.088},{y:-.1,w:(B?.085:.08),d:.086,z:.006},{y:-.25,w:.066,d:.072,z:.004},
+    {y:-.4,w:.05,d:.054},{y:-.46,w:.05,d:.055,z:.007},{y:-.55,w:.053,d:.058,z:-.012},{y:-.7,w:.036,d:.04,z:-.004},{y:-.78,w:.029,d:.032},{y:-.825,w:.03,d:.033}
   ];
   const foot=[{y:0,w:.03,d:.034},{y:-.04,w:.038,d:.04,z:.004},{y:-.12,w:.044,d:.03,z:-.006},{y:-.2,w:.042,d:.02,z:-.015},{y:-.24,w:.031,d:.014,z:-.02},{y:-.255,w:.015,d:.008,z:-.022}];
   const neck=[{y:1.46,w:.058,d:.056},{y:1.6,w:.05,d:.05,z:-.006}];
@@ -247,7 +247,7 @@ function anatomy(){
     {y:1.69,w:.077,d:.098},{y:1.735,w:.079,d:.1,z:-.003},{y:1.775,w:.072,d:.092,z:-.006},{y:1.805,w:.052,d:.068,z:-.008},{y:1.823,w:.022,d:.03,z:-.008},{y:1.828,w:.001,d:.001,z:-.008}
   ];
   return{torso,arm,hand,leg,foot,neck,head,
-    joints:{armL:{pos:[sh,1.41,0],rz:.3},armR:{pos:[-sh,1.41,0],rz:-.3},legL:{pos:[.09,.92,0],rz:.02},legR:{pos:[-.09,.92,0],rz:-.02}},
+    joints:{armL:{pos:[sh,1.41,0],rz:.3},armR:{pos:[-sh,1.41,0],rz:-.3},legL:{pos:[.088,.9,0],rz:.025},legR:{pos:[-.088,.9,0],rz:-.025}},
     feet:{L:[.098,.045,-.06],R:[-.098,.045,-.06]}};
 }
 let A=anatomy();
@@ -288,26 +288,40 @@ const root=new THREE.Group();root.name='Heemsworld_Character';scene.add(root);
 const G={};for(const n of ['body','hair','socks','shoes','pants','shirt','jacket']){G[n]=new THREE.Group();G[n].name=n[0].toUpperCase()+n.slice(1);root.add(G[n])}
 function clear(g){g.traverse(o=>{if(o.geometry)o.geometry.dispose()});g.clear()}
 const skinMat=plain(SKINS[2],'Skin',.75);
+const faceCanvas=document.createElement('canvas');faceCanvas.width=faceCanvas.height=128;
+const faceTex=new THREE.CanvasTexture(faceCanvas);faceTex.colorSpace=THREE.SRGBColorSpace;faceTex.magFilter=faceTex.minFilter=THREE.NearestFilter;faceTex.generateMipmaps=false;
+const faceMat=new THREE.MeshStandardMaterial({...MAT_OPTS,map:faceTex,roughness:.75});faceMat.name='Face';
+function paintFace(){
+  // head UVs: u=0.5 is the front, v runs chin(0) -> crown(1); canvas y is flipped
+  const c=faceCanvas.getContext('2d'),S=128,skin=SKINS[state.skin];c.imageSmoothingEnabled=false;
+  c.fillStyle=skin;c.fillRect(0,0,S,S);
+  const V=y=>Math.round((1-(y-1.565)/(1.828-1.565))*S);
+  const ex=9,ey=V(1.712);
+  c.fillStyle=shade(skin,-.035);c.fillRect(64-14,ey-4,8,7);c.fillRect(64+6,ey-4,8,7); // soft eye sockets
+  for(const sx of [-1,1]){const x=64+sx*ex;
+    c.fillStyle='#f4f1ea';c.fillRect(x-4,ey-2,8,5);                     // eye white
+    c.fillStyle=EYES[state.eyes];c.fillRect(x-2,ey-2,4,5);              // iris
+    c.fillStyle='#0c0a09';c.fillRect(x-1,ey-1,2,3);                     // pupil
+    c.fillStyle='#ffffff';c.fillRect(x-2,ey-2,1,1);                     // catch-light
+    c.fillStyle=HAIRC[state.hairColor];c.fillRect(x-5,ey-7,10,2);c.fillRect(x+(sx>0?3:-5),ey-8,2,1); // brow
+  }
+  const ny=V(1.682);c.fillStyle=shade(skin,-.1);c.fillRect(61,ny+4,7,1); // nose shadow
+  const my=V(1.638);c.fillStyle=shade(skin,-.22);c.fillRect(59,my,10,1);c.fillStyle=shade(skin,-.1);c.fillRect(60,my+2,8,1); // mouth + lower lip
+  c.fillStyle=shade(skin,-.06);c.fillRect(0,V(1.585),S,4);                 // under-jaw shade
+  faceTex.needsUpdate=true;
+}
 
 /* ================= builders ================= */
 function buildBody(){
   clear(G.body);const B=G.body,s=skinMat;
   B.add(mesh(loft(A.torso,12),s,'Torso'));
   B.add(mesh(loft(A.neck,8,[false,false]),s,'Neck'));
-  B.add(mesh(loft(A.head,12),s,'Head'));
+  paintFace();B.add(mesh(loft(A.head,12),faceMat,'Head'));
   onLimbs(B,'arm',()=>{const g=new THREE.Group();g.add(mesh(loft(A.arm,8),s,'Arm'));g.add(mesh(loft(A.hand,6),s,'Hand'));
     const th=mesh(loft([{y:0,w:.011,d:.012},{y:-.045,w:.008,d:.009},{y:-.05,w:.002,d:.002}],5),s,'Thumb');th.position.set(0,-.585,.03);th.rotation.x=-.55;g.add(th);return g},'Arm');
   onLimbs(B,'leg',()=>mesh(loft(A.leg,8),s,'Leg'),'Leg');
   onFeet(B,()=>mesh(loft(A.foot,8),s,'Foot'),'Foot');
-  // face
-  const white=plain('#f4f1ea','EyeWhite',.5),iris=plain(EYES[state.eyes],'Iris',.4),brow=plain(HAIRC[state.hairColor],'Brow'),lip=plain(shade(SKINS[state.skin],-.14),'Lips');
-  for(const x of [.033,-.033]){
-    const e=mesh(new THREE.IcosahedronGeometry(.014,1),white,'Eye');e.position.set(x,1.712,.083);e.scale.set(1.2,.85,.6);B.add(e);
-    const p=mesh(new THREE.IcosahedronGeometry(.0085,0),iris,'Pupil');p.position.set(x,1.712,.093);p.scale.set(1,1,.5);B.add(p);
-    const b=mesh(new THREE.BoxGeometry(.03,.006,.01),brow,'Brow');b.position.set(x,1.738,.094);b.rotation.z=x>0?-.12:.12;B.add(b);
-  }
-  const nose=mesh(new THREE.ConeGeometry(.013,.034,4),s,'Nose');nose.position.set(0,1.682,.1);nose.rotation.set(Math.PI/2.4,0,Math.PI/4);B.add(nose);
-  const mouth=mesh(new THREE.BoxGeometry(.032,.006,.01),lip,'Mouth');mouth.position.set(0,1.637,.09);B.add(mouth);
+  const nose=mesh(new THREE.ConeGeometry(.013,.034,4),s,'Nose');nose.position.set(0,1.684,.097);nose.rotation.set(Math.PI/2+.35,Math.PI/4,0);B.add(nose);
   for(const x of [.079,-.079]){const ear=mesh(new THREE.BoxGeometry(.012,.038,.026),s,'Ear');ear.position.set(x,1.7,-.008);ear.rotation.y=x>0?.2:-.2;B.add(ear)}
 }
 function buildHair(){
@@ -329,15 +343,15 @@ function buildShirt(){
 }
 function buildPants(){
   clear(G.pants);if(!state.pants)return;const it=CAT.pants[state.pants-1],m=clothMat(it,'Pants'),o=.011;
-  const len={Jeans:-.83,Shorts:-.3,Capris:-.62}[it.cut];
-  G.pants.add(mesh(loft(sub(A.torso,.86,1.03,o),12,[true,false]),m,'PantsHips'));
+  const len={Jeans:-.81,Shorts:-.3,Capris:-.62}[it.cut];
+  G.pants.add(mesh(loft(sub(A.torso,.8,1.03,o),12,[true,false]),m,'PantsHips'));
   G.pants.add(mesh(loft(sub(A.torso,1.01,1.04,o+.004),12,[false,false]),plain(shade(it.c1,-.22),'Waistband'),'Waistband'));
-  onLimbs(G.pants,'leg',()=>mesh(loft(sub(A.leg,.02,len,o),8,[true,false]),m,'PantLeg'),'PantLeg');
+  onLimbs(G.pants,'leg',()=>mesh(loft(sub(A.leg,0,len,o),8,[false,false]),m,'PantLeg'),'PantLeg');
 }
 function buildSocks(){
   clear(G.socks);if(!state.socks)return;const it=CAT.socks[state.socks-1],m=clothMat(it,'Socks');
   const top={Ankle:-.79,Crew:-.66,'Knee-high':-.45}[it.cut];
-  onLimbs(G.socks,'leg',()=>mesh(loft(sub(A.leg,top,-.845,.004),8,[false,true]),m,'Sock'),'Sock');
+  onLimbs(G.socks,'leg',()=>mesh(loft(sub(A.leg,top,-.825,.004),8,[false,true]),m,'Sock'),'Sock');
   onFeet(G.socks,()=>mesh(loft(sub(A.foot,0,-.255,.004),8),m,'SockFoot'),'SockFoot');
 }
 function buildShoes(){
@@ -350,7 +364,7 @@ function buildShoes(){
     const s=mesh(loft(sub(A.foot,.01,-.258,off+.004,{d:-.02,z:-.018}),8),sole,'Sole');g.add(s);
     if(it.cut==='Sneakers'){const l=mesh(new THREE.BoxGeometry(.04,.06,.008),plain('#ffffff','Laces'),'Laces');l.position.set(0,-.09,.04);l.rotation.x=.35;g.add(l)}
     return g},'Shoe');
-  if(it.cut==='Boots')onLimbs(G.shoes,'leg',()=>mesh(loft(sub(A.leg,-.66,-.845,.018),8,[true,false]),m,'BootShaft'),'BootShaft');
+  if(it.cut==='Boots')onLimbs(G.shoes,'leg',()=>mesh(loft(sub(A.leg,-.66,-.825,.018),8,[true,false]),m,'BootShaft'),'BootShaft');
 }
 function buildJacket(){
   clear(G.jacket);if(!state.jacket)return;const it=CAT.jacket[state.jacket-1],m=clothMat(it,'Jacket'),o=.026;
@@ -469,7 +483,7 @@ function resize(){const w=stage.clientWidth,h=stage.clientHeight;renderer.setSiz
 new ResizeObserver(resize).observe(stage);resize();
 renderer.setAnimationLoop(()=>{controls.update();renderer.render(scene,camera)});
 buildAll();renderTabs();renderPane();
-window.__heems={root,state,CAT,buildAll};
+window.__heems={root,state,CAT,buildAll,camera,controls};
 </script>
 </body>
 </html>
