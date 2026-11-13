@@ -204,7 +204,7 @@ select.search{appearance:none;cursor:pointer}
   <main>
     <div id="stage">
       <div class="deco"></div>
-      <div id="empty"><span class="g">Your Heem starts blank — pick some clothes!</span></div>
+      <div id="empty"><span class="g">Your Heem starts in underwear — time to dress up!</span></div>
       <div id="status"><span class="g">Drag to spin · scroll to zoom · right-drag to move</span></div>
       <div class="viewbtns"><button data-v="front"><span class="g">Front</span></button><button data-v="side"><span class="g">Side</span></button><button data-v="back"><span class="g">Back</span></button><button data-v="face"><span class="g">Face</span></button><button data-v="feet"><span class="g">Feet</span></button></div>
     </div>
@@ -436,6 +436,7 @@ function TORSO_BUMP(a,y){
   return .042*side*v;
 }
 function loft(R,seg=10,caps=[true,true],opts={}){
+  if(R.some(r=>r.tb)&&state.frame===1&&R.some(r=>r.y>1.2&&r.y<1.42)){R=dense(R,3);seg=Math.max(seg,24)}
   const asc=R.at(-1).y>R[0].y,y0=Math.min(R[0].y,R.at(-1).y),y1=Math.max(R[0].y,R.at(-1).y),S=seg+1,P=[],U=[],I=[];
   const arc=opts.arc,jag=opts.jag||0;
   R.forEach((r,j)=>{for(let i=0;i<=seg;i++){
@@ -456,7 +457,7 @@ function loft(R,seg=10,caps=[true,true],opts={}){
 function mesh(geo,m,name){const o=new THREE.Mesh(geo,m);o.name=name;return o}
 
 /* ================= anatomy (stylised: long legs, narrow waist, slightly larger head) ================= */
-const state={hairP:0,hairCol:null,hairLen:1,hairVol:1,eyeW:1,eyeH:1,browY:0,browGap:0,browTilt:0,browThick:1,customMouth:false,eyeY:0,eyeGap:12,eyeSize:1,eyeTilt:0,mouthY:0,mouthX:0,mouthSize:1,noseY:0,noseSize:1,customEyes:false,eyeShape:0,brow:0,mouth:0,mark:0,style:'Toon',frame:0,skin:2,hair:0,hairColor:1,eyes:0,height:1,build:1,shirt:0,pants:0,jacket:0,shoes:0,socks:0};
+const state={underCol:'#f4f1ea',underwear:true,hairP:0,hairCol:null,hairLen:1,hairVol:1,eyeW:1,eyeH:1,browY:0,browGap:0,browTilt:0,browThick:1,customMouth:false,eyeY:0,eyeGap:12,eyeSize:1,eyeTilt:0,mouthY:0,mouthX:0,mouthSize:1,noseY:0,noseSize:1,customEyes:false,eyeShape:0,brow:0,mouth:0,mark:0,style:'Toon',frame:0,skin:2,hair:0,hairColor:1,eyes:0,height:1,build:1,shirt:0,pants:0,jacket:0,shoes:0,socks:0};
 const H0=1.585,HS=1.22,HV=1.08,HEADZ=.02,HY=y=>H0+(y-1.565)*HV;   // wider than tall = rounder anime head   // head-space helper (y measured on the original 1.565–1.828 head)
 const LEG_END=-.885;
 
@@ -781,7 +782,7 @@ const plinth=new THREE.Group();
 scene.add(plinth);
 
 const root=new THREE.Group();root.name='Heemsworld_Character';scene.add(root);
-const G={};for(const n of ['body','hair','socks','shoes','pants','shirt','jacket']){G[n]=new THREE.Group();G[n].name=n[0].toUpperCase()+n.slice(1);root.add(G[n])}
+const G={};for(const n of ['body','under','hair','socks','shoes','pants','shirt','jacket']){G[n]=new THREE.Group();G[n].name=n[0].toUpperCase()+n.slice(1);root.add(G[n])}
 function clear(g){const geos=new Set();g.traverse(o=>{if(o.geometry)geos.add(o.geometry)});geos.forEach(x=>x.dispose());g.clear()}
 function outline(g){
   if(state.style!=='Toon')return;
@@ -794,7 +795,7 @@ function buildBody(){
   clear(G.body);const B=G.body;
   const skin=plain(SKINS[state.skin],'Skin');
   const torsoM=mat({map:paintSkin('torso')},'SkinTorso'),armM=mat({map:paintSkin('arm')},'SkinArm'),legM=mat({map:paintSkin('leg')},'SkinLeg');
-  B.add(mesh(loft(dense(A.torso,2),20),torsoM,'Torso'));
+  B.add(mesh(loft(A.torso,20),torsoM,'Torso'));
   B.add(mesh(loft(A.neck,8,[false,false]),skin,'Neck'));
   paintFace();
   // nose: ramps out from under the eyes to a point at 3/4 head height, tucks back in just below, then the face line runs on to the chin
@@ -931,11 +932,12 @@ function dense(R,n=3){const out=[];for(let i=0;i<R.length-1;i++){for(let k=0;k<n
 // torso: below the chest, cloth falls straight from the chest/shoulders (never pulls in at the waist), with optional flare
 function drapeTorso(R,off,flare=0,ease=.97){
   const chest=A.torso.filter(r=>r.y>1.2&&r.y<1.45).reduce((a,r)=>r.w>a.w?r:a);
-  const ymin=Math.min(...R.map(r=>r.y));
+  const cF=(chest.z||0)+chest.d,cB=(chest.z||0)-chest.d,ymin=Math.min(...R.map(r=>r.y));
   return dense(R).map(r=>{
     if(r.y>=chest.y)return{...r,w:r.w+off,d:r.d+off};
-    const t=(chest.y-r.y)/(chest.y-ymin||1);
-    return{...r,w:Math.max(r.w,chest.w*ease)+off+flare*t,d:Math.max(r.d,chest.d*ease)+off+flare*t*.75,z:(r.z||0)*(1-t)+(chest.z||0)*t*.5};
+    const t=(chest.y-r.y)/(chest.y-ymin||1),z=r.z||0;
+    const front=Math.max(z+r.d,cF*ease)+off+flare*t*.75,back=Math.min(z-r.d,cB*ease)-off-flare*t*.75;   // hang from the chest at the front, cover the rear at the back
+    return{...r,w:Math.max(r.w,chest.w*ease)+off+flare*t,d:(front-back)/2,z:(front+back)/2};
   });
 }
 // limbs: radius follows a loose profile from the shoulder/thigh down; cuff=true gathers the last bit
@@ -955,7 +957,7 @@ function buildShirt(){
   clear(G.shirt);if(!state.shirt)return;const it=itemOf('shirt',state.shirt),m=clothMatDS(it,'Shirt'),o=.01;
   if(it.y2k){y2kShirt(it,m);outline(G.shirt);return}
   const hem=it.cut==='Tank'?.98:.95;
-  G.shirt.add(mesh(loft(drapeTorso(sub(A.torso,hem,1.54,0),o,.012),14,[false,false],{...CLOTH,seed:1}),m,'ShirtBody'));
+  G.shirt.add(mesh(loft(drapeTorso(sub(A.torso,hem,1.54,0),o,.012).map(r=>r.y<1.12?{...r,w:r.w+.012,d:r.d+.012}:r),14,[false,false],{...CLOTH,seed:1}),m,'ShirtBody'));
   {const a=ringAt(A.torso,1.532),b=ringAt(A.torso,1.552);G.shirt.add(mesh(loft([{...a,w:a.w+o+.004,d:a.d+o+.004},{...b,y:1.552,w:b.w+o+.006,d:b.d+o+.006}],12,[false,false]),plain(shade(it.c1,-.15),'Collar'),'Collar'))}
   if(it.cut!=='Tank'){
     const ref=ringAt(A.arm,-.02);
@@ -973,7 +975,7 @@ function buildPants(){
   const hipW=Math.max(...A.torso.filter(r=>r.y<1.05).map(r=>r.w)),hipD=Math.max(...A.torso.filter(r=>r.y<1.05).map(r=>r.d));
   // loose seat: below the waistband the fabric sits out at hip width; the crotch drops a little
   const seat=dense(sub(A.torso,.86,1.09,0)).map(r=>r.y>1.02?{...r,w:r.w+o,d:r.d+o}:{...r,w:Math.max(r.w,hipW*(r.y<.9?.82:.99))+o,d:Math.max(r.d,hipD*(r.y<.9?.86:.99))+o});
-  seat[0]={...seat[0],y:.84,w:.1,d:.07};
+  seat[0]={...seat[0],y:.84,w:Math.max(.1,seat[1].w*.62),d:Math.max(.07,seat[1].d*.7)};
   G.pants.add(mesh(loft(seat,14,[true,false],{...CLOTH,seed:3}),m,'PantsSeat'));
   G.pants.add(mesh(loft(sub(A.torso,1.07,1.1,o+.004),12,[false,false]),plain(shade(it.c1,-.22),'Waistband'),'Waistband'));
   const ref=ringAt(A.leg,-.06);
@@ -1002,6 +1004,30 @@ function buildShoes(){
   if(it.cut==='Boots')onLimbs(G.shoes,'leg',()=>mesh(loft(sub(A.leg,-.7,LEG_END,.018),8,[true,false]),m,'BootShaft'),'BootShaft');
   outline(G.shoes);
 }
+/* ================= underwear (base layer: boxer briefs / bra + briefs) ================= */
+const UNDER_COLS=[['White','#f4f1ea'],['Black','#1d1d1f'],['Gray','#9a9ca3'],['Pink','#f6a6c8'],['Baby Blue','#a9d8f5'],['Lilac','#c9a7f0'],['Nude','#d9b49a'],['Red','#c8323c']];
+function buildUnder(){
+  clear(G.under);if(!state.underwear)return;
+  const U=G.under,col=state.underCol,m=mat({color:col,side:THREE.DoubleSide},'Underwear'),trim=plain(shade(col,col==='#1d1d1f'?.18:-.14),'UnderwearTrim'),o=.0035;
+  if(state.frame===0){
+    // boxer briefs ("drawers"): waist to mid-thigh with a band
+    U.add(mesh(loft(sub(A.torso,.86,1.03,o),20,[true,false]),m,'Boxers'));
+    U.add(mesh(loft(sub(A.torso,1.01,1.035,o+.003),20,[false,false]),trim,'Waistband'));
+    onLimbs(U,'leg',()=>{const g=new THREE.Group();g.add(mesh(loft(sub(A.leg,.04,-.17,o),12,[false,false]),m,'BoxerLeg'));g.add(mesh(loft(sub(A.leg,-.155,-.17,o+.002),12,[false,false]),trim,'LegBand'));return g},'BoxerLeg');
+  }else{
+    // briefs
+    U.add(mesh(loft(sub(A.torso,.86,.99,o),20,[true,false]),m,'Briefs'));
+    U.add(mesh(loft(sub(A.torso,.975,.995,o+.002),20,[false,false]),trim,'BriefsBand'));
+    onLimbs(U,'leg',()=>mesh(loft(sub(A.leg,.04,-.005,o),12,[false,false]),m,'BriefsLeg'),'BriefsLeg');
+    // bra: follows the chest shape, with an under-band and shoulder straps
+    U.add(mesh(loft(sub(A.torso,1.235,1.385,o),20,[false,false]),m,'Bra'));
+    U.add(mesh(loft(sub(A.torso,1.225,1.25,o+.003),20,[false,false]),trim,'BraBand'));
+    const nk=ringAt(A.torso,1.5);
+    for(const sx of [-1,1]){const f=onRing(A.torso,1.385,sx*.5,o+.002),b=onRing(A.torso,1.385,sx*(Math.PI-.55),o+.002);
+      U.add(mesh(cord([f,[sx*nk.w*.72,1.5,(nk.z||0)+nk.d*.55],[sx*nk.w*.78,1.515,(nk.z||0)],[sx*nk.w*.72,1.5,(nk.z||0)-nk.d*.6],b],.004),trim,'BraStrap'))}
+  }
+  outline(U);
+}
 /* ================= Y2K pieces ================= */
 const sideOf=k=>k.endsWith('L')?1:-1;
 function trimRing(y0,y1,off,col,name,arc){return mesh(loft(sub(A.torso,y0,y1,off),14,[false,false],arc?{arc}:{}),plain(col,name),name)}
@@ -1028,14 +1054,14 @@ function y2kPants(it,m){
   const Pn=G.pants,o=.01,band=plain(shade(it.c1,-.22),'Waistband');
   const hipW=Math.max(...A.torso.filter(r=>r.y<1.05).map(r=>r.w)),hipD=Math.max(...A.torso.filter(r=>r.y<1.05).map(r=>r.d));
   if(it.cut==='Pleated Mini'){                               // pleated skirt flaring out from the waist
-    const top=ringAt(A.torso,1.04),rings=[{...top,y:1.04,w:top.w+o,d:top.d+o},{y:.98,w:hipW+o,d:hipD+o,z:-.012},{y:.88,w:hipW*1.22,d:hipD*1.22,z:-.012},{y:.79,w:hipW*1.36,d:hipD*1.34,z:-.01}];
+    const top=ringAt(A.torso,1.04),hp=ringAt(A.torso,.97),hz=hp.z||0,rings=[{...top,y:1.04,w:top.w+o,d:top.d+o},{y:.98,w:hipW+o+.006,d:hipD+o+.008,z:hz},{y:.88,w:hipW*1.22,d:(hipD+o)*1.22,z:hz},{y:.79,w:hipW*1.36,d:(hipD+o)*1.34,z:hz*.8}];
     Pn.add(mesh(loft(dense(rings,3),24,[false,false],{pleat:.06}),m,'PleatedMini'));
     Pn.add(mesh(loft(sub(A.torso,1.025,1.05,o+.006),14,[false,false]),band,'Waistband'));
     return;
   }
   // low-rise: the waistband sits on the hips
   const seat=dense(sub(A.torso,.86,1.0,0)).map(r=>({...r,w:Math.max(r.w,hipW*(r.y<.9?.82:.99))+o,d:Math.max(r.d,hipD*(r.y<.9?.86:.99))+o}));
-  seat[0]={...seat[0],y:.84,w:.1,d:.07};
+  seat[0]={...seat[0],y:.84,w:Math.max(.1,seat[1].w*.62),d:Math.max(.07,seat[1].d*.7)};
   Pn.add(mesh(loft(seat,14,[true,false],{...CLOTH,seed:3}),m,'LowRiseSeat'));
   Pn.add(mesh(loft(sub(A.torso,.985,1.01,o+.006),14,[false,false]),band,'Waistband'));
   const ref=ringAt(A.leg,-.06),cargo=it.cut==='Cargo Pants';
@@ -1108,7 +1134,7 @@ function buildJacket(){
   const trimCol=shade(it.c1,-.22),trim=plain(trimCol,'JacketTrim'),rib=clothMatDS({...it,cut:'Hoodie',pattern:'Solid',c1:shade(it.c1,-.1),name:it.name+' rib',seed:it.seed+5},'Rib');
   const hood=it.cut==='Hoodie',bomber=it.cut==='Bomber',trench=it.cut==='Trench';
   let body=drapeTorso(sub(A.torso,bomber?1.0:.93,1.535,0),o,hood?.016:.006,1.0);   // boxy: hangs from the shoulders
-  if(trench){const b=body[0];body=[{...b,y:.56,w:b.w+.075,d:b.d+.06},{...b,y:.76,w:b.w+.045,d:b.d+.035},...body]}
+  if(trench){const b=body[0];body=[{...b,y:.56,w:b.w+.075,d:b.d+.065},{...b,y:.76,w:b.w+.045,d:b.d+.04},...body]}
   const ys=body.map(r=>r.y),yb=Math.min(...ys),yt=Math.max(...ys);
   // open front for bomber/trench (shows the shirt), closed for the hoodie
   const gap=hood?0:(bomber?.07:.16),arc=gap?[gap,2*P-gap]:undefined;
@@ -1163,7 +1189,7 @@ function buildJacket(){
   }
   outline(J);
 }
-const BUILD={hair:buildHair,shirt:buildShirt,pants:buildPants,jacket:buildJacket,shoes:buildShoes,socks:buildSocks};
+const BUILD={under:buildUnder,hair:buildHair,shirt:buildShirt,pants:buildPants,jacket:buildJacket,shoes:buildShoes,socks:buildSocks};
 function buildAll(){A=anatomy();buildBody();for(const k in BUILD)BUILD[k]();applyShape();updateWear()}
 function applyShape(){root.scale.set(state.build,state.height,state.build);root.position.y=shoeLift()*state.height}
 
@@ -1359,6 +1385,9 @@ function renderPane(){
     pane.appendChild(chips('Render style',STYLES,'style',buildAll,true));
     pane.appendChild(chips('Gender',FRAMES,'frame',buildAll));
     pane.appendChild(swatches('Skin tone',SKINS,'skin',buildBody));
+    {const r=el(`<div class="row"><label>${gl('Underwear')}</label><div class="sw"></div></div>`);
+     UNDER_COLS.forEach(([n,c])=>{const b=el(`<button title="${n}" style="background:${c}" class="${state.underwear&&state.underCol===c?'on':''}"></button>`);b.onclick=()=>{state.underwear=true;state.underCol=c;buildUnder();renderPane()};r.lastChild.appendChild(b)});
+     pane.appendChild(r)}
     pane.appendChild(el(`<p class="hint">Hair has its own tab on the left — 1,000 styles.</p>`));
     pane.appendChild(slider('Height','height',.9,1.1));
     pane.appendChild(slider('Build','build',.88,1.18));
