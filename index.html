@@ -369,7 +369,7 @@ function anatomy(){
   const foot0=[{y:0,w:.028,d:.032},{y:-.04,w:.036,d:.038,z:.004},{y:-.12,w:.042,d:.028,z:-.006},{y:-.2,w:.04,d:.019,z:-.015},{y:-.24,w:.03,d:.013,z:-.02},{y:-.255,w:.014,d:.007,z:-.022}];const foot=foot0.map(r=>({...r,y:r.y*.86,w:r.w*.88,d:r.d*.86,z:r.z?r.z*.86:0}));
   const neck=B?[{y:1.52,w:.04,d:.041,z:-.026},{y:1.58,w:.035,d:.037,z:-.018},{y:1.67,w:.033,d:.036,z:-.008}]:[{y:1.52,w:.047,d:.048,z:-.026},{y:1.58,w:.042,d:.044,z:-.018},{y:1.67,w:.039,d:.042,z:-.008}];
   const head=[
-    [1.562,.005,.003,.044],[1.568,.018,.008,.044],[1.578,.03,.015,.041],[1.59,.041,.024,.036],[1.598,.047,.03,.033],[1.608,.054,.036,.028],[1.617,.06,.042,.023],[1.632,.067,.0505,.0155],[1.645,.072,.0695,-.0015],[1.66,.078,.0802,-.0102],[1.698,.084,.0942,-.0202],[1.731,.086,.1,-.02],[1.76,.082,.0957,-.02],[1.79,.07,.0807,-.02],[1.81,.053,.0613,-.02],[1.825,.03,.0346,-.02],[1.831,.001,.001,-.02]
+    [1.562,.006,.003,.044],[1.568,.019,.008,.044],[1.578,.032,.015,.041],[1.59,.045,.024,.036],[1.598,.053,.03,.033],[1.608,.061,.036,.028],[1.617,.068,.042,.023],[1.632,.077,.0505,.0155],[1.645,.08,.0695,-.0015],[1.66,.082,.0802,-.0102],[1.698,.084,.0942,-.0202],[1.731,.086,.1,-.02],[1.76,.082,.0957,-.02],[1.79,.07,.0807,-.02],[1.81,.053,.0613,-.02],[1.825,.03,.0346,-.02],[1.831,.001,.001,-.02]
   ].map(([y,w,d,z])=>({y:HY(y),w:(w+(!B&&y>1.59&&y<1.66?.007:0))*HS,d:d*HS,z:z*HS+HEADZ}));  // boys: slightly squarer jaw
   return{torso,arm,hand,leg,foot,neck,head,
     joints:{armL:{pos:[sh,1.47,0],rz:.3},armR:{pos:[-sh,1.47,0],rz:-.3},legL:{pos:[.088,.96,0],rz:.025},legR:{pos:[-.088,.96,0],rz:-.025}},
@@ -415,19 +415,19 @@ const EYE_P={
   Sharp:{w:15,h:7,slope:2,ih:7,wing:1},Cat:{w:14,h:9,slope:2,ih:9,slit:1,wing:2},Droopy:{w:14,h:10,slope:-2,ih:9},
   Sparkle:{w:14,h:13,slope:0,ih:11,sparkle:1},Happy:{closed:1}
 };
-function eyeBox(sx,P,dx){const t=dx*sx/(P.w/2),shift=P.slope*t,round=Math.abs(t)>.72?2:0;
+function eyeBox(sx,P,dx){const t=dx*sx/(P.w*1.3/2),shift=P.slope*t,round=Math.abs(t)>.72?2:0;
   return{top:-P.h/2-shift+round,bot:P.h/2-shift*.5-round}}
 function drawEyes(c,ey,skin){
   const P=EYE_P[EYE_SHAPES[state.eyeShape]],ir=EYES[state.eyes],lash='#1a120e',girl=state.frame===1,thick=girl?3:2;
-  for(const sx of [-1,1]){const x=64+sx*12;
-    if(P.closed){c.fillStyle=lash;for(let dx=-6;dx<=6;dx++){const y=Math.round(ey-3+Math.abs(dx)*.55);c.fillRect(x+dx,y,1,2)}
+  for(const sx of [-1,1]){const x=64+sx*15;
+    if(P.closed){c.fillStyle=lash;for(let dx=-8;dx<=8;dx++){const y=Math.round(ey-3+Math.abs(dx)*.45);c.fillRect(x+dx,y,1,2)}
       if(girl){c.fillRect(x+sx*7,ey,2,1);c.fillRect(x+sx*8,ey+1,1,1)}continue}
-    const hw=Math.floor(P.w/2),ix=x-sx;
+    const hw=Math.floor(P.w*1.3/2),ix=x-sx;
     for(let dx=-hw;dx<=hw;dx++){const b=eyeBox(sx,P,dx),top=Math.round(ey+b.top+(P.lid||0)),bot=Math.round(ey+b.bot);
       if(bot<=top)continue;
       c.fillStyle='#f8f6f2';c.fillRect(x+dx,top,1,bot-top);
       const cx=x+dx;
-      if(cx>=ix-4&&cx<=ix+3){                                                   // iris column
+      if(cx>=ix-5&&cx<=ix+4){                                                   // iris column (wider)
         const it=Math.max(top,Math.round(ey-P.ih/2)),ib=Math.min(bot,Math.round(ey+P.ih/2));
         if(ib>it){const g=c.createLinearGradient(0,it,0,ib);g.addColorStop(0,shade(ir,-.25));g.addColorStop(.55,ir);g.addColorStop(1,shade(ir,.22));c.fillStyle=g;c.fillRect(cx,it,1,ib-it)}
       }
@@ -448,7 +448,7 @@ function drawEyes(c,ey,skin){
     if(wing){const b=eyeBox(sx,P,sx*hw),wx=x+sx*hw,wy=Math.round(ey+b.top+(P.lid||0))-thick+1;c.fillStyle=lash;
       for(let k=1;k<=wing+1;k++)c.fillRect(wx+sx*k-(sx<0?0:0),wy-k,2,1)}
     // blush under eyes (girls by default)
-    if(girl||MARKS[state.mark]==='Rosy'){c.fillStyle=mix(skin,'#ff8a8a',.35);c.globalAlpha=MARKS[state.mark]==='Rosy'?.7:.4;c.fillRect(x-5+sx*2,ey+9,9,2);c.globalAlpha=1}
+    if(girl||MARKS[state.mark]==='Rosy'){c.fillStyle=mix(skin,'#ff8a8a',.35);c.globalAlpha=MARKS[state.mark]==='Rosy'?.7:.4;c.fillRect(x-6+sx*2,ey+9,11,2);c.globalAlpha=1}
   }
 }
 function drawBrows(c,ey,skin){
@@ -456,8 +456,8 @@ function drawBrows(c,ey,skin){
   const prof={Soft:t=>-Math.round((1-t*t)*1.5),Straight:t=>0,Thick:t=>-Math.round((1-t*t)),Arched:t=>-Math.round((1-Math.abs(t-.2))*3),Fierce:t=>Math.round((1-t)*2.2)-1,Worried:t=>-Math.round((1-t)*2.2)+1}[st];
   const th=st==='Thick'?3:(girl&&st!=='Fierce'?1:2);
   c.fillStyle=col;
-  for(const sx of [-1,1]){const x=64+sx*12,by=ey-15;
-    for(let dx=-6;dx<=6;dx++){const t=(dx*sx+6)/12;c.fillRect(x+dx,by+prof(t*2-1),1,th)}}   // t: 0 = inner end, 1 = outer
+  for(const sx of [-1,1]){const x=64+sx*15,by=ey-15;
+    for(let dx=-7;dx<=7;dx++){const t=(dx*sx+7)/14;c.fillRect(x+dx,by+prof(t*2-1),1,th)}}   // t: 0 = inner end, 1 = outer
 }
 function drawMouth(c,my,skin){
   const st=MOUTHS[state.mouth],girl=state.frame===1,lip=mix(skin,'#c0505c',girl?.45:.18),line=shade(lip,-.3),inside='#5a1f26',tongue='#e07a86';
