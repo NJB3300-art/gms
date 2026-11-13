@@ -471,68 +471,61 @@ function hairShell(yTop,yBot,off0,off1,arc,jag,extraZ=0){
     rings.push({y,w:Math.max(r.w,wMax*(1-.04*t))+o,d:Math.max(r.d,dMax*(1-.1*t))+o,z:(r.z||0)*(1-t)+extraZ*t})}
   return loft(rings,20,[false,false],{arc,jag});
 }
+/* ---------- anime hair: painted strands + clumps ---------- */
+const hairTexCache=new Map();
+function hairTex(col){
+  if(hairTexCache.has(col))return hairTexCache.get(col);
+  const c=document.createElement('canvas');c.width=64;c.height=128;const x=c.getContext('2d'),r=rng(col.length*97+parseInt(col.slice(1),16)%999);
+  const g=x.createLinearGradient(0,0,0,128);g.addColorStop(0,shade(col,.04));g.addColorStop(1,shade(col,-.12));x.fillStyle=g;x.fillRect(0,0,64,128);
+  for(let i=0;i<26;i++){x.fillStyle=`rgba(0,0,0,${.08+r()*.1})`;x.fillRect(Math.floor(r()*64),0,1,128)}           // strand lines
+  for(let i=0;i<10;i++){x.fillStyle=`rgba(255,255,255,${.05+r()*.06})`;x.fillRect(Math.floor(r()*64),0,1,128)}
+  x.fillStyle=shade(col,.13);for(let i=0;i<64;i+=2){const h=3+Math.floor(r()*6);x.fillRect(i,23+Math.floor(r()*3),2,h)}  // soft shine band ("angel ring")
+  const t=canvasTex(c,true);hairTexCache.set(col,t);return t;
+}
 function buildHair(){
   clear(G.hair);const st=HAIRS[state.hair];if(st==='None')return;
-  const m=mat({color:HAIRC[state.hairColor],side:THREE.DoubleSide},'Hair'),H=G.hair,R=A.head,top=R.at(-1).y,P=Math.PI;
-  const cap=(from,off)=>mesh(loft(sub(R,HY(from),top,off),14,[false,true]),m,'HairCap');
-  const fringe=(to,swept=0)=>mesh(hairShell(HY(1.8),HY(to+.03),.02,.026,[-1.1+swept,1.1+swept],.022),m,'Fringe');
-  if(st==='Buzz'){H.add(cap(1.722,.005));outline(H);return}
-  if(st==='Bob'){H.add(cap(1.735,.017));H.add(mesh(hairShell(HY(1.77),HY(1.605),.019,.034,[.8,2*P-.8],.026),m,'BobShell'));H.add(fringe(1.735))}
-  if(st==='Pixie'){H.add(cap(1.735,.016));H.add(mesh(hairShell(HY(1.77),HY(1.66),.017,.022,[.95,2*P-.95],.024),m,'PixieBack'));H.add(fringe(1.742,.35))}
-  if(st==='Long'){H.add(cap(1.735,.017));H.add(mesh(hairShell(HY(1.77),1.42,.019,.05,[.85,2*P-.85],.04,-.05),m,'LongShell'));H.add(fringe(1.73,-.2))}
-  if(st==='Bun'){H.add(cap(1.7,.01));const b=mesh(new THREE.IcosahedronGeometry(.05,1),m,'Bun');b.position.set(0,HY(1.8),-.095);H.add(b)}
-  if(st==='Puff'){const p=mesh(new THREE.IcosahedronGeometry(.145,1),m,'Puff');p.position.set(0,HY(1.775),-.02);p.scale.set(1,.88,1);H.add(p)}
-  // point on the head surface at angle a (0 = front) and original-head height y
-  const onHead=(a,y,out=0)=>{const r=ringAt(R,HY(y));return[Math.sin(a)*(r.w+out),HY(y),Math.cos(a)*(r.d+out)+(r.z||0)]};
-  // a tube that starts at p and travels along dir with drift, as merged-friendly geometry
+  const col=HAIRC[state.hairColor],m=mat({map:hairTex(col),side:THREE.DoubleSide},'Hair'),H=G.hair,R=A.head,top=R.at(-1).y,P=Math.PI;
+  const r=rng(state.hair*31+7);
+  const onHead=(a,y,out=0)=>{const q=ringAt(R,HY(y));return[Math.sin(a)*(q.w+out),HY(y),Math.cos(a)*(q.d+out)+(q.z||0)]};
+  const cap=(from,off)=>loft(sub(R,HY(from),top,off),16,[false,true]);
+  // one clump: a flat, pointed lock that starts at angle a on the head and hangs down, bulging out then curling in/out
+  function clump(a,y,len,{w=.05,th=.018,out=.012,bulge=.014,sweep=0,curl=0,up=0}={}){
+    const n=7,rs=[];
+    for(let i=0;i<=n;i++){const t=i/n;
+      rs.push({y:-len*t+up*t*t,w:Math.max(.002,w*Math.pow(1-t,.75)),d:Math.max(.0015,th*(1-.7*t)),x:sweep*t*t,z:out*t+bulge*Math.sin(P*t)+curl*t*t})}
+    const g=loft(rs,6,[true,false]);const p=onHead(a,y,.008);
+    g.applyMatrix4(new THREE.Matrix4().compose(new THREE.Vector3(...p),new THREE.Quaternion().setFromEuler(new THREE.Euler(0,a,0)),new THREE.Vector3(1,1,1)));
+    return g;
+  }
+  const ring=(a0,a1,n,y,len,o={},jit=.25)=>{const gs=[];for(let i=0;i<n;i++){const a=a0+(a1-a0)*(n===1?.5:i/(n-1));gs.push(clump(a,y,len*(1-jit/2+r()*jit),{...o,sweep:(o.sweep||0)+(r()-.5)*.012}))}return gs};
+  const fringe=(n=7,len=.085,sweep=0,spread=.95)=>ring(-spread,spread,n,1.825,len,{w:.048,th:.016,out:.004,bulge:.012,sweep,curl:.004},.35);
+  const done=(geos,name)=>{H.add(mesh(mergeGeometries(geos),m,name));geos.forEach(x=>x.dispose())};
   const tube=(p,len,r0,r1,dx,dz,steps=6,seg=6)=>{const rs=[];for(let i=0;i<=steps;i++){const t=i/steps;rs.push({y:p[1]-len*t,w:r0+(r1-r0)*t,d:r0+(r1-r0)*t,x:p[0]+dx*t*t,z:p[2]+dz*t})}return loft(rs,seg)};
-  const merged=(geos,name)=>{const g=mergeGeometries(geos);geos.forEach(x=>x.dispose());return mesh(g,m,name)};
-  if(st==='Wolf Cut'){
-    H.add(cap(1.725,.024));
-    H.add(mesh(hairShell(HY(1.8),HY(1.67),.024,.036,[.7,2*P-.7],.034),m,'WolfLayer1'));
-    H.add(mesh(hairShell(HY(1.72),HY(1.555),.03,.05,[1.5,2*P-1.5],.04,-.025),m,'WolfMullet'));
-    H.add(mesh(hairShell(HY(1.82),HY(1.715),.026,.032,[-1.15,1.15],.03),m,'WolfFringe'));
-  }
-  if(st==='Curtains'){
-    H.add(cap(1.735,.017));H.add(mesh(hairShell(HY(1.77),HY(1.62),.019,.03,[.85,2*P-.85],.02),m,'CurtainBack'));
-    H.add(mesh(hairShell(HY(1.81),HY(1.64),.022,.032,[.5,1.45],.024),m,'CurtainL'));
-    H.add(mesh(hairShell(HY(1.81),HY(1.64),.022,.032,[-1.45,-.5],.024),m,'CurtainR'));
-  }
-  if(st==='Ponytail'){
-    H.add(cap(1.715,.013));H.add(mesh(hairShell(HY(1.8),HY(1.745),.016,.02,[-1,1],.014),m,'Fringe'));
-    const p=onHead(P,1.77,.01);H.add(mesh(tube([p[0],p[1],p[2]-.01],.36,.034,.012,0,-.06,8,8),m,'Ponytail'));
-    const band=mesh(new THREE.TorusGeometry(.03,.009,6,10),plain(shade(HAIRC[state.hairColor],-.25),'HairTie'),'HairTie');band.position.set(p[0],p[1]-.02,p[2]-.012);band.rotation.x=Math.PI/2;H.add(band);
-  }
-  if(st==='Twin Tails'){
-    H.add(cap(1.72,.014));H.add(fringe(1.735));
-    for(const sx of [-1,1]){const p=onHead(sx*P*.62,1.79,.012);H.add(mesh(tube(p,.42,.034,.01,sx*.07,-.03,8,8),m,'TwinTail'))}
-  }
-  if(st==='Space Buns'){
-    H.add(cap(1.715,.013));H.add(fringe(1.74));
-    for(const sx of [-1,1]){const b=mesh(new THREE.IcosahedronGeometry(.055,1),m,'SpaceBun');const p=onHead(sx*1.15,1.81,.02);b.position.set(...p);H.add(b)}
-  }
-  if(st==='Braids'){
-    H.add(cap(1.715,.014));H.add(mesh(hairShell(HY(1.81),HY(1.735),.018,.022,[-1.05,1.05],.016),m,'Fringe'));
-    const geos=[];
-    for(const sx of [-1,1]){const p=onHead(sx*P*.58,1.69,.01);
-      for(let i=0;i<9;i++){const g=new THREE.IcosahedronGeometry(.024-i*.0011,0);g.translate(p[0]+sx*.006*(i%2?1:-1),p[1]-i*.038,p[2]-.01);geos.push(g)}}
-    H.add(merged(geos,'Braids'));
-  }
-  if(st==='Dreads'){
-    H.add(cap(1.715,.016));
-    const geos=[],r=rng(state.hairColor*13+7);
-    for(let i=0;i<26;i++){const a=.55+i/25*(2*P-1.1),row=i%2;
-      const p=onHead(a,1.78-row*.05,.014),len=.26+r()*.12-(Math.abs(Math.sin(a))>.9?.04:0);
-      geos.push(tube(p,len,.013,.009,Math.sin(a)*.025,Math.cos(a)*.025-.01,6,5))}
-    for(let i=0;i<7;i++){const a=-.55+i/6*1.1,p=onHead(a,1.8,.014);geos.push(tube(p,.07+r()*.03,.012,.009,Math.sin(a)*.02,.03,4,5))}
-    H.add(merged(geos,'Dreads'));
-  }
-  if(st==='Mohawk'){
-    H.add(cap(1.722,.004));
-    for(let i=0;i<7;i++){const a=-.45+i/6*1.9,c=mesh(new THREE.ConeGeometry(.035,.1,4),m,'MohawkSpike');
-      const y=HY(1.8)+Math.cos(a)*.05,z=Math.sin(a)*.09-.01;c.position.set(0,y,z);c.rotation.x=a*.8;c.scale.set(.4,1,1);H.add(c)}
-  }
-  if(st==='Spiky'){H.add(cap(1.73,.012));for(let i=0;i<10;i++){const a=(i/10-.5)*P*1.5,c=mesh(new THREE.ConeGeometry(.032,.09,4),m,'Spike');c.position.set(Math.sin(a)*.055,HY(1.815),Math.cos(a)*.055-.02);c.rotation.set(Math.cos(a)*.65,0,-Math.sin(a)*.65);H.add(c)}}
+  let G2=[];
+  if(st==='Buzz'){G2=[cap(1.722,.006)]}
+  if(st==='Bob'){G2=[cap(1.7,.022),...ring(.8,2*P-.8,15,1.79,.19,{w:.056,out:.014,bulge:.016,curl:-.012}),...fringe(7,.085)]}
+  if(st==='Pixie'){G2=[cap(1.7,.022),...ring(.85,2*P-.85,13,1.8,.11,{w:.05,out:.016,bulge:.012}),...fringe(6,.09,.04,.9)]}
+  if(st==='Long'){G2=[cap(1.7,.022),...ring(.85,2*P-.85,16,1.79,.42,{w:.058,out:.02,bulge:.02,curl:-.03}),...ring(1.5,2*P-1.5,7,1.74,.36,{w:.05,out:.03,bulge:.015}),...fringe(7,.08,-.01)]}
+  if(st==='Wolf Cut'){G2=[cap(1.7,.026),...ring(0,2*P,18,1.84,.1,{w:.05,out:.03,bulge:.02,up:.02}),...ring(.7,2*P-.7,14,1.77,.13,{w:.05,out:.02,bulge:.018}),...ring(1.6,2*P-1.6,8,1.7,.2,{w:.048,out:.012,bulge:.012,curl:.012}),...fringe(8,.09,0,1.05)]}
+  if(st==='Curtains'){G2=[cap(1.7,.022),...ring(.95,2*P-.95,13,1.79,.17,{w:.054,out:.014,bulge:.014}),
+      ...[1,-1].flatMap(sx=>ring(sx*.12,sx*1.0,5,1.83,.15,{w:.05,th:.016,out:.008,bulge:.014,sweep:sx*.03},.2))]}
+  if(st==='Ponytail'){G2=[cap(1.7,.016),...fringe(6,.07)];const p=onHead(P,1.77,.012);G2.push(tube([p[0],p[1],p[2]-.012],.38,.036,.012,0,-.07,9,8));
+    const band=mesh(new THREE.TorusGeometry(.032,.009,6,10),plain(shade(col,-.3),'HairTie'),'HairTie');band.position.set(p[0],p[1]-.02,p[2]-.014);band.rotation.x=P/2;H.add(band)}
+  if(st==='Twin Tails'){G2=[cap(1.7,.016),...fringe(7,.08)];for(const sx of [-1,1]){const p=onHead(sx*P*.62,1.79,.014);G2.push(tube(p,.44,.036,.01,sx*.08,-.03,9,8))}}
+  if(st==='Space Buns'){G2=[cap(1.7,.016),...fringe(7,.075)];for(const sx of [-1,1]){const b=new THREE.IcosahedronGeometry(.058,1);const p=onHead(sx*1.15,1.81,.022);b.translate(...p);G2.push(b)}}
+  if(st==='Bun'){G2=[cap(1.7,.014)];const b=new THREE.IcosahedronGeometry(.055,1);b.translate(0,HY(1.8),-.1);G2.push(b)}
+  if(st==='Puff'){const b=new THREE.IcosahedronGeometry(.15,1);b.scale(1,.88,1);b.translate(0,HY(1.775),-.02);G2=[b]}
+  if(st==='Braids'){G2=[cap(1.7,.016),...fringe(7,.075)];for(const sx of [-1,1]){const p=onHead(sx*P*.58,1.69,.012);
+      for(let i=0;i<9;i++){const g=new THREE.IcosahedronGeometry(.025-i*.0011,0);g.translate(p[0]+sx*.006*(i%2?1:-1),p[1]-i*.038,p[2]-.01);G2.push(g)}}}
+  if(st==='Dreads'){G2=[cap(1.7,.018)];const rr=rng(state.hairColor*13+7);
+    for(let i=0;i<26;i++){const a=.55+i/25*(2*P-1.1),row=i%2,p=onHead(a,1.78-row*.05,.016),len=.26+rr()*.12;G2.push(tube(p,len,.013,.009,Math.sin(a)*.025,Math.cos(a)*.025-.01,6,5))}
+    for(let i=0;i<7;i++){const a=-.55+i/6*1.1,p=onHead(a,1.81,.016);G2.push(tube(p,.07+rr()*.03,.012,.009,Math.sin(a)*.02,.03,4,5))}}
+  if(st==='Mohawk'){G2=[cap(1.722,.004)];
+    for(let i=0;i<8;i++){const a=-.5+i/7*2.0,y=HY(1.8)+Math.cos(a)*.055,z=Math.sin(a)*.1-.01;const g=new THREE.ConeGeometry(.035,.11,4);g.scale(.4,1,1);g.rotateX(a*.8);g.translate(0,y,z);G2.push(g)}}
+  if(st==='Spiky'){G2=[cap(1.7,.018),...ring(0,2*P,16,1.83,.1,{w:.05,out:.05,bulge:.01,up:.16})]}
+  // all pieces must share attributes to merge
+  G2=G2.map(g=>{const q=g.index?g.toNonIndexed():g;if(!q.attributes.uv){q.setAttribute('uv',new THREE.Float32BufferAttribute(new Float32Array(q.attributes.position.count*2),2))}if(!q.attributes.normal)q.computeVertexNormals();return q});
+  done(G2,'Hair');
   outline(H);
 }
 /* ---------- drape: fabric hangs instead of hugging ---------- */
@@ -609,25 +602,69 @@ function buildShoes(){
   if(it.cut==='Boots')onLimbs(G.shoes,'leg',()=>mesh(loft(sub(A.leg,-.7,LEG_END,.018),8,[true,false]),m,'BootShaft'),'BootShaft');
   outline(G.shoes);
 }
+// a thin cord/edge that follows points
+function cord(pts,r=.005,seg=5){return loft(pts.map(p=>({y:p[1],w:r,d:r,x:p[0],z:p[2]})),seg)}
+// point on a draped ring list at angle a (0 = front), pushed out by off
+function onRing(R,y,a,off=0){const q=ringAt(R,y);return[Math.sin(a)*(q.w+off),y,Math.cos(a)*(q.d+off)+(q.z||0)]}
 function buildJacket(){
-  clear(G.jacket);if(!state.jacket)return;const it=CAT.jacket[state.jacket-1],m=clothMatDS(it,'Jacket'),o=.032;
-  const trim=plain(shade(it.c1,-.22),'JacketTrim');
-  let body=drapeTorso(sub(A.torso,it.cut==='Bomber'?1.0:.93,1.53,0),o,it.cut==='Hoodie'?.016:.006,1.0);   // boxy: hangs from the shoulders
-  if(it.cut==='Trench'){const b=body[0];body=[{...b,y:.56,w:b.w+.075,d:b.d+.06},{...b,y:.76,w:b.w+.045,d:b.d+.035},...body]}
-  if(it.cut==='Bomber'){const b=body[0];body=[{...b,y:.97,w:b.w-.022,d:b.d-.018},{...b,y:.99,w:b.w-.02,d:b.d-.016},...body]}   // gathered waistband
-  G.jacket.add(mesh(loft(body,14,[false,false],{...CLOTH,seed:5}),m,'JacketBody'));
-  const ref=ringAt(A.arm,-.02),sp={Hoodie:t=>1.0-.12*t,Bomber:t=>1.02-.1*t,Trench:t=>.98+.04*t}[it.cut];
-  const sleeve=drapeLimb(sub(A.arm,-.005,-.53,0),ref,.026,sp,it.cut!=='Trench');
-  onLimbs(G.jacket,'arm',()=>{const g=new THREE.Group();g.add(mesh(loft(sub(A.arm,.037,-.01,.024),9,[true,false]),m,'JacketShoulder'));g.add(mesh(loft(sleeve,9,[false,false],{...CLOTH,seed:6}),m,'JacketSleeve'));return g},'JacketSleeve');
-  const frontZ=y=>{const r=ringAt(body,y);return r.d+(r.z||0)+.004};
-  if(it.cut!=='Hoodie'){const z=mesh(new THREE.BoxGeometry(.008,.46,.006),trim,'Zip');z.position.set(0,1.25,frontZ(1.25));G.jacket.add(z)}
-  if(it.cut==='Hoodie'){
-    G.jacket.add(mesh(loft([{y:1.5,w:.135,d:.095,z:-.05},{y:1.56,w:.125,d:.105,z:-.062},{y:1.63,w:.085,d:.075,z:-.088}],10),m,'Hood'));
-    const p=mesh(new THREE.BoxGeometry(.2,.1,.016),m,'Pocket');p.position.set(0,1.04,frontZ(1.04));G.jacket.add(p);
+  clear(G.jacket);if(!state.jacket)return;const it=CAT.jacket[state.jacket-1],m=clothMatDS(it,'Jacket'),o=.032,J=G.jacket,P=Math.PI;
+  const trimCol=shade(it.c1,-.22),trim=plain(trimCol,'JacketTrim'),rib=clothMatDS({...it,cut:'Hoodie',pattern:'Solid',c1:shade(it.c1,-.1),name:it.name+' rib',seed:it.seed+5},'Rib');
+  const hood=it.cut==='Hoodie',bomber=it.cut==='Bomber',trench=it.cut==='Trench';
+  let body=drapeTorso(sub(A.torso,bomber?1.0:.93,1.535,0),o,hood?.016:.006,1.0);   // boxy: hangs from the shoulders
+  if(trench){const b=body[0];body=[{...b,y:.56,w:b.w+.075,d:b.d+.06},{...b,y:.76,w:b.w+.045,d:b.d+.035},...body]}
+  const ys=body.map(r=>r.y),yb=Math.min(...ys),yt=Math.max(...ys);
+  // open front for bomber/trench (shows the shirt), closed for the hoodie
+  const gap=hood?0:(bomber?.07:.16),arc=gap?[gap,2*P-gap]:undefined;
+  J.add(mesh(loft(body,16,[false,false],{...CLOTH,seed:5,arc}),m,'JacketBody'));
+  // sleeves: snug shoulder seam + loose sleeve + ribbed or plain cuff
+  const ref=ringAt(A.arm,-.02),sp={Hoodie:t=>1.0-.1*t,Bomber:t=>1.04-.08*t,Trench:t=>.98+.06*t}[it.cut];
+  const sleeve=drapeLimb(sub(A.arm,-.005,-.5,0),ref,.026,sp);
+  const cuffR=sub(A.arm,-.49,-.53,.016);
+  onLimbs(J,'arm',()=>{const g=new THREE.Group();
+    g.add(mesh(loft(sub(A.arm,.037,-.01,.024),9,[true,false]),m,'JacketShoulder'));
+    g.add(mesh(loft(sleeve,10,[false,false],{...CLOTH,seed:6}),m,'JacketSleeve'));
+    if(!trench)g.add(mesh(loft(cuffR,10,[false,false]),rib,'Cuff'));
+    return g},'JacketSleeve');
+  // hem: ribbed, gathered band (hoodie/bomber); plain turned hem (trench)
+  const hem=body.slice(0,3).map((r,k)=>({...r,w:r.w-(trench?0:.014)+k*.004,d:r.d-(trench?0:.012)+k*.004}));
+  hem.splice(2);hem[1]={...hem[1],y:yb+(trench?.025:.05)};
+  J.add(mesh(loft(hem,16,[false,false],{arc}),trench?m:rib,'Hem'));
+  if(hood){
+    // hood down: a cowl lying on the upper back, open toward the face, with a darker lining
+    const rings=[{y:1.45,w:.165,d:.125,z:-.01},{y:1.5,w:.16,d:.13,z:-.035},{y:1.55,w:.14,d:.12,z:-.065},{y:1.585,w:.1,d:.09,z:-.09},{y:1.6,w:.04,d:.045,z:-.105}];
+    J.add(mesh(loft(rings,16,[false,false],{arc:[1.05,2*P-1.05],...CLOTH,seed:9}),m,'Hood'));
+    J.add(mesh(loft(rings.slice(0,4).map(r=>({...r,w:r.w-.008,d:r.d-.008})),16,[false,false],{arc:[1.1,2*P-1.1]}),plain(shade(it.c1,-.3),'HoodLining'),'HoodLining'));
+    // drawstrings with tips
+    const tie=plain('#f4efe6','Drawstring');
+    for(const sx of [-1,1]){const p=onRing(body,1.5,sx*.32,.006);J.add(mesh(cord([[p[0],1.5,p[2]],[p[0]+sx*.004,1.43,p[2]+.012],[p[0]+sx*.002,1.36,p[2]+.016]],.0045),tie,'Drawstring'));
+      const tip=mesh(loft([{y:1.365,w:.006,d:.006},{y:1.34,w:.006,d:.006}],5),plain('#c9c2b4','Aglet'),'Aglet');tip.position.set(p[0]+sx*.002,0,p[2]+.016);J.add(tip)}
+    // kangaroo pocket: a patch that follows the belly curve, with a stitched top edge
+    const pk=sub(body,1.0,1.13,.006).map(r=>({...r,w:r.w,d:r.d}));
+    J.add(mesh(loft(pk,16,[false,false],{arc:[-.62,.62]}),m,'Pocket'));
+    for(const sx of [-1,1]){const a=onRing(body,1.13,sx*.62,.008),b=onRing(body,1.0,sx*.5,.008);J.add(mesh(cord([a,b],.0035),trim,'PocketEdge'))}
+    J.add(mesh(cord([onRing(body,1.13,-.62,.009),onRing(body,1.13,0,.009),onRing(body,1.13,.62,.009)].map((q,k)=>k===1?q:q),.003),trim,'PocketTop'));
   }
-  if(it.cut==='Bomber')G.jacket.add(mesh(loft([{y:1.51,w:.088,d:.083},{y:1.56,w:.078,d:.075}],10,[false,false]),trim,'Collar'));
-  if(it.cut==='Trench'){const bl=ringAt(body,1.1);G.jacket.add(mesh(loft([{...bl,y:1.09,w:bl.w+.006,d:bl.d+.006},{...bl,y:1.12,w:bl.w+.006,d:bl.d+.006}],14,[false,false]),trim,'Belt'));G.jacket.add(mesh(loft([{y:1.49,w:.135,d:.105,z:.005},{y:1.56,w:.092,d:.082}],10,[false,false]),m,'Lapel'))}
-  outline(G.jacket);
+  if(bomber){
+    // ribbed collar, zipper edges, slanted welt pockets
+    const col=sub(A.torso,1.515,1.56,.028);J.add(mesh(loft(col,14,[false,false],{arc}),rib,'Collar'));
+    for(const sx of [-1,1]){const pts=[];for(let y=yb+.01;y<=1.53;y+=.04)pts.push(onRing(body,y,sx*gap,.002));J.add(mesh(cord(pts,.0055),plain('#b9b4aa','Zipper'),'Zipper'));
+      J.add(mesh(cord([onRing(body,1.06,sx*1.0,.004),onRing(body,1.15,sx*.75,.004)],.005),trim,'WeltPocket'))}
+  }
+  if(trench){
+    // lapels folded open, belt with buckle, double-breasted buttons
+    for(const sx of [-1,1]){
+      const L=[];for(const [y,a,ofs] of [[1.54,.5,.03],[1.47,.42,.035],[1.38,.3,.032],[1.3,.2,.026]])L.push(onRing(body,y,sx*a,ofs));
+      const lap=new THREE.BufferGeometry(),inner=L.map(p=>[p[0]*.82,p[1],p[2]+.004]);
+      const v=[];for(let k=0;k<L.length-1;k++){v.push(...L[k],...inner[k],...L[k+1],...inner[k],...inner[k+1],...L[k+1])}
+      lap.setAttribute('position',new THREE.Float32BufferAttribute(v,3));lap.setAttribute('uv',new THREE.Float32BufferAttribute(new Float32Array(v.length/3*2),2));lap.computeVertexNormals();
+      J.add(mesh(lap,mat({color:shade(it.c1,-.08),side:THREE.DoubleSide},'Lapel'),'Lapel'));
+      for(const y of [1.3,1.2,1.06])J.add(Object.assign(mesh(new THREE.IcosahedronGeometry(.009,1),plain('#2a211b','Button'),'Button'),{}).translateX(onRing(body,y,sx*.32,.006)[0]).translateY(y).translateZ(onRing(body,y,sx*.32,.006)[2]));
+    }
+    const bl=sub(body,1.08,1.12,.006);J.add(mesh(loft(bl,16,[false,false],{arc}),trim,'Belt'));
+    const bk=mesh(new THREE.BoxGeometry(.04,.034,.008),plain('#c9a24a','Buckle'),'Buckle');const bp=onRing(body,1.1,.0001,.01);bk.position.set(.05,1.1,bp[2]-.004);J.add(bk);
+    J.add(mesh(loft(sub(A.torso,1.515,1.57,.03),14,[false,false],{arc:[.25,2*P-.25]}),m,'Collar'));
+  }
+  outline(J);
 }
 const BUILD={shirt:buildShirt,pants:buildPants,jacket:buildJacket,shoes:buildShoes,socks:buildSocks};
 function buildAll(){A=anatomy();buildBody();buildHair();for(const k in BUILD)BUILD[k]();applyShape();updateWear()}
