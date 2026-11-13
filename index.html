@@ -327,10 +327,10 @@ function anatomy(){
     {y:-.43,w:.045,d:.049,z:.002},{y:-.49,w:.046,d:.051,z:.008},{y:-.6,w:.051,d:.057,z:-.014},{y:-.75,w:.032,d:.035,z:-.004},{y:-.84,w:.025,d:.028},{y:LEG_END,w:.026,d:.029}
   ];leg.forEach((r,i)=>{if(i>0){r.w*=legK;r.d*=legK}});
   const foot0=[{y:0,w:.028,d:.032},{y:-.04,w:.036,d:.038,z:.004},{y:-.12,w:.042,d:.028,z:-.006},{y:-.2,w:.04,d:.019,z:-.015},{y:-.24,w:.03,d:.013,z:-.02},{y:-.255,w:.014,d:.007,z:-.022}];const foot=foot0.map(r=>({...r,y:r.y*.86,w:r.w*.88,d:r.d*.86,z:r.z?r.z*.86:0}));
-  const neck=B?[{y:1.52,w:.04,d:.041,z:-.016},{y:1.6,w:.035,d:.037,z:.002},{y:1.72,w:.033,d:.035,z:.02}]:[{y:1.52,w:.047,d:.048,z:-.016},{y:1.6,w:.042,d:.044,z:.002},{y:1.72,w:.039,d:.041,z:.02}];
+  const neck=B?[{y:1.52,w:.04,d:.041,z:-.026},{y:1.6,w:.035,d:.037,z:-.018},{y:1.71,w:.033,d:.036,z:-.008}]:[{y:1.52,w:.047,d:.048,z:-.026},{y:1.6,w:.042,d:.044,z:-.018},{y:1.71,w:.039,d:.042,z:-.008}];
   const head=[
-    [1.565,.014,.016,.054],[1.583,.036,.032,.05],[1.612,.056,.062,.026],[1.648,.071,.1,-.006],[1.69,.08,.113,-.016],[1.735,.085,.117,-.02],[1.775,.081,.113,-.024],[1.806,.066,.092,-.022],[1.824,.036,.052,-.016],[1.831,.001,.001,-.016]
-  ].map(([y,w,d,z])=>({y:HY(y),w:(w+(!B&&y>1.58&&y<1.66?.006:0))*HS,d:d*HS,z:z*HS+HEADZ}));  // boys: slightly squarer jaw
+    [1.565,.008,.006,.046],[1.575,.026,.013,.043],[1.598,.046,.0315,.0315],[1.632,.064,.0505,.0155],[1.645,.072,.0695,-.0015],[1.66,.078,.0802,-.0102],[1.698,.084,.0942,-.0202],[1.731,.086,.1,-.02],[1.76,.082,.0957,-.02],[1.79,.07,.0807,-.02],[1.81,.053,.0613,-.02],[1.825,.03,.0346,-.02],[1.831,.001,.001,-.02]
+  ].map(([y,w,d,z])=>({y:HY(y),w:(w+(!B&&y>1.59&&y<1.66?.007:0))*HS,d:d*HS,z:z*HS+HEADZ}));  // boys: slightly squarer jaw
   return{torso,arm,hand,leg,foot,neck,head,
     joints:{armL:{pos:[sh,1.47,0],rz:.3},armR:{pos:[-sh,1.47,0],rz:-.3},legL:{pos:[.088,.96,0],rz:.025},legR:{pos:[-.088,.96,0],rz:-.025}},
     feet:{L:[.098,.045,-.06],R:[-.098,.045,-.06]}};
@@ -442,9 +442,9 @@ function paintFace(){
   const c=faceCanvas.getContext('2d'),S=128,skin=SKINS[state.skin],R=A.head;c.imageSmoothingEnabled=false;
   const V=y=>Math.round((1-vOf(R,HY(y)))*S);
   c.fillStyle=skin;c.fillRect(0,0,S,S);
-  const ey=V(1.7),girl=state.frame===1;
-  drawEyes(c,ey,skin);drawBrows(c,ey,skin);drawMouth(c,V(1.626),skin);drawMarks(c,ey,skin);
-  const ny=V(1.662);c.fillStyle=shade(skin,-.16);c.fillRect(63,ny,2,1);      // nose hint
+  const ey=V(1.698),girl=state.frame===1;   // eyes at 1/2 head height
+  drawEyes(c,ey,skin);drawBrows(c,ey,skin);drawMouth(c,V(1.598),skin);drawMarks(c,ey,skin);
+  const ny=V(1.632);c.fillStyle=shade(skin,-.16);c.fillRect(63,ny,2,1);      // nose hint (3/4 down)
   c.fillStyle=shade(skin,-.08);c.fillRect(0,V(1.588),S,3);
   faceTex.needsUpdate=true;
 }
@@ -503,8 +503,8 @@ function buildBody(){
   onLimbs(B,'leg',()=>mesh(loft(A.leg,8),legM,'Leg'),'Leg');
   onFeet(B,()=>mesh(loft(A.foot,8),skin,'Foot'),'Foot');
   // tiny anime nose: barely there from the front, a small point in profile
-  {const ny=HY(1.664),r=ringAt(A.head,ny),fz=(r.z||0)+r.d;const n=mesh(new THREE.ConeGeometry(.011,.03,3),skin,'Nose');n.position.set(0,ny,fz+.004);n.rotation.set(Math.PI/2+.5,Math.PI,0);B.add(n)}
-  for(const x of [.08*HS,-.08*HS]){const ear=mesh(new THREE.BoxGeometry(.01,.032,.02),skin,'Ear');ear.position.set(x*1.04,HY(1.69),HEADZ-.012);ear.rotation.y=x>0?.2:-.2;B.add(ear)}
+  {const ny=HY(1.636),r=ringAt(A.head,ny),fz=(r.z||0)+r.d;const n=mesh(new THREE.ConeGeometry(.009,.026,3),skin,'Nose');n.position.set(0,ny,fz+.006);n.rotation.set(Math.PI/2+.5,Math.PI,0);B.add(n)}
+  for(const sx of [1,-1]){const ey2=HY(1.665),r=ringAt(A.head,ey2);const ear=mesh(new THREE.IcosahedronGeometry(1,1),skin,'Ear');ear.scale.set(.008,.036,.022);ear.position.set(sx*(r.w*.93),ey2,(r.z||0)-.012);ear.rotation.set(-.15,sx*.25,0);B.add(ear)}
   outline(B);
 }
 function hairShell(yTop,yBot,off0,off1,arc,jag,extraZ=0){
