@@ -180,7 +180,19 @@ import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 /* ================= catalog ================= */
 const COLORS=[['Black','#1d1d1f'],['White','#f2f2ee'],['Red','#c8323c'],['Crimson','#8e1b2b'],['Orange','#e8742a'],['Mustard','#d6a72b'],['Lime','#8cc63f'],['Forest','#2f6b3a'],['Teal','#1f8a8a'],['Sky','#5bb4e8'],['Navy','#1f2f5c'],['Royal','#3b55c9'],['Violet','#6f42c1'],['Pink','#e77fb0'],['Tan','#c9a77c'],['Gray','#7d8088']];
 const PATTERNS=['Solid','Striped','Pinstripe','Checker','Dotted','Diagonal','Gradient','Camo','Plaid'];
-const RIBBED=new Set(['Longsleeve','Hoodie','Bomber','Crew','Knee-high']);
+const RIBBED=new Set(['Longsleeve','Hoodie','Bomber','Crew','Knee-high','Leg Warmers','Shrug']);
+const Y2KC=[['Baby Pink','#f9b8d3'],['Hot Pink','#ff3fa4'],['Lilac','#c9a7f0'],['Baby Blue','#a9d8f5'],['Mint','#a8f0d1'],['Lime','#c6f24e'],['Silver','#c9ccd4'],['Butter','#fbe7a1'],['Cherry','#e0263c'],['Denim','#4f7fbf'],['Black','#1d1d1f'],['White','#f7f5f2']];
+const Y2KP=['Butterfly','Star','Flame','Holo','Heart','Leopard','Sparkle','Velour','Zebra'];
+// 27 Y2K pieces per category, numbered after the classics (#100+)
+function makeY2K(cuts,salt){
+  const out=[];
+  for(let i=0;i<27;i++){
+    const cut=cuts[i%3],p=Y2KP[Math.floor(i/3)%9];
+    const a=Y2KC[(i*5+salt)%12];let b=Y2KC[(i*7+3+salt)%12];if(b===a)b=Y2KC[(i*7+4+salt)%12];
+    out.push({id:100+i,cut,pattern:p,c1:a[1],c2:b[1],name:`${a[0]} ${p} ${cut}`,seed:i*131+salt+7,y2k:true});
+  }
+  return out;
+}
 function makeCatalog(cuts,salt){
   const out=[];
   for(let i=0;i<99;i++){
@@ -190,7 +202,7 @@ function makeCatalog(cuts,salt){
   }
   return out;
 }
-const CAT={
+const CAT0={
   shirt:makeCatalog(['Tee','Longsleeve','Tank'],0),
   pants:makeCatalog(['Jeans','Shorts','Capris'],3),
   jacket:makeCatalog(['Hoodie','Bomber','Trench'],9),
@@ -201,6 +213,18 @@ const CAT={
     {id:3,cut:'Knee-high',pattern:'Striped',c1:'#f2f2ee',c2:'#c8323c',name:'Red Striped Knee-highs',seed:3}
   ]
 };
+const CAT={
+  shirt:[...CAT0.shirt,...makeY2K(['Baby Tee','Tube Top','Halter Cami'],1)],
+  pants:[...CAT0.pants,...makeY2K(['Low-rise Flares','Cargo Pants','Pleated Mini'],4)],
+  jacket:[...CAT0.jacket,...makeY2K(['Cropped Puffer','Velour Track','Shrug'],7)],
+  shoes:[...CAT0.shoes,...makeY2K(['Platform Sneakers','Platform Boots','Mary Janes'],10)],
+  socks:[...CAT0.socks,
+    {id:4,cut:'Leg Warmers',pattern:'Solid',c1:'#f9b8d3',c2:'#f9b8d3',name:'Baby Pink Leg Warmers',seed:4,y2k:true},
+    {id:5,cut:'Thigh-highs',pattern:'Striped',c1:'#f7f5f2',c2:'#c9a7f0',name:'Lilac Striped Thigh-highs',seed:5,y2k:true},
+    {id:6,cut:'Fuzzy Ankle',pattern:'Solid',c1:'#f7f5f2',c2:'#f7f5f2',name:'White Fuzzy Ankle Socks',seed:6,y2k:true}]
+};
+// classic ids are 1..99, Y2K ids are 100+: look items up by id, not by index
+const itemOf=(cat,id)=>CAT[cat].find(x=>x.id===id);
 const SKINS=['#f3d6c1','#e8bf9f','#d39f7b','#b57a52','#8a5838','#5e3b27','#3d2619'];
 const HAIRC=['#151211','#3a2417','#6b4226','#a8743f','#e2c178','#b8b4ad','#a8432a','#f27aa8','#7a4fd0','#2b6fd6','#3fb58a'];
 const EYES=['#3b2414','#2f6b3a','#2f63a8','#6b7178','#7a3fa8'];
@@ -226,6 +250,20 @@ function drawPattern(ctx,s,it){
   else if(p==='Diagonal'){ctx.lineWidth=s/24;for(let i=-s;i<2*s;i+=s/6){ctx.beginPath();ctx.moveTo(i,0);ctx.lineTo(i+s,s);ctx.stroke()}}
   else if(p==='Gradient'){const g=ctx.createLinearGradient(0,0,0,s);g.addColorStop(0,c1);g.addColorStop(1,c2);ctx.fillStyle=g;ctx.fillRect(0,0,s,s)}
   else if(p==='Camo'){const r=rng(seed);const cs=[c2,shade(c1,-.18),shade(c2,.2)];for(let i=0;i<46;i++){ctx.fillStyle=cs[i%3];ctx.beginPath();ctx.ellipse(r()*s,r()*s,s*(.05+r()*.1),s*(.03+r()*.06),r()*3,0,7);ctx.fill()}}
+  else if(p==='Butterfly'){const k=s/4;for(let y=0;y<4;y++)for(let x=0;x<4;x++){const cx=x*k+k/2+(y%2)*k/2,cy=y*k+k/2;
+      ctx.fillStyle=c2;for(const sx of [-1,1]){ctx.beginPath();ctx.ellipse(cx+sx*k*.17,cy-k*.08,k*.17,k*.13,sx*.5,0,7);ctx.fill();ctx.beginPath();ctx.ellipse(cx+sx*k*.13,cy+k*.12,k*.1,k*.08,-sx*.4,0,7);ctx.fill()}
+      ctx.fillStyle=shade(c2,-.3);ctx.fillRect(cx-Math.max(1,k*.02),cy-k*.18,Math.max(2,k*.04),k*.34)}}
+  else if(p==='Star'||p==='Sparkle'){const n=p==='Star'?5:4,k=s/4;for(let y=0;y<4;y++)for(let x=0;x<4;x++){const cx=x*k+k/2+(y%2)*k/2,cy=y*k+k/2,R=k*(p==='Star'?.3:.22),r=R*(p==='Star'?.45:.25);
+      ctx.fillStyle=p==='Sparkle'&&(x+y)%2?'#ffffff':c2;ctx.beginPath();for(let i=0;i<n*2;i++){const a=i*Math.PI/n-Math.PI/2,q=i%2?r:R;ctx.lineTo(cx+Math.cos(a)*q,cy+Math.sin(a)*q)}ctx.fill()}}
+  else if(p==='Flame'){const r=rng(seed);for(const [col,h] of [[c2,.6],[shade(c2,.25),.38]]){ctx.fillStyle=col;ctx.beginPath();ctx.moveTo(0,s);
+      for(let x=0;x<=s;x+=s/8){const tip=s*(1-h*(.7+r()*.3));ctx.quadraticCurveTo(x+s/32,tip+s*.1,x+s/16,tip);ctx.quadraticCurveTo(x+s/12,tip+s*.15,x+s/8,s*(1-h*.35))}ctx.lineTo(s,s);ctx.fill()}}
+  else if(p==='Holo'){const g=ctx.createLinearGradient(0,0,s,s);['#ffd1f0','#d1e8ff','#e9d1ff','#d1fff0','#fff5c2','#ffd1f0'].forEach((c,i,a)=>g.addColorStop(i/(a.length-1),c));ctx.fillStyle=g;ctx.fillRect(0,0,s,s);ctx.globalAlpha=.3;ctx.fillStyle=c1;ctx.fillRect(0,0,s,s);ctx.globalAlpha=1}
+  else if(p==='Heart'){const k=s/4;ctx.fillStyle=c2;for(let y=0;y<4;y++)for(let x=0;x<4;x++){const cx=x*k+k/2+(y%2)*k/2,cy=y*k+k/2,h=k*.28;
+      ctx.beginPath();ctx.moveTo(cx,cy+h);ctx.bezierCurveTo(cx-h*1.6,cy-h*.2,cx-h*.6,cy-h*1.4,cx,cy-h*.45);ctx.bezierCurveTo(cx+h*.6,cy-h*1.4,cx+h*1.6,cy-h*.2,cx,cy+h);ctx.fill()}}
+  else if(p==='Leopard'){const r=rng(seed);for(let i=0;i<34;i++){const x=r()*s,y=r()*s,rr=s*(.03+r()*.03);ctx.fillStyle=shade(c1,-.18);ctx.beginPath();ctx.ellipse(x,y,rr*.9,rr*.7,r()*3,0,7);ctx.fill();
+      ctx.strokeStyle=c2;ctx.lineWidth=Math.max(1,s/40);ctx.beginPath();ctx.arc(x,y,rr,r()*2,r()*2+4.2);ctx.stroke()}}
+  else if(p==='Velour'){for(let x=0;x<s;x++){const v=Math.sin(x/s*Math.PI*4)*.06;ctx.fillStyle=shade(c1,v);ctx.fillRect(x,0,1,s)}ctx.fillStyle=c2;ctx.fillRect(s*.46,0,s*.08,s)}
+  else if(p==='Zebra'){ctx.fillStyle=c2;for(let y=-s/8;y<s;y+=s/6){ctx.beginPath();ctx.moveTo(0,y);for(let x=0;x<=s;x+=s/16)ctx.lineTo(x,y+Math.sin(x/s*Math.PI*4+y)*s*.04);for(let x=s;x>=0;x-=s/16)ctx.lineTo(x,y+s*.06+Math.sin(x/s*Math.PI*4+y+1)*s*.03);ctx.fill()}}
   else if(p==='Plaid'){ctx.globalAlpha=.45;for(let i=0;i<s;i+=s/4){ctx.fillRect(i,0,s/10,s);ctx.fillRect(0,i,s,s/10)}ctx.globalAlpha=.8;ctx.fillStyle=shade(c1,.35);for(let i=s/8;i<s;i+=s/4){ctx.fillRect(i,0,Math.max(1,s/64),s);ctx.fillRect(0,i,s,Math.max(1,s/64))}ctx.globalAlpha=1}
 }
 function canvasTex(c,repeat=false){
@@ -289,7 +327,8 @@ function loft(R,seg=10,caps=[true,true],opts={}){
   R.forEach((r,j)=>{for(let i=0;i<=seg;i++){
     const a=arc?arc[0]+i/seg*(arc[1]-arc[0]):i/seg*Math.PI*2+Math.PI;
     let y=r.y;if(jag&&j===R.length-1&&i%2===1)y+=asc?jag:-jag;
-    let k=1;if(opts.wrinkle&&j>0&&j<R.length-1){const h=Math.sin((i%seg)*12.9898+j*78.233+(opts.seed||0))*43758.5453;k=1+(h-Math.floor(h)-.5)*opts.wrinkle}
+    let k=1;if(opts.pleat&&j>0)k*=1+((i%seg)%2?opts.pleat:-opts.pleat)*(j/(R.length-1));
+    if(opts.wrinkle&&j>0&&j<R.length-1){const h=Math.sin((i%seg)*12.9898+j*78.233+(opts.seed||0))*43758.5453;k=1+(h-Math.floor(h)-.5)*opts.wrinkle}
     const bz=opts.bump?opts.bump(a,r.y):0;
     P.push(Math.sin(a)*r.w*k+(r.x||0),y,Math.cos(a)*r.d*k+(r.z||0)+bz);U.push(i/seg,(r.y-y0)/(y1-y0||1));
   }});
@@ -604,7 +643,8 @@ const DS={side:THREE.DoubleSide};
 const clothMatDS=(it,name)=>mat({map:texFor(it),...DS},name);
 
 function buildShirt(){
-  clear(G.shirt);if(!state.shirt)return;const it=CAT.shirt[state.shirt-1],m=clothMatDS(it,'Shirt'),o=.01;
+  clear(G.shirt);if(!state.shirt)return;const it=itemOf('shirt',state.shirt),m=clothMatDS(it,'Shirt'),o=.01;
+  if(it.y2k){y2kShirt(it,m);outline(G.shirt);return}
   const hem=it.cut==='Tank'?.98:.95;
   G.shirt.add(mesh(loft(drapeTorso(sub(A.torso,hem,1.54,0),o,.012),14,[false,false],{...CLOTH,seed:1}),m,'ShirtBody'));
   {const a=ringAt(A.torso,1.532),b=ringAt(A.torso,1.552);G.shirt.add(mesh(loft([{...a,w:a.w+o+.004,d:a.d+o+.004},{...b,y:1.552,w:b.w+o+.006,d:b.d+o+.006}],12,[false,false]),plain(shade(it.c1,-.15),'Collar'),'Collar'))}
@@ -619,7 +659,8 @@ function buildShirt(){
   outline(G.shirt);
 }
 function buildPants(){
-  clear(G.pants);if(!state.pants)return;const it=CAT.pants[state.pants-1],m=clothMatDS(it,'Pants'),o=.012;
+  clear(G.pants);if(!state.pants)return;const it=itemOf('pants',state.pants),m=clothMatDS(it,'Pants'),o=.012;
+  if(it.y2k){y2kPants(it,m);outline(G.pants);return}
   const hipW=Math.max(...A.torso.filter(r=>r.y<1.05).map(r=>r.w)),hipD=Math.max(...A.torso.filter(r=>r.y<1.05).map(r=>r.d));
   // loose seat: below the waistband the fabric sits out at hip width; the crotch drops a little
   const seat=dense(sub(A.torso,.86,1.09,0)).map(r=>r.y>1.02?{...r,w:r.w+o,d:r.d+o}:{...r,w:Math.max(r.w,hipW*(r.y<.9?.82:.99))+o,d:Math.max(r.d,hipD*(r.y<.9?.86:.99))+o});
@@ -633,14 +674,16 @@ function buildPants(){
   outline(G.pants);
 }
 function buildSocks(){
-  clear(G.socks);if(!state.socks)return;const it=CAT.socks[state.socks-1],m=clothMat(it,'Socks');
+  clear(G.socks);if(!state.socks)return;const it=itemOf('socks',state.socks),m=clothMat(it,'Socks');
+  if(it.y2k){y2kSocks(it,m);outline(G.socks);return}
   const top={Ankle:-.84,Crew:-.7,'Knee-high':-.48}[it.cut];
   onLimbs(G.socks,'leg',()=>mesh(loft(sub(A.leg,top,LEG_END,.004),8,[false,true]),m,'Sock'),'Sock');
   onFeet(G.socks,()=>mesh(loft(sub(A.foot,0,-.255,.004),8),m,'SockFoot'),'SockFoot');
   outline(G.socks);
 }
 function buildShoes(){
-  clear(G.shoes);if(!state.shoes)return;const it=CAT.shoes[state.shoes-1],m=clothMat(it,'Shoes');
+  clear(G.shoes);applyShape();if(!state.shoes)return;const it=itemOf('shoes',state.shoes),m=clothMat(it,'Shoes');
+  if(it.y2k){y2kShoes(it,m);outline(G.shoes);return}
   const sole=plain(it.cut==='Sneakers'?'#f1ede4':'#2a211b','Sole'),off=it.cut==='Boots'?.016:.011;
   onFeet(G.shoes,()=>{const g=new THREE.Group();
     g.add(mesh(loft(it.cut==='Loafers'?sub(A.foot,-.02,-.255,off):sub(A.foot,.005,-.255,off),8),m,'Upper'));
@@ -650,12 +693,109 @@ function buildShoes(){
   if(it.cut==='Boots')onLimbs(G.shoes,'leg',()=>mesh(loft(sub(A.leg,-.7,LEG_END,.018),8,[true,false]),m,'BootShaft'),'BootShaft');
   outline(G.shoes);
 }
+/* ================= Y2K pieces ================= */
+const sideOf=k=>k.endsWith('L')?1:-1;
+function trimRing(y0,y1,off,col,name,arc){return mesh(loft(sub(A.torso,y0,y1,off),14,[false,false],arc?{arc}:{}),plain(col,name),name)}
+function y2kShirt(it,m){
+  const S=G.shirt,o=.008,edge=shade(it.c1,-.18),P=Math.PI;
+  if(it.cut==='Baby Tee'){                                   // cropped, fitted, tiny sleeves
+    S.add(mesh(loft(sub(A.torso,1.13,1.54,o),14,[false,false]),m,'BabyTee'));
+    S.add(trimRing(1.13,1.145,o+.003,edge,'Hem'));S.add(trimRing(1.528,1.548,o+.004,edge,'Collar'));
+    onLimbs(S,'arm',()=>{const g=new THREE.Group();g.add(mesh(loft(sub(A.arm,.036,-.11,o),9,[true,false]),m,'CapSleeve'));g.add(mesh(loft(sub(A.arm,-.1,-.115,o+.003),9,[false,false]),plain(edge,'Cuff'),'Cuff'));return g},'CapSleeve');
+  }
+  if(it.cut==='Tube Top'){                                   // strapless band across the chest
+    S.add(mesh(loft(sub(A.torso,1.19,1.37,o),14,[false,false],{wrinkle:.02}),m,'TubeTop'));
+    S.add(trimRing(1.36,1.375,o+.003,edge,'TopEdge'));S.add(trimRing(1.19,1.2,o+.003,edge,'BottomEdge'));
+  }
+  if(it.cut==='Halter Cami'){                                // fitted cami that ties behind the neck
+    S.add(mesh(loft(sub(A.torso,1.1,1.41,o),14,[false,false]),m,'Cami'));
+    S.add(trimRing(1.1,1.112,o+.003,edge,'Hem'));
+    const strap=plain(edge,'HalterStrap');
+    for(const sx of [-1,1]){const a=onRing(A.torso,1.405,sx*.42,o+.002),nk=ringAt(A.neck,1.53);
+      S.add(mesh(cord([a,[sx*.035,1.47,a[2]-.01],[sx*(nk.w+.004),1.535,(nk.z||0)+.01],[sx*(nk.w*.6),1.54,(nk.z||0)-nk.d-.004],[0,1.54,(nk.z||0)-nk.d-.006]],.0045),strap,'HalterStrap'))}
+  }
+}
+function y2kPants(it,m){
+  const Pn=G.pants,o=.01,band=plain(shade(it.c1,-.22),'Waistband');
+  const hipW=Math.max(...A.torso.filter(r=>r.y<1.05).map(r=>r.w)),hipD=Math.max(...A.torso.filter(r=>r.y<1.05).map(r=>r.d));
+  if(it.cut==='Pleated Mini'){                               // pleated skirt flaring out from the waist
+    const top=ringAt(A.torso,1.04),rings=[{...top,y:1.04,w:top.w+o,d:top.d+o},{y:.98,w:hipW+o,d:hipD+o,z:-.012},{y:.88,w:hipW*1.22,d:hipD*1.22,z:-.012},{y:.79,w:hipW*1.36,d:hipD*1.34,z:-.01}];
+    Pn.add(mesh(loft(dense(rings,3),24,[false,false],{pleat:.06}),m,'PleatedMini'));
+    Pn.add(mesh(loft(sub(A.torso,1.025,1.05,o+.006),14,[false,false]),band,'Waistband'));
+    return;
+  }
+  // low-rise: the waistband sits on the hips
+  const seat=dense(sub(A.torso,.86,1.0,0)).map(r=>({...r,w:Math.max(r.w,hipW*(r.y<.9?.82:.99))+o,d:Math.max(r.d,hipD*(r.y<.9?.86:.99))+o}));
+  seat[0]={...seat[0],y:.84,w:.1,d:.07};
+  Pn.add(mesh(loft(seat,14,[true,false],{...CLOTH,seed:3}),m,'LowRiseSeat'));
+  Pn.add(mesh(loft(sub(A.torso,.985,1.01,o+.006),14,[false,false]),band,'Waistband'));
+  const ref=ringAt(A.leg,-.06),cargo=it.cut==='Cargo Pants';
+  const prof=cargo?(t=>1.18+.05*t):(t=>t<.5?.94-.36*t:.76+(t-.5)*1.7);   // baggy cargo / snug-to-knee then flared
+  onLimbs(Pn,'leg',k=>{const g=new THREE.Group(),sx=sideOf(k);
+    g.add(mesh(loft(drapeLimb(sub(A.leg,.03,-.88,0),ref,o,prof),12,[false,false],{wrinkle:cargo?.09:.04,seed:4}),m,'PantLeg'));
+    if(cargo){const x=sx*(ref.w*1.2+o+.008);const pk=mesh(new THREE.BoxGeometry(.014,.1,.085),m,'CargoPocket');pk.position.set(x,-.4,.0);g.add(pk);
+      const fl=mesh(new THREE.BoxGeometry(.018,.026,.09),plain(shade(it.c1,-.15),'PocketFlap'),'PocketFlap');fl.position.set(x,-.355,0);g.add(fl)}
+    return g},'PantLeg');
+}
+function y2kJacket(it,m){
+  const J=G.jacket,P=Math.PI,trim=plain(shade(it.c1,-.22),'Trim'),ref=ringAt(A.arm,-.02);
+  const quilt=(R,amt)=>R.map((r,i)=>i%2?{...r,w:r.w+amt,d:r.d+amt}:r);
+  if(it.cut==='Cropped Puffer'){                             // short, puffy, quilted, high collar
+    const body=quilt(dense(drapeTorso(sub(A.torso,1.12,1.535,0),.05,0,1.0),2),.009);
+    J.add(mesh(loft(body,16,[false,false],{arc:[.05,2*P-.05]}),m,'Puffer'));
+    const sl=quilt(dense(drapeLimb(sub(A.arm,-.005,-.5,0),ref,.045,()=>1.05),2),.008);
+    onLimbs(J,'arm',()=>{const g=new THREE.Group();g.add(mesh(loft(sub(A.arm,.037,-.01,.05),9,[true,false]),m,'PufferShoulder'));g.add(mesh(loft(sl,10,[false,true]),m,'PufferSleeve'));return g},'PufferSleeve');
+    J.add(mesh(loft([{...ringAt(A.neck,1.52),y:1.52,w:ringAt(A.neck,1.52).w+.04,d:ringAt(A.neck,1.52).d+.04},{...ringAt(A.neck,1.6),y:1.6,w:ringAt(A.neck,1.6).w+.035,d:ringAt(A.neck,1.6).d+.035}],12,[false,false],{arc:[.15,2*P-.15]}),m,'HighCollar'));
+    const zp=[];for(let y=1.13;y<=1.53;y+=.04)zp.push(onRing(body,y,.05,.002));J.add(mesh(cord(zp,.005),plain('#d9d9de','Zipper'),'Zipper'));
+  }
+  if(it.cut==='Velour Track'){                               // fitted zip-up with stripes down the sleeves
+    const body=sub(A.torso,1.06,1.535,.016);
+    J.add(mesh(loft(body,16,[false,false],{arc:[.05,2*P-.05]}),m,'TrackJacket'));
+    J.add(mesh(loft(sub(A.torso,1.515,1.57,.03),14,[false,false],{arc:[.2,2*P-.2]}),m,'StandCollar'));
+    const zp=[];for(let y=1.07;y<=1.53;y+=.04)zp.push(onRing(body,y,.05,.002));J.add(mesh(cord(zp,.005),plain('#e6e6ea','Zipper'),'Zipper'));
+    const stripe=plain(it.c2,'Stripe');
+    onLimbs(J,'arm',k=>{const g=new THREE.Group(),sx=sideOf(k);g.add(mesh(loft(sub(A.arm,.036,-.53,.014),9,[true,false]),m,'TrackSleeve'));
+      const pts=[];for(let y=0;y>=-.52;y-=.05){const r=ringAt(A.arm,y);pts.push([sx*(r.w+.016),y,0])}g.add(mesh(cord(pts,.006),stripe,'SleeveStripe'));return g},'TrackSleeve');
+  }
+  if(it.cut==='Shrug'){                                      // tiny cropped cardigan: shoulders + sleeves only
+    J.add(mesh(loft(sub(A.torso,1.36,1.535,.02),16,[false,false],{arc:[1.0,2*P-1.0]}),m,'Shrug'));
+    const sl=drapeLimb(sub(A.arm,-.005,-.5,0),ref,.022,t=>.98-.1*t,true);
+    onLimbs(J,'arm',()=>{const g=new THREE.Group();g.add(mesh(loft(sub(A.arm,.037,-.01,.024),9,[true,false]),m,'ShrugShoulder'));g.add(mesh(loft(sl,10,[false,false],{wrinkle:.05}),m,'ShrugSleeve'));return g},'ShrugSleeve');
+  }
+}
+function shoeLift(){if(!state.shoes)return 0;const it=itemOf('shoes',state.shoes);return({'Platform Sneakers':.045,'Platform Boots':.065,'Mary Janes':.028})[it.cut]||0}
+function y2kShoes(it,m){
+  const H=shoeLift(),Sh=G.shoes,sole=plain(it.cut==='Platform Sneakers'?'#f7f5f2':'#1d1d1f','PlatformSole');
+  onFeet(Sh,()=>{const g=new THREE.Group();
+    g.add(mesh(loft(it.cut==='Mary Janes'?sub(A.foot,-.02,-.22,.011):sub(A.foot,.005,-.22,.014),8),m,'Upper'));
+    if(it.cut==='Mary Janes'){const st=mesh(new THREE.BoxGeometry(.075,.012,.012),plain(shade(it.c1,-.25),'Strap'),'Strap');st.position.set(0,-.075,.038);g.add(st)}
+    if(it.cut==='Platform Sneakers'){const l=mesh(new THREE.BoxGeometry(.04,.055,.008),plain('#ffffff','Laces'),'Laces');l.position.set(0,-.08,.036);l.rotation.x=.35;g.add(l)}
+    return g},'Shoe');
+  // chunky platform under each foot, in body space (the whole character is lifted by H)
+  for(const sx of [1,-1]){const ft=A.feet[sx>0?'L':'R'];
+    const b=mesh(new THREE.BoxGeometry(.1,H+.014,.24),sole,'Platform');b.position.set(ft[0],(-H+.014)/2,ft[2]+.1);Sh.add(b);
+    if(it.cut==='Platform Sneakers'){const st=mesh(new THREE.BoxGeometry(.102,.01,.242),plain(it.c2,'SoleStripe'),'SoleStripe');st.position.set(ft[0],-H*.45,ft[2]+.1);Sh.add(st)}
+    if(it.cut==='Mary Janes'){const hl=mesh(new THREE.BoxGeometry(.06,.03,.06),sole,'Heel');hl.position.set(ft[0],-H-.0,ft[2]+.0);Sh.add(hl)}}
+  if(it.cut==='Platform Boots')onLimbs(Sh,'leg',()=>mesh(loft(sub(A.leg,-.45,LEG_END,.022),9,[true,false]),m,'BootShaft'),'BootShaft');
+}
+function y2kSocks(it,m){
+  const So=G.socks;
+  if(it.cut==='Leg Warmers'){                                // slouchy, scrunched
+    onLimbs(So,'leg',()=>mesh(loft(dense(sub(A.leg,-.44,LEG_END+.01,.026),3),10,[false,false],{wrinkle:.16,seed:11}),m,'LegWarmer'),'LegWarmer');
+    onFeet(So,()=>mesh(loft(sub(A.foot,0,-.255,.004),8),plain('#f7f5f2','Sock'),'SockFoot'),'SockFoot');return;
+  }
+  const top=it.cut==='Thigh-highs'?-.1:-.8;
+  onLimbs(So,'leg',()=>mesh(loft(sub(A.leg,top,LEG_END,.004),8,[false,true]),m,'Sock'),'Sock');
+  onFeet(So,()=>mesh(loft(sub(A.foot,0,-.255,.004),8),m,'SockFoot'),'SockFoot');
+  if(it.cut==='Fuzzy Ankle')onLimbs(So,'leg',()=>mesh(loft(dense(sub(A.leg,-.79,-.83,.02),3),10,[false,false],{wrinkle:.3,seed:12}),m,'FuzzyCuff'),'FuzzyCuff');
+}
 // a thin cord/edge that follows points
 function cord(pts,r=.005,seg=5){return loft(pts.map(p=>({y:p[1],w:r,d:r,x:p[0],z:p[2]})),seg)}
 // point on a draped ring list at angle a (0 = front), pushed out by off
 function onRing(R,y,a,off=0){const q=ringAt(R,y);return[Math.sin(a)*(q.w+off),y,Math.cos(a)*(q.d+off)+(q.z||0)]}
 function buildJacket(){
-  clear(G.jacket);if(!state.jacket)return;const it=CAT.jacket[state.jacket-1],m=clothMatDS(it,'Jacket'),o=.032,J=G.jacket,P=Math.PI;
+  clear(G.jacket);if(!state.jacket)return;const it=itemOf('jacket',state.jacket),m=clothMatDS(it,'Jacket'),o=.032,J=G.jacket,P=Math.PI;
+  if(it.y2k){y2kJacket(it,m);outline(J);return}
   const trimCol=shade(it.c1,-.22),trim=plain(trimCol,'JacketTrim'),rib=clothMatDS({...it,cut:'Hoodie',pattern:'Solid',c1:shade(it.c1,-.1),name:it.name+' rib',seed:it.seed+5},'Rib');
   const hood=it.cut==='Hoodie',bomber=it.cut==='Bomber',trench=it.cut==='Trench';
   let body=drapeTorso(sub(A.torso,bomber?1.0:.93,1.535,0),o,hood?.016:.006,1.0);   // boxy: hangs from the shoulders
@@ -716,14 +856,14 @@ function buildJacket(){
 }
 const BUILD={shirt:buildShirt,pants:buildPants,jacket:buildJacket,shoes:buildShoes,socks:buildSocks};
 function buildAll(){A=anatomy();buildBody();buildHair();for(const k in BUILD)BUILD[k]();applyShape();updateWear()}
-function applyShape(){root.scale.set(state.build,state.height,state.build)}
+function applyShape(){root.scale.set(state.build,state.height,state.build);root.position.y=shoeLift()*state.height}
 
 /* ================= 3D clothing previews ================= */
 const PREV=144;
 const thumbR=new THREE.WebGLRenderer({antialias:true,alpha:true,preserveDrawingBuffer:true});thumbR.setSize(PREV,PREV);thumbR.setPixelRatio(1);thumbR.outputColorSpace=THREE.SRGBColorSpace;
 const tScene=new THREE.Scene();tScene.add(new THREE.HemisphereLight(0xfff6fb,0x8a6a7a,1.7));{const d=new THREE.DirectionalLight(0xffffff,2.1);d.position.set(1.5,3,3);tScene.add(d)}
 const tCam=new THREE.PerspectiveCamera(30,1,.01,10);
-const SHOT={shirt:[[.5,1.33,1.55],[0,1.22,0]],jacket:[[.6,1.3,2.0],[0,1.12,0]],pants:[[.55,.72,2.05],[0,.52,0]],shoes:[[.32,.28,.55],[0,.04,.06]],socks:[[.42,.42,1.0],[0,.2,0]]};
+const SHOT={shirt:[[.5,1.33,1.55],[0,1.22,0]],jacket:[[.6,1.3,2.0],[0,1.12,0]],pants:[[.55,.85,2.15],[0,.6,0]],shoes:[[.32,.28,.55],[0,.04,.06]],socks:[[.42,.42,1.0],[0,.2,0]]};
 const previewCache=new Map();let previewQueue=[],previewGen=0;
 function previewKey(cat,id){return cat+id+'|'+state.frame+state.style}
 function renderPreview(cat,id){
@@ -732,7 +872,7 @@ function renderPreview(cat,id){
   BUILD[cat]();tScene.add(G[cat]);
   tCam.position.set(...SHOT[cat][0]);tCam.lookAt(...SHOT[cat][1]);thumbR.render(tScene,tCam);
   const url=thumbR.domElement.toDataURL('image/png');
-  tScene.remove(G[cat]);clear(G[cat]);G[cat]=live;state[cat]=prev;
+  tScene.remove(G[cat]);clear(G[cat]);G[cat]=live;state[cat]=prev;applyShape();
   previewCache.set(key,url);return url;
 }
 function pumpPreviews(){
@@ -788,23 +928,23 @@ function renderPane(){
     return;
   }
   const list=CAT[tab],label=TABS.find(t=>t[0]===tab)[1];
-  pane.appendChild(el(`<div class="ph"><h2>${gl(label)}</h2><span>${gl(list.length+' styles · hover to try on')}</span></div>`));
+  pane.appendChild(el(`<div class="ph"><h2>${gl(label)}</h2><span>${gl(list.length+' styles · '+list.filter(x=>x.y2k).length+' Y2K · hover to try on')}</span></div>`));
   const grid=document.createElement('div');grid.className='grid';
   if(list.length>3){
     const s=el(`<input class="search" placeholder="Search by colour, pattern or number">`);s.value=query;s.oninput=()=>{query=s.value;fill()};pane.appendChild(s);
     const f=el(`<div class="filters"></div>`);
-    ['All',...new Set(list.map(i=>i.cut))].forEach(c=>{const b=el(`<button class="chip">${gl(c)}</button>`);const v=c==='All'?'':c;if(cutFilter===v)b.classList.add('on');b.onclick=()=>{cutFilter=v;f.querySelectorAll('.chip').forEach(x=>x.classList.toggle('on',x===b));fill()};f.appendChild(b)});
+    ['All','Classic','Y2K ✦',...new Set(list.map(i=>i.cut))].forEach(c=>{const b=el(`<button class="chip">${gl(c)}</button>`);const v=c==='All'?'':c;if(cutFilter===v)b.classList.add('on');b.onclick=()=>{cutFilter=v;f.querySelectorAll('.chip').forEach(x=>x.classList.toggle('on',x===b));fill()};f.appendChild(b)});
     pane.appendChild(f);
   }
   pane.appendChild(grid);
   function fill(){
     grid.innerHTML='';const q=query.trim().toLowerCase();
-    const items=list.filter(it=>(!cutFilter||it.cut===cutFilter)&&(!q||it.name.toLowerCase().includes(q)||String(it.id)===q.replace('#','')));
+    const items=list.filter(it=>(!cutFilter||it.cut===cutFilter||(cutFilter==='Y2K ✦'&&it.y2k)||(cutFilter==='Classic'&&!it.y2k))&&(!q||it.name.toLowerCase().includes(q)||String(it.id)===q.replace('#','')));
     const none=el(`<button class="card${state[tab]===0?' on':''}"><div class="none">${gl('None')}</div><b>${gl('—')}</b><i>Nothing</i></button>`);none.onclick=()=>{tryCat=null;pick(0)};grid.appendChild(none);
     previewGen++;previewQueue=[];
     for(const it of items){
       const key=previewKey(tab,it.id),cached=previewCache.get(key);
-      const b=el(`<button class="card${state[tab]===it.id?' on':''}" title="${it.name}"><span class="tryon">try on</span><img alt="${it.name}" src="${cached||thumbFor(it)}"><b>${gl('#'+String(it.id).padStart(2,'0'))}</b><i>${it.name}</i></button>`);
+      const b=el(`<button class="card${state[tab]===it.id?' on':''}" title="${it.name}"><span class="tryon">try on</span><img alt="${it.name}" src="${cached||thumbFor(it)}"><b>${gl('#'+String(it.id).padStart(2,'0')+(it.y2k?' ✦':''))}</b><i>${it.name}</i></button>`);
       if(!cached)previewQueue.push({cat:tab,id:it.id,img:b.querySelector('img')});
       b.onclick=()=>{tryCat=null;tryPrev=null;pick(it.id)};
       if(canHover){b.onmouseenter=()=>tryOn(tab,it.id);b.onmouseleave=tryOff}
@@ -818,15 +958,16 @@ function updateWear(){
   const w=document.getElementById('wear');w.innerHTML=`<span class="lbl">${gl('Wearing')}</span>`;
   let any=false;
   for(const k of ['shirt','pants','jacket','shoes','socks']){if(!state[k])continue;any=true;
-    const p=el(`<span class="pill">${gl(CAT[k][state[k]-1].name)}<button aria-label="Remove">×</button></span>`);p.lastChild.onclick=()=>{state[k]=0;BUILD[k]();updateWear();if(tab===k)renderPane()};w.appendChild(p)}
+    const p=el(`<span class="pill">${gl(itemOf(k,state[k]).name)}<button aria-label="Remove">×</button></span>`);p.lastChild.onclick=()=>{state[k]=0;BUILD[k]();updateWear();if(tab===k)renderPane()};w.appendChild(p)}
   if(!any)w.appendChild(el(`<span class="nothing">${gl('Nothing yet')}</span>`));
   document.getElementById('empty').style.display=any?'none':'';
 }
 const toastEl=document.getElementById('toast');let tt;
 function toast(t){toastEl.textContent=t;toastEl.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>toastEl.classList.remove('show'),2600)}
+const pickId=k=>{const L=CAT[k];return L[Math.floor(Math.random()*L.length)].id};
 document.getElementById('random').onclick=()=>{
   const r=n=>Math.floor(Math.random()*n);
-  Object.assign(state,{eyeShape:r(EYE_SHAPES.length),brow:r(BROWS.length),mouth:r(MOUTHS.length),mark:Math.random()<.6?0:r(MARKS.length),frame:r(2),skin:r(SKINS.length),hair:1+r(HAIRS.length-1),hairColor:r(HAIRC.length),eyes:r(EYES.length),shirt:1+r(99),pants:1+r(99),jacket:Math.random()<.4?1+r(99):0,shoes:1+r(99),socks:1+r(3)});
+  Object.assign(state,{eyeShape:r(EYE_SHAPES.length),brow:r(BROWS.length),mouth:r(MOUTHS.length),mark:Math.random()<.6?0:r(MARKS.length),frame:r(2),skin:r(SKINS.length),hair:1+r(HAIRS.length-1),hairColor:r(HAIRC.length),eyes:r(EYES.length),shirt:pickId('shirt'),pants:pickId('pants'),jacket:Math.random()<.4?pickId('jacket'):0,shoes:pickId('shoes'),socks:pickId('socks')});
   buildAll();renderPane();
 };
 document.getElementById('reset').onclick=()=>{for(const k in BUILD)state[k]=0;buildAll();renderPane()};
