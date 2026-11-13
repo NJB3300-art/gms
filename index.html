@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Heemsworld</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f4efe6;--panel:#fffaf2;--ink:#1d1a16;--muted:#7a7166;--line:#e6dccb;--accent:#ff5a36;--accent2:#2b2bd9}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif}
+#app{display:flex;height:100vh;width:100%}
+#stage{position:relative;flex:1;min-width:0;background:radial-gradient(ellipse at 50% 40%,#fff8ec 0%,#efe4d2 70%,#e5d6bf 100%)}
+#stage canvas{display:block;width:100%;height:100%;touch-action:none}
+.brand{position:absolute;top:18px;left:22px;font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:30px;letter-spacing:-1px;pointer-events:none}
+.brand span{color:var(--accent)}
+.brand small{display:block;font-family:Inter;font-weight:500;font-size:12px;letter-spacing:0;color:var(--muted);margin-top:2px}
+.actions{position:absolute;left:22px;bottom:20px;display:flex;gap:10px;flex-wrap:wrap}
+button{font:inherit;cursor:pointer;border:0}
+.btn{padding:11px 18px;border-radius:999px;font-weight:600;font-size:14px;background:var(--ink);color:#fff;box-shadow:0 2px 0 rgba(0,0,0,.15)}
+.btn.alt{background:#fff;color:var(--ink);border:1.5px solid var(--ink)}
+.btn.hot{background:var(--accent)}
+.btn:active{transform:translateY(1px)}
+#status{position:absolute;right:18px;bottom:22px;font-size:13px;color:var(--muted);max-width:50%;text-align:right}
+#panel{width:400px;max-width:100%;background:var(--panel);border-left:1.5px solid var(--line);display:flex;flex-direction:column;min-height:0}
+.tabs{display:flex;gap:4px;padding:12px 12px 0;flex-wrap:wrap}
+.tab{padding:8px 12px;border-radius:10px 10px 0 0;background:transparent;font-weight:600;font-size:13px;color:var(--muted)}
+.tab.on{background:var(--bg);color:var(--ink)}
+.pane{flex:1;overflow:auto;background:var(--bg);margin:0 12px 12px;border-radius:0 12px 12px 12px;padding:14px}
+.search{width:100%;padding:9px 12px;border-radius:10px;border:1.5px solid var(--line);background:#fff;font:inherit;font-size:14px;margin-bottom:10px}
+.count{font-size:12px;color:var(--muted);margin:0 0 10px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:8px}
+.card{background:#fff;border:2px solid transparent;border-radius:12px;padding:5px;text-align:left;display:flex;flex-direction:column;gap:4px}
+.card img,.card .none{width:100%;aspect-ratio:1;border-radius:8px;display:block;object-fit:cover}
+.card .none{background:repeating-linear-gradient(45deg,#eee,#eee 6px,#f8f8f8 6px,#f8f8f8 12px);display:grid;place-items:center;font-size:11px;color:var(--muted)}
+.card b{font-size:11px;font-weight:600}
+.card i{font-style:normal;font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card.on{border-color:var(--accent)}
+.row{margin-bottom:16px}
+.row label{display:block;font-size:12px;font-weight:600;margin-bottom:6px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.sw{display:flex;gap:7px;flex-wrap:wrap}
+.sw button{width:30px;height:30px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1.5px var(--line)}
+.sw button.on{box-shadow:0 0 0 2.5px var(--accent)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chips button{padding:7px 11px;border-radius:999px;background:#fff;border:1.5px solid var(--line);font-size:13px}
+.chips button.on{border-color:var(--ink);background:var(--ink);color:#fff}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.wear{font-size:12px;color:var(--muted);padding:0 14px 12px;line-height:1.5}
+@media (max-width:760px){#app{flex-direction:column}#stage{flex:none;height:52vh}#panel{width:100%;flex:1;border-left:0;border-top:1.5px solid var(--line)}.brand{font-size:24px}#status{display:none}}
+</style>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}
+</script>
+</head>
+<body>
+<div id="app">
+  <div id="stage">
+    <div class="brand">Heems<span>world</span><small>3D character maker</small></div>
+    <div class="actions">
+      <button class="btn hot" id="export">Export .glb</button>
+      <button class="btn alt" id="random">Randomize</button>
+    </div>
+    <div id="status">Drag to spin · scroll to zoom</div>
+  </div>
+  <aside id="panel">
+    <div class="tabs" id="tabs"></div>
+    <div class="pane" id="pane"></div>
+    <div class="wear" id="wear"></div>
+  </aside>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+import {GLTFExporter} from 'three/addons/exporters/GLTFExporter.js';
+
+/* ---------- catalog ---------- */
+const COLORS=[['Black','#1d1d1f'],['White','#f2f2ee'],['Red','#c8323c'],['Crimson','#8e1b2b'],['Orange','#e8742a'],['Mustard','#d6a72b'],['Lime','#8cc63f'],['Forest','#2f6b3a'],['Teal','#1f8a8a'],['Sky','#5bb4e8'],['Navy','#1f2f5c'],['Royal','#3b55c9'],['Violet','#6f42c1'],['Pink','#e77fb0'],['Tan','#c9a77c'],['Gray','#7d8088']];
+const PATTERNS=['Solid','Striped','Pinstripe','Checker','Dotted','Diagonal','Gradient','Camo','Plaid'];
+function makeCatalog(cuts,salt){
+  const out=[];
+  for(let i=0;i<99;i++){
+    const cut=cuts[i%3], p=PATTERNS[Math.floor(i/3)%9];
+    const a=COLORS[(i*7+salt)%16]; let b=COLORS[(i*11+5+salt)%16]; if(b===a) b=COLORS[(i*11+6+salt)%16];
+    out.push({id:i+1,cut,pattern:p,c1:a[1],c2:b[1],name:`${a[0]} ${p==='Solid'?'':p+' '}${cut}`,seed:i*97+salt+1});
+  }
+  return out;
+}
+const CAT={
+  shirt:makeCatalog(['Tee','Longsleeve','Tank'],0),
+  pants:makeCatalog(['Jeans','Shorts','Capris'],3),
+  jacket:makeCatalog(['Hoodie','Bomber','Trench'],9),
+  shoes:makeCatalog(['Sneakers','Boots','Loafers'],12),
+  socks:[
+    {id:1,cut:'Ankle',pattern:'Solid',c1:'#f2f2ee',c2:'#f2f2ee',name:'White Ankle Socks',seed:1},
+    {id:2,cut:'Crew',pattern:'Striped',c1:'#7d8088',c2:'#1d1d1f',name:'Gray Striped Crew Socks',seed:2},
+    {id:3,cut:'Knee-high',pattern:'Striped',c1:'#f2f2ee',c2:'#c8323c',name:'Red Striped Knee-highs',seed:3}
+  ]
+};
+const SKINS=['#f6d7c3','#eec3a3','#d9a37e','#b97d55','#8d5a3b','#5c3a26','#3d2518'];
+const HAIRC=['#151211','#3a2417','#6b4226','#a8743f','#e2c178','#b8b4ad','#c8323c','#3b55c9','#e77fb0'];
+const EYES=['#3a2417','#2f6b3a','#3b6fb6','#7d8088','#6f42c1'];
+const HAIRS=['Bald','Buzz','Short','Bun','Spiky','Long','Puff'];
+
+/* ---------- helpers ---------- */
+function rng(s){return()=>{s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function shade(hex,a){const c=new THREE.Color(hex);const hsl={};c.getHSL(hsl);c.setHSL(hsl.h,hsl.s,Math.min(1,Math.max(0,hsl.l+a)));return '#'+c.getHexString()}
+function drawPattern(ctx,s,it){
+  const {pattern:p,c1,c2,seed}=it;
+  ctx.fillStyle=c1;ctx.fillRect(0,0,s,s);ctx.fillStyle=c2;ctx.strokeStyle=c2;
+  if(p==='Striped'){for(let y=0;y<s;y+=s/8)ctx.fillRect(0,y,s,s/16)}
+  else if(p==='Pinstripe'){for(let x=0;x<s;x+=s/16)ctx.fillRect(x,0,Math.max(1,s/100),s)}
+  else if(p==='Checker'){const k=s/8;for(let y=0;y<8;y++)for(let x=0;x<8;x++)if((x+y)%2)ctx.fillRect(x*k,y*k,k,k)}
+  else if(p==='Dotted'){const k=s/8;for(let y=0;y<8;y++)for(let x=0;x<9;x++){ctx.beginPath();ctx.arc(x*k+(y%2)*k/2,y*k+k/2,k/5,0,7);ctx.fill()}}
+  else if(p==='Diagonal'){ctx.lineWidth=s/24;for(let i=-s;i<2*s;i+=s/6){ctx.beginPath();ctx.moveTo(i,0);ctx.lineTo(i+s,s);ctx.stroke()}}
+  else if(p==='Gradient'){const g=ctx.createLinearGradient(0,0,0,s);g.addColorStop(0,c1);g.addColorStop(1,c2);ctx.fillStyle=g;ctx.fillRect(0,0,s,s)}
+  else if(p==='Camo'){const r=rng(seed);const cs=[c2,shade(c1,-.18),shade(c2,.2)];for(let i=0;i<46;i++){ctx.fillStyle=cs[i%3];ctx.beginPath();ctx.ellipse(r()*s,r()*s,s*(.05+r()*.1),s*(.03+r()*.06),r()*3,0,7);ctx.fill()}}
+  else if(p==='Plaid'){ctx.globalAlpha=.45;for(let i=0;i<s;i+=s/4){ctx.fillRect(i,0,s/10,s);ctx.fillRect(0,i,s,s/10)}ctx.globalAlpha=.8;ctx.fillStyle=shade(c1,.35);for(let i=s/8;i<s;i+=s/4){ctx.fillRect(i,0,Math.max(1,s/64),s);ctx.fillRect(0,i,s,Math.max(1,s/64))}ctx.globalAlpha=1}
+}
+const texCache=new Map(), thumbCache=new Map();
+function texFor(it){
+  const k=it.name+it.seed; if(texCache.has(k)) return texCache.get(k);
+  const c=document.createElement('canvas');c.width=c.height=256;drawPattern(c.getContext('2d'),256,it);
+  const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(2,2);
+  texCache.set(k,t);return t;
+}
+function thumbFor(it){
+  const k=it.name+it.seed; if(thumbCache.has(k)) return thumbCache.get(k);
+  const c=document.createElement('canvas');c.width=c.height=64;drawPattern(c.getContext('2d'),64,it);
+  const u=c.toDataURL();thumbCache.set(k,u);return u;
+}
+const matFor=(it,name)=>{const m=new THREE.MeshStandardMaterial({map:texFor(it),roughness:.85});m.name=name;return m};
+const plain=(hex,name,r=.8)=>{const m=new THREE.MeshStandardMaterial({color:hex,roughness:r});m.name=name;return m};
+
+/* ---------- scene ---------- */
+const stage=document.getElementById('stage');
+const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true,preserveDrawingBuffer:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.outputColorSpace=THREE.SRGBColorSpace;
+stage.prepend(renderer.domElement);
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(32,1,.05,50);camera.position.set(1.4,1.35,3.6);
+const controls=new OrbitControls(camera,renderer.domElement);controls.target.set(0,.95,0);controls.enableDamping=true;controls.minDistance=1.2;controls.maxDistance=7;controls.update();
+scene.add(new THREE.HemisphereLight(0xfff6e8,0x8a7a66,1.6));
+const key=new THREE.DirectionalLight(0xffffff,1.9);key.position.set(2,4,3);scene.add(key);
+const rim=new THREE.DirectionalLight(0xffd9b0,.9);rim.position.set(-3,2,-2);scene.add(rim);
+const floor=new THREE.Mesh(new THREE.CircleGeometry(.75,48),new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:.1}));
+floor.rotation.x=-Math.PI/2;floor.position.y=.001;scene.add(floor);
+
+const root=new THREE.Group();root.name='Heemsworld_Character';scene.add(root);
+const G={};for(const n of ['body','hair','socks','shoes','pants','shirt','jacket']){G[n]=new THREE.Group();G[n].name=n[0].toUpperCase()+n.slice(1);root.add(G[n])}
+
+/* ---------- body geometry ---------- */
+const LIMB={
+  armL:{pos:[.25,1.44,0],rz:.2,len:.62,r0:.056,r1:.042},
+  armR:{pos:[-.25,1.44,0],rz:-.2,len:.62,r0:.056,r1:.042},
+  legL:{pos:[.105,.95,0],rz:0,len:.86,r0:.082,r1:.05},
+  legR:{pos:[-.105,.95,0],rz:0,len:.86,r0:.082,r1:.05}
+};
+const ZS=.62;
+const torsoR=y=>.17+(.2-.17)*THREE.MathUtils.clamp((y-.92)/(.56),0,1);
+function limbSeg(L,t0,t1,off,mat,name){
+  const r=t=>L.r0+(L.r1-L.r0)*t, h=(t1-t0)*L.len;
+  const m=new THREE.Mesh(new THREE.CylinderGeometry(r(t0)+off,r(t1)+off,h,24),mat);m.name=name;m.position.y=-(t0+t1)/2*L.len;
+  const g=new THREE.Group();g.name=name+'_joint';g.position.set(...L.pos);g.rotation.z=L.rz;g.add(m);return g;
+}
+function torsoSeg(yb,yt,off,mat,name,rb,rt){
+  rb=rb??torsoR(yb);rt=rt??torsoR(yt);
+  const m=new THREE.Mesh(new THREE.CylinderGeometry(rt+off,rb+off,yt-yb,32),mat);m.name=name;m.position.y=(yb+yt)/2;m.scale.z=ZS;return m;
+}
+function sphere(r,pos,mat,name,scale){const m=new THREE.Mesh(new THREE.SphereGeometry(r,24,16),mat);m.name=name;m.position.set(...pos);if(scale)m.scale.set(...scale);return m}
+function box(w,h,d,pos,mat,name){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);m.name=name;m.position.set(...pos);return m}
+function torus(R,r,pos,mat,name,rx=Math.PI/2,sz=ZS){const m=new THREE.Mesh(new THREE.TorusGeometry(R,r,10,32),mat);m.name=name;m.position.set(...pos);m.rotation.x=rx;m.scale.y=sz;return m}
+const FOOT=x=>[x,.04,.045];
+
+const state={skin:2,hair:2,hairColor:1,eyes:0,height:1,build:1,shirt:1,pants:1,jacket:0,shoes:1,socks:2};
+const skinMat=plain(SKINS[2],'Skin',.6);
+
+function clear(g){g.traverse(o=>{if(o.geometry)o.geometry.dispose()});g.clear()}
+
+function buildBody(){
+  clear(G.body);const B=G.body,s=skinMat;
+  B.add(torsoSeg(.88,1.48,0,s,'Torso'));
+  B.add(torsoSeg(.84,.95,0,s,'Hips',.17,.17));
+  B.add(new THREE.Mesh(new THREE.CylinderGeometry(.05,.055,.14,16),s)).position.y=1.54;
+  for(const k of ['armL','armR']){const L=LIMB[k];B.add(limbSeg(L,0,1,0,s,k));B.add(sphere(.06,L.pos,s,k+'_shoulder'));
+    const hx=L.pos[0]+Math.sin(L.rz)*L.len*1.05, hy=L.pos[1]-Math.cos(L.rz)*L.len*1.05;B.add(sphere(.048,[hx,hy,0],s,k+'_hand',[.85,1.25,.7]))}
+  for(const k of ['legL','legR']){B.add(limbSeg(LIMB[k],0,1,0,s,k))}
+  B.add(box(.1,.07,.22,FOOT(.105),s,'footL'));B.add(box(.1,.07,.22,FOOT(-.105),s,'footR'));
+  const hp=[0,1.7,0];
+  B.add(sphere(.115,hp,s,'Head',[1,1.12,1.02]));
+  B.add(sphere(.03,[.115,1.69,0],s,'earL',[.5,1,.8]));B.add(sphere(.03,[-.115,1.69,0],s,'earR',[.5,1,.8]));
+  B.add(sphere(.018,[0,1.685,.118],s,'Nose',[1,1,1.2]));
+  const white=plain('#ffffff','EyeWhite',.3), iris=plain(EYES[state.eyes],'Iris',.3), lip=plain(shade(SKINS[state.skin],-.18),'Lips',.6), brow=plain(HAIRC[state.hairColor],'Brow');
+  for(const x of [.042,-.042]){B.add(sphere(.021,[x,1.72,.097],white,'Eye',[1,1,.6]));B.add(sphere(.011,[x,1.72,.11],iris,'Pupil',[1,1,.5]));B.add(box(.04,.008,.01,[x,1.752,.104],brow,'Brow'))}
+  B.add(box(.045,.01,.01,[0,1.645,.108],lip,'Mouth'));
+}
+
+function buildHair(){
+  clear(G.hair);const st=HAIRS[state.hair];if(st==='Bald')return;
+  const m=plain(HAIRC[state.hairColor],'Hair',.9);m.side=THREE.DoubleSide;
+  const cap=(r,th,name)=>{const c=new THREE.Mesh(new THREE.SphereGeometry(r,32,16,0,Math.PI*2,0,th),m);c.name=name;c.position.set(0,1.7,-.005);c.scale.set(1,1.12,1.02);c.rotation.x=-.35;return c};
+  if(st==='Buzz'){G.hair.add(cap(.119,Math.PI*.5,'Buzz'));return}
+  G.hair.add(cap(.126,Math.PI*.52,'HairCap'));
+  if(st==='Bun')G.hair.add(sphere(.055,[0,1.86,-.06],m,'Bun'));
+  if(st==='Spiky'){for(let i=0;i<14;i++){const a=i/14*Math.PI*2, r=.07;const c=new THREE.Mesh(new THREE.ConeGeometry(.025,.09,8),m);c.name='Spike';c.position.set(Math.cos(a)*r,1.81,Math.sin(a)*r-.01);c.lookAt(Math.cos(a)*.4,2.2,Math.sin(a)*.4-.01);c.rotateX(Math.PI/2);G.hair.add(c)}G.hair.add(sphere(.04,[0,1.84,0],m,'SpikeTop'))}
+  if(st==='Long'){const b=new THREE.Mesh(new THREE.CylinderGeometry(.12,.14,.34,24,1,true,Math.PI*.5,Math.PI),m);b.name='LongBack';b.position.set(0,1.58,-.02);b.scale.z=.8;G.hair.add(b)}
+  if(st==='Puff')G.hair.add(sphere(.16,[0,1.78,-.02],m,'Puff',[1,.9,1]));
+}
+
+function buildShirt(){
+  clear(G.shirt);if(!state.shirt)return;const it=CAT.shirt[state.shirt-1],m=matFor(it,'Shirt'),o=.012;
+  G.shirt.add(torsoSeg(.9,1.48,o,m,'ShirtBody'));
+  G.shirt.add(torus(.062,.012,[0,1.48,0],plain(shade(it.c1,-.12),'Collar'),'Collar',Math.PI/2,1));
+  if(it.cut!=='Tank'){const len=it.cut==='Tee'?.34:.93;for(const k of ['armL','armR']){G.shirt.add(sphere(.06+o,LIMB[k].pos,m,'ShirtShoulder'));G.shirt.add(limbSeg(LIMB[k],0,len,o,m,'Sleeve'))}}
+}
+function buildPants(){
+  clear(G.pants);if(!state.pants)return;const it=CAT.pants[state.pants-1],m=matFor(it,'Pants'),o=.015;
+  const len={Jeans:.97,Shorts:.42,Capris:.72}[it.cut];
+  G.pants.add(torsoSeg(.83,.99,o,m,'PantsHips',.17,.172));
+  G.pants.add(torus(.18,.012,[0,.985,0],plain(shade(it.c1,-.2),'Waistband'),'Waistband'));
+  for(const k of ['legL','legR'])G.pants.add(limbSeg(LIMB[k],0,len,o,m,'PantLeg'));
+}
+function buildSocks(){
+  clear(G.socks);if(!state.socks)return;const it=CAT.socks[state.socks-1],m=matFor(it,'Socks');
+  const a={Ankle:.93,Crew:.78,'Knee-high':.5}[it.cut];
+  for(const k of ['legL','legR'])G.socks.add(limbSeg(LIMB[k],a,1,.006,m,'Sock'));
+  G.socks.add(box(.112,.08,.232,FOOT(.105),m,'SockFootL'));G.socks.add(box(.112,.08,.232,FOOT(-.105),m,'SockFootR'));
+}
+function buildShoes(){
+  clear(G.shoes);if(!state.shoes)return;const it=CAT.shoes[state.shoes-1],m=matFor(it,'Shoes');
+  const sole=plain(it.cut==='Sneakers'?'#f4f1ea':'#2a211b','Sole',.9);
+  for(const x of [.105,-.105]){
+    if(it.cut==='Sneakers'){G.shoes.add(box(.125,.085,.26,[x,.055,.05],m,'Sneaker'));G.shoes.add(box(.13,.03,.27,[x,.015,.05],sole,'Sole'));G.shoes.add(box(.07,.012,.08,[x,.1,.1],plain('#ffffff','Laces'),'Laces'))}
+    if(it.cut==='Boots'){G.shoes.add(box(.13,.1,.26,[x,.06,.05],m,'Boot'));G.shoes.add(box(.135,.03,.27,[x,.015,.05],sole,'Sole'))}
+    if(it.cut==='Loafers'){G.shoes.add(box(.12,.065,.25,[x,.045,.05],m,'Loafer'));G.shoes.add(box(.124,.022,.255,[x,.011,.05],sole,'Sole'));G.shoes.add(box(.06,.01,.02,[x,.08,.12],plain(shade(it.c1,-.25),'Strap'),'Strap'))}
+  }
+  if(it.cut==='Boots')for(const k of ['legL','legR'])G.shoes.add(limbSeg(LIMB[k],.78,1,.03,m,'BootShaft'));
+}
+function buildJacket(){
+  clear(G.jacket);if(!state.jacket)return;const it=CAT.jacket[state.jacket-1],m=matFor(it,'Jacket'),o=.035;
+  const trim=plain(shade(it.c1,-.2),'JacketTrim');
+  G.jacket.add(torsoSeg(.86,1.5,o,m,'JacketBody'));
+  for(const k of ['armL','armR']){G.jacket.add(sphere(.06+o,LIMB[k].pos,m,'JacketShoulder'));G.jacket.add(limbSeg(LIMB[k],0,.9,.028,m,'JacketSleeve'))}
+  if(it.cut!=='Hoodie')G.jacket.add(box(.008,.6,.01,[0,1.17,torsoR(1.17)*ZS+o*ZS+.008],trim,'Zip'));
+  if(it.cut==='Hoodie'){
+    const h=new THREE.Mesh(new THREE.TorusGeometry(.12,.05,12,32,Math.PI*1.3),m);h.name='Hood';h.position.set(0,1.5,-.03);h.rotation.set(Math.PI/2+.25,0,-Math.PI*.15+Math.PI);h.scale.set(1,.95,1);G.jacket.add(h);
+    G.jacket.add(box(.2,.11,.02,[0,1.03,torsoR(1.03)*ZS+o*ZS+.01],m,'Pocket'));
+    G.jacket.add(torus(torsoR(.86)+o,.018,[0,.87,0],trim,'Hem'));
+  }
+  if(it.cut==='Bomber'){G.jacket.add(torus(torsoR(.86)+o+.004,.026,[0,.87,0],trim,'Waistband'));G.jacket.add(torus(.08,.02,[0,1.5,0],trim,'Collar',Math.PI/2,1))}
+  if(it.cut==='Trench'){G.jacket.add(torsoSeg(.5,.87,o,m,'TrenchSkirt',.27,torsoR(.87)));G.jacket.add(torus(torsoR(1.0)+o+.004,.016,[0,1.0,0],trim,'Belt'));G.jacket.add(torus(.09,.025,[0,1.5,.01],m,'Lapel',Math.PI/2+.3,1))}
+}
+function buildAll(){buildBody();buildHair();buildSocks();buildShoes();buildPants();buildShirt();buildJacket();applyShape();updateWear()}
+function applyShape(){root.scale.set(state.build,state.height,state.build)}
+
+/* ---------- UI ---------- */
+const TABS=[['body','Body'],['shirt','Shirts'],['pants','Pants'],['jacket','Jackets'],['shoes','Shoes'],['socks','Socks']];
+let tab='shirt',query='';
+const tabsEl=document.getElementById('tabs'),pane=document.getElementById('pane');
+function renderTabs(){tabsEl.innerHTML='';for(const [k,l] of TABS){const b=document.createElement('button');b.className='tab'+(tab===k?' on':'');b.textContent=l;b.onclick=()=>{tab=k;query='';renderTabs();renderPane()};tabsEl.appendChild(b)}}
+function swatches(label,list,key,onPick){
+  const r=document.createElement('div');r.className='row';r.innerHTML=`<label>${label}</label>`;const w=document.createElement('div');w.className='sw';
+  list.forEach((c,i)=>{const b=document.createElement('button');b.style.background=c;b.className=state[key]===i?'on':'';b.title=c;b.onclick=()=>{state[key]=i;onPick();renderPane()};w.appendChild(b)});r.appendChild(w);return r}
+function slider(label,key,min,max){
+  const r=document.createElement('div');r.className='row';r.innerHTML=`<label>${label}</label>`;const s=document.createElement('input');s.type='range';s.min=min;s.max=max;s.step=.01;s.value=state[key];s.oninput=()=>{state[key]=+s.value;applyShape()};r.appendChild(s);return r}
+function renderPane(){
+  pane.innerHTML='';
+  if(tab==='body'){
+    pane.appendChild(swatches('Skin tone',SKINS,'skin',()=>{skinMat.color.set(SKINS[state.skin]);buildBody()}));
+    const r=document.createElement('div');r.className='row';r.innerHTML='<label>Hair style</label>';const ch=document.createElement('div');ch.className='chips';
+    HAIRS.forEach((h,i)=>{const b=document.createElement('button');b.textContent=h;b.className=state.hair===i?'on':'';b.onclick=()=>{state.hair=i;buildHair();renderPane()};ch.appendChild(b)});r.appendChild(ch);pane.appendChild(r);
+    pane.appendChild(swatches('Hair color',HAIRC,'hairColor',()=>{buildHair();buildBody()}));
+    pane.appendChild(swatches('Eye color',EYES,'eyes',buildBody));
+    pane.appendChild(slider('Height','height',.85,1.15));
+    pane.appendChild(slider('Build','build',.82,1.25));
+    return;
+  }
+  const list=CAT[tab];
+  if(list.length>3){const s=document.createElement('input');s.className='search';s.placeholder=`Search ${list.length} ${tab==='shoes'?'shoes':tab+'s'} (e.g. "camo", "navy", "${list[1].cut.toLowerCase()}")`;s.value=query;s.oninput=()=>{query=s.value;fill()};pane.appendChild(s)}
+  const cnt=document.createElement('p');cnt.className='count';pane.appendChild(cnt);
+  const grid=document.createElement('div');grid.className='grid';pane.appendChild(grid);
+  function fill(){
+    grid.innerHTML='';const q=query.trim().toLowerCase();
+    const items=list.filter(it=>!q||it.name.toLowerCase().includes(q)||String(it.id)===q);
+    cnt.textContent=`${items.length} of ${list.length} · #${state[tab]||'—'} selected`;
+    if(!q){const b=document.createElement('button');b.className='card'+(state[tab]===0?' on':'');b.innerHTML='<div class="none">None</div><b>None</b><i>&nbsp;</i>';b.onclick=()=>pick(0);grid.appendChild(b)}
+    for(const it of items){const b=document.createElement('button');b.className='card'+(state[tab]===it.id?' on':'');b.title=it.name;b.innerHTML=`<img alt="" src="${thumbFor(it)}"><b>#${String(it.id).padStart(2,'0')}</b><i>${it.name}</i>`;b.onclick=()=>pick(it.id);grid.appendChild(b)}
+  }
+  function pick(id){state[tab]=id;({shirt:buildShirt,pants:buildPants,jacket:buildJacket,shoes:buildShoes,socks:buildSocks})[tab]();updateWear();fill()}
+  fill();
+}
+function updateWear(){
+  const n=k=>state[k]?CAT[k][state[k]-1].name:'none';
+  document.getElementById('wear').textContent=`Wearing: ${n('shirt')} · ${n('pants')} · ${n('jacket')} · ${n('shoes')} · ${n('socks')}`;
+}
+document.getElementById('random').onclick=()=>{
+  const r=n=>Math.floor(Math.random()*n);
+  Object.assign(state,{skin:r(SKINS.length),hair:r(HAIRS.length),hairColor:r(HAIRC.length),eyes:r(EYES.length),shirt:1+r(99),pants:1+r(99),jacket:Math.random()<.45?1+r(99):0,shoes:1+r(99),socks:1+r(3),height:.9+Math.random()*.2,build:.88+Math.random()*.25});
+  skinMat.color.set(SKINS[state.skin]);buildAll();renderPane();
+};
+
+/* ---------- GLB export ---------- */
+const statusEl=document.getElementById('status');
+let downloads=null;
+try{window.claude?.use?.('downloads').then(d=>{downloads=d}).catch(()=>{})}catch(e){}
+const CRC=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0}return t})();
+function crc32(d){let c=0xFFFFFFFF;for(let i=0;i<d.length;i++)c=CRC[(c^d[i])&255]^(c>>>8);return(c^0xFFFFFFFF)>>>0}
+function zipOne(name,data){
+  const nb=new TextEncoder().encode(name),crc=crc32(data),L=data.length;
+  const lh=new DataView(new ArrayBuffer(30));[[0,0x04034b50,4],[4,20,2],[12,0x21,2],[14,crc,4],[18,L,4],[22,L,4],[26,nb.length,2]].forEach(([o,v,s])=>s===4?lh.setUint32(o,v,true):lh.setUint16(o,v,true));
+  const cd=new DataView(new ArrayBuffer(46));[[0,0x02014b50,4],[4,20,2],[6,20,2],[14,0x21,2],[16,crc,4],[20,L,4],[24,L,4],[28,nb.length,2]].forEach(([o,v,s])=>s===4?cd.setUint32(o,v,true):cd.setUint16(o,v,true));
+  const end=new DataView(new ArrayBuffer(22));[[0,0x06054b50,4],[8,1,2],[10,1,2],[12,46+nb.length,4],[16,30+nb.length+L,4]].forEach(([o,v,s])=>s===4?end.setUint32(o,v,true):end.setUint16(o,v,true));
+  return new Blob([lh,nb,data,cd,nb,end]);
+}
+document.getElementById('export').onclick=()=>{
+  statusEl.textContent='Building .glb…';
+  root.updateMatrixWorld(true);
+  new GLTFExporter().parse(root,async buf=>{
+    const bytes=new Uint8Array(buf),kb=(bytes.length/1024).toFixed(0);
+    if(downloads){
+      try{await downloads.save({filename:'heemsworld-character.zip',data:zipOne('heemsworld-character.glb',bytes)});statusEl.textContent=`Saved heemsworld-character.glb (${kb} KB, zipped)`}
+      catch(e){statusEl.textContent=e?.code==='declined'?'Export cancelled':'Export failed: '+(e?.message||e?.code||e)}
+    }else{
+      const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([bytes],{type:'model/gltf-binary'}));a.download='heemsworld-character.glb';document.body.appendChild(a);a.click();a.remove();
+      statusEl.textContent=`Exported heemsworld-character.glb (${kb} KB)`;
+    }
+  },err=>{statusEl.textContent='Export failed: '+err},{binary:true});
+};
+
+/* ---------- loop ---------- */
+function resize(){const w=stage.clientWidth,h=stage.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}
+new ResizeObserver(resize).observe(stage);resize();
+renderer.setAnimationLoop(()=>{controls.update();renderer.render(scene,camera)});
+buildAll();renderTabs();renderPane();
+window.__heems={root,state,CAT,buildAll};
+</script>
+</body>
+</html>
