@@ -172,6 +172,14 @@ main{grid-template-columns:500px 1fr!important}
 .layer .eye{width:40px;padding:5px 0!important}
 @media (max-width:860px){main{grid-template-columns:1fr!important}#panel{order:1;grid-template-columns:1fr;grid-template-rows:auto 1fr auto;border-right:0}
   .tabs{grid-row:auto;flex-direction:row;overflow-x:auto;border-right:0;border-bottom:1.5px solid var(--line)!important}.tab{min-width:70px}.pane,.wear{grid-column:1}}
+.rz{height:230px;display:grid;place-items:center;border-radius:14px;background:repeating-conic-gradient(#fff 0 25%,#fff3f8 0 50%) 0 0/18px 18px;border:1.5px solid #f6c6da;touch-action:none;overflow:hidden}
+.rzframe{position:relative;outline:2px dashed #e0559a;outline-offset:0;background:rgba(255,255,255,.2)}
+.rzframe img{width:100%;height:100%;display:block;pointer-events:none;user-select:none}
+.rzframe .h{position:absolute;width:14px;height:14px;border-radius:50%;background:#fff;border:2px solid #d6457f;box-shadow:0 1px 3px rgba(0,0,0,.2);touch-action:none}
+.h.n{top:-8px;left:calc(50% - 7px);cursor:ns-resize}.h.s{bottom:-8px;left:calc(50% - 7px);cursor:ns-resize}
+.h.e{right:-8px;top:calc(50% - 7px);cursor:ew-resize}.h.w{left:-8px;top:calc(50% - 7px);cursor:ew-resize}
+.h.ne{right:-8px;top:-8px;cursor:nesw-resize}.h.sw{left:-8px;bottom:-8px;cursor:nesw-resize}.h.nw{left:-8px;top:-8px;cursor:nwse-resize}.h.se{right:-8px;bottom:-8px;cursor:nwse-resize}
+.rzvals{text-align:center;margin-top:6px;font-size:13px}
 </style>
 <script type="importmap">
 {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}
@@ -377,7 +385,7 @@ function loft(R,seg=10,caps=[true,true],opts={}){
 function mesh(geo,m,name){const o=new THREE.Mesh(geo,m);o.name=name;return o}
 
 /* ================= anatomy (stylised: long legs, narrow waist, slightly larger head) ================= */
-const state={browY:0,browGap:0,browTilt:0,browThick:1,customMouth:false,eyeY:0,eyeGap:12,eyeSize:1,eyeTilt:0,mouthY:0,mouthX:0,mouthSize:1,noseY:0,noseSize:1,customEyes:false,eyeShape:0,brow:0,mouth:0,mark:0,style:'Toon',frame:0,skin:2,hair:0,hairColor:1,eyes:0,height:1,build:1,shirt:0,pants:0,jacket:0,shoes:0,socks:0};
+const state={eyeW:1,eyeH:1,browY:0,browGap:0,browTilt:0,browThick:1,customMouth:false,eyeY:0,eyeGap:12,eyeSize:1,eyeTilt:0,mouthY:0,mouthX:0,mouthSize:1,noseY:0,noseSize:1,customEyes:false,eyeShape:0,brow:0,mouth:0,mark:0,style:'Toon',frame:0,skin:2,hair:0,hairColor:1,eyes:0,height:1,build:1,shirt:0,pants:0,jacket:0,shoes:0,socks:0};
 const H0=1.585,HS=1.22,HV=1.08,HEADZ=.02,HY=y=>H0+(y-1.565)*HV;   // wider than tall = rounder anime head   // head-space helper (y measured on the original 1.565–1.828 head)
 const LEG_END=-.885;
 
@@ -481,10 +489,19 @@ function heart(c,cx,cy,h){c.beginPath();c.moveTo(cx,cy+h);c.bezierCurveTo(cx-h*1
 let EA={x:1,y:1};
 // placement + custom-eye hooks (thumbnails/pad renders force the defaults)
 let FACE_DEFAULTS=false;
+const EW=()=>FACE_DEFAULTS?1:state.eyeW,EH=()=>FACE_DEFAULTS?1:state.eyeH;
 const GAP=()=>FACE_DEFAULTS?12:state.eyeGap,SZ=()=>FACE_DEFAULTS?1:state.eyeSize,TILT=()=>FACE_DEFAULTS?0:state.eyeTilt,USE_CUSTOM=()=>!FACE_DEFAULTS&&state.customEyes;
 // one eye (the right one, outer corner to the right) lives on this pad, 28 x 20 face units at 10px per unit
 const EYEBOX={w:28,h:20},PAD_PX=10;
 const eyePad=document.createElement('canvas');eyePad.width=EYEBOX.w*PAD_PX;eyePad.height=EYEBOX.h*PAD_PX;
+function singleEyeURL(){
+  const c=document.createElement('canvas');c.width=eyePad.width;c.height=eyePad.height;const x=c.getContext('2d');
+  if(state.customEyes)x.drawImage(eyePad,0,0);
+  else{const K=PAD_PX,t=document.createElement('canvas');t.width=t.height=128*K;const y=t.getContext('2d');y.setTransform(K,0,0,K,0,0);
+    const keep=EA;EA={x:1,y:1};FACE_DEFAULTS=true;drawEyes(y,64,SKINS[state.skin],state.eyeShape);FACE_DEFAULTS=false;EA=keep;
+    x.drawImage(t,(64+12-EYEBOX.w/2)*K,(64-EYEBOX.h/2)*K,EYEBOX.w*K,EYEBOX.h*K,0,0,c.width,c.height)}
+  return c.toDataURL();
+}
 function stampPresetOnPad(idx){
   const K=PAD_PX,t=document.createElement('canvas');t.width=t.height=128*K;const x=t.getContext('2d');x.setTransform(K,0,0,K,0,0);
   const keep=EA;EA={x:1,y:1};FACE_DEFAULTS=true;drawEyes(x,64,SKINS[state.skin],idx);FACE_DEFAULTS=false;EA=keep;
@@ -567,7 +584,7 @@ function drawEyes(c,ey,skin,shapeIdx=state.eyeShape){
     if(girl||rosy){const bx=x+sx*2,by=ey+10,rg=c.createRadialGradient(bx,by,0,bx,by,6);rg.addColorStop(0,`rgba(255,120,140,${rosy?.5:.32})`);rg.addColorStop(1,'rgba(255,120,140,0)');c.fillStyle=rg;c.beginPath();c.ellipse(bx,by,6,3,0,0,7);c.fill();
       c.strokeStyle=`rgba(230,90,120,${rosy?.55:.35})`;c.lineWidth=.35;for(let k=-1;k<=1;k++){c.beginPath();c.moveTo(bx+k*1.6-.6,by+1);c.lineTo(bx+k*1.6+.6,by-1);c.stroke()}}
     };
-  for(const sx of [-1,1]){const x=64+sx*GAP();c.save();c.translate(x,ey);c.scale(EA.x*SZ(),EA.y*SZ());c.rotate(TILT()*sx);
+  for(const sx of [-1,1]){const x=64+sx*GAP();c.save();c.translate(x,ey);c.rotate(TILT()*sx);c.scale(EA.x*SZ()*EW(),EA.y*SZ()*EH());
     if(USE_CUSTOM()){if(sx<0)c.scale(-1,1);c.drawImage(eyePad,-EYEBOX.w/2,-EYEBOX.h/2,EYEBOX.w,EYEBOX.h)}
     else{c.translate(-x,-ey);one(sx,x)}
     c.restore()}
@@ -596,7 +613,7 @@ function drawBrows(c,ey,skin,idx=state.brow){
   const base={Thick:2.2,Bushy:2.8,'Flat Thick':2.4,Thin:.6,Short:1.6}[st]??(girl&&st!=='Fierce'?.9:1.4);
   const th=base*b.thick,len=st==='Short'?.6:1;
   c.fillStyle=col;
-  for(const sx of [-1,1]){const x=64+sx*(GAP()+b.gap),by=ey-(14+(EA.y-1)*8)*SZ()+b.y;
+  for(const sx of [-1,1]){const x=64+sx*(GAP()+b.gap),by=ey-(14+(EA.y-1)*8)*SZ()*(FACE_DEFAULTS?1:(.45+.55*state.eyeH))+b.y;
     c.save();c.translate(x,by);c.rotate(sx*b.tilt);c.translate(-x,-by);
     // tapered brow: thick at the inner end, thin at the outer tip
     const pts=[];for(let k=0;k<=12;k++){const t=k/12;pts.push([x+sx*(-6+12*t)*len,by+prof(t*2-1),th*(1-t*(st==='Flat Thick'?.3:.75))])}
@@ -1141,7 +1158,26 @@ function renderPane(){
     pane.appendChild(el(`<div class="ph"><h2>${gl('Eyes')}</h2><span>${gl(EYE_SHAPES.length+' styles')}</span></div>`));
     pane.appendChild(presetGrid('Eye style',EYE_SHAPES,'eyeShape',eyeThumb,()=>{state.customEyes=false}));
     pane.appendChild(swatches('Eye color',EYES,'eyes',buildBody));
-    pane.appendChild(boxOf('Eye placement',fs('Up / down','eyeY',-8,8,.25),fs('Spacing','eyeGap',8,17,.25),fs('Size','eyeSize',.7,1.35,.01),fs('Tilt','eyeTilt',-.35,.35,.01),resetBtn({eyeY:0,eyeGap:12,eyeSize:1,eyeTilt:0})));
+    // resize box: drag an edge or corner to squish / stretch (from the centre, like resizing a photo)
+    {const rb=el(`<div class="facebox"><h3>${gl('Squish & stretch')}</h3><p class="hint">Drag the edges or corners. Both eyes change together.</p>
+       <div class="rz"><div class="rzframe"><img alt="eye"><i class="h n" data-h="n"></i><i class="h s" data-h="s"></i><i class="h e" data-h="e"></i><i class="h w" data-h="w"></i>
+       <i class="h ne" data-h="ne"></i><i class="h nw" data-h="nw"></i><i class="h se" data-h="se"></i><i class="h sw" data-h="sw"></i></div></div><div class="rzvals"></div></div>`);
+     const fr=rb.querySelector('.rzframe'),img=fr.querySelector('img'),vals=rb.querySelector('.rzvals'),stage=rb.querySelector('.rz');
+     img.src=singleEyeURL();const BW=140,BH=100;
+     const sync=()=>{fr.style.width=BW*state.eyeW+'px';fr.style.height=BH*state.eyeH+'px';vals.innerHTML=gl(`Width ${Math.round(state.eyeW*100)}% · Height ${Math.round(state.eyeH*100)}%`);
+       const wI=rb.parentNode&&pane.querySelector('input[data-k=eyeW]'),hI=pane.querySelector('input[data-k=eyeH]');if(wI)wI.value=state.eyeW;if(hI)hI.value=state.eyeH};
+     let drag=null;
+     fr.querySelectorAll('.h').forEach(h=>h.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();h.setPointerCapture(e.pointerId);drag={h:h.dataset.h,x:e.clientX,y:e.clientY,w:state.eyeW,hh:state.eyeH}}));
+     stage.addEventListener('pointermove',e=>{if(!drag)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y,k=drag.h,cl=v=>Math.min(1.9,Math.max(.4,v));
+       if(k.includes('e'))state.eyeW=cl(drag.w+2*dx/BW);if(k.includes('w'))state.eyeW=cl(drag.w-2*dx/BW);
+       if(k.includes('s'))state.eyeH=cl(drag.hh+2*dy/BH);if(k.includes('n'))state.eyeH=cl(drag.hh-2*dy/BH);
+       sync();later(paintFace)});
+     const end=()=>{drag=null};stage.addEventListener('pointerup',end);stage.addEventListener('pointercancel',end);
+     sync();pane.appendChild(rb)}
+    const wS=fs('Width','eyeW',.4,1.9,.01),hS=fs('Height','eyeH',.4,1.9,.01);wS.querySelector('input').dataset.k='eyeW';hS.querySelector('input').dataset.k='eyeH';
+    const syncBox=()=>{const fr=pane.querySelector('.rzframe');if(fr){fr.style.width=140*state.eyeW+'px';fr.style.height=100*state.eyeH+'px';pane.querySelector('.rzvals').innerHTML=gl(`Width ${Math.round(state.eyeW*100)}% · Height ${Math.round(state.eyeH*100)}%`)}};
+    [wS,hS].forEach(r=>r.querySelector('input').addEventListener('input',syncBox));
+    pane.appendChild(boxOf('Eye placement',wS,hS,fs('Up / down','eyeY',-8,8,.25),fs('Spacing','eyeGap',8,17,.25),fs('Size','eyeSize',.7,1.35,.01),fs('Tilt','eyeTilt',-.35,.35,.01),resetBtn({eyeY:0,eyeGap:12,eyeSize:1,eyeTilt:0,eyeW:1,eyeH:1})));
     const ir=EYES[state.eyes];
     pane.appendChild(drawPad({title:'Draw your eyes',hint:'Draw the right eye — the left one mirrors it.',layers:[eyePad],vis:[true],aspect:'28/20',mirror:true,
       stampLabel:'Stamp selected eye preset',stamp:()=>stampPresetOnPad(state.eyeShape),useKey:'customEyes',useLabels:['Use my drawn eyes','Using my eyes ✓'],
