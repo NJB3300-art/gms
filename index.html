@@ -164,7 +164,7 @@ const SKINS=['#f3d6c1','#e8bf9f','#d39f7b','#b57a52','#8a5838','#5e3b27','#3d261
 const HAIRC=['#151211','#3a2417','#6b4226','#a8743f','#e2c178','#b8b4ad','#a8432a','#f27aa8','#7a4fd0','#2b6fd6','#3fb58a'];
 const EYES=['#3b2414','#2f6b3a','#2f63a8','#6b7178','#7a3fa8'];
 const HAIRS=['None','Buzz','Bob','Pixie','Wolf Cut','Long','Curtains','Ponytail','Twin Tails','Bun','Space Buns','Braids','Dreads','Puff','Mohawk','Spiky'];
-const FRAMES=['Frame A','Frame B'];
+const FRAMES=['Boy','Girl'];
 const STYLES=['Toon','Retro'];
 
 /* ================= paint helpers ================= */
@@ -244,7 +244,8 @@ function loft(R,seg=10,caps=[true,true],opts={}){
   R.forEach((r,j)=>{for(let i=0;i<=seg;i++){
     const a=arc?arc[0]+i/seg*(arc[1]-arc[0]):i/seg*Math.PI*2+Math.PI;
     let y=r.y;if(jag&&j===R.length-1&&i%2===1)y+=asc?jag:-jag;
-    P.push(Math.sin(a)*r.w+(r.x||0),y,Math.cos(a)*r.d+(r.z||0));U.push(i/seg,(r.y-y0)/(y1-y0||1));
+    let k=1;if(opts.wrinkle&&j>0&&j<R.length-1){const h=Math.sin((i%seg)*12.9898+j*78.233+(opts.seed||0))*43758.5453;k=1+(h-Math.floor(h)-.5)*opts.wrinkle}
+    P.push(Math.sin(a)*r.w*k+(r.x||0),y,Math.cos(a)*r.d*k+(r.z||0));U.push(i/seg,(r.y-y0)/(y1-y0||1));
   }});
   const tri=(a,b,c)=>asc?I.push(a,b,c):I.push(a,c,b);
   for(let j=0;j<R.length-1;j++)for(let i=0;i<seg;i++){const a=j*S+i,b=a+1,c=a+S,d=c+1;tri(a,b,c);tri(b,d,c)}
@@ -265,14 +266,14 @@ function anatomy(){
   const torso=(B?[
     [.86,.065,.055],[.9,.135,.09],[.96,.172,.11,-.01],[1.01,.164,.104,-.008],[1.06,.134,.088],[1.14,.112,.08],[1.24,.124,.088,.004],[1.33,.142,.108,.018],[1.41,.15,.1,.01],[1.47,.158,.084],[1.52,.098,.06],[1.55,.046,.044]
   ]:[
-    [.86,.065,.055],[.9,.128,.088],[.96,.158,.104,-.006],[1.01,.154,.1,-.006],[1.06,.138,.092],[1.14,.124,.084],[1.24,.138,.094,.006],[1.33,.156,.106,.014],[1.41,.168,.1,.01],[1.47,.175,.086],[1.52,.105,.062],[1.55,.048,.046]
+    [.86,.065,.055],[.9,.128,.088],[.96,.158,.104,-.006],[1.01,.154,.1,-.006],[1.06,.138,.092],[1.14,.124,.084],[1.24,.138,.094,.006],[1.33,.156,.106,.014],[1.41,.176,.1,.008],[1.47,.185,.088],[1.52,.105,.062],[1.55,.048,.046]
   ]).map(([y,w,d,z=0])=>({y,w,d,z}));
   const sh=ringAt(torso,1.47).w-.012;
   const arm=[
     {y:.035,w:.03,d:.034},{y:0,w:.05,d:.054},{y:-.07,w:(B?.046:.053),d:(B?.048:.054)},{y:-.15,w:(B?.038:.044),d:(B?.04:.046)},
     {y:-.27,w:.032,d:.034},{y:-.31,w:(B?.035:.038),d:(B?.036:.039)},{y:-.4,w:(B?.031:.035),d:(B?.03:.032)},{y:-.5,w:.025,d:.021},{y:-.56,w:.022,d:.018}
   ];
-  const armK=.86;arm.forEach(r=>{r.w*=armK;r.d*=armK});
+  const armK=B?.84:.93;arm.forEach(r=>{r.w*=armK;r.d*=armK});
   const hand=[{y:-.55,w:.02,d:.024},{y:-.585,w:.019,d:.037},{y:-.64,w:.018,d:.042},{y:-.69,w:.015,d:.04},{y:-.73,w:.012,d:.032},{y:-.755,w:.008,d:.02},{y:-.762,w:.003,d:.006}];
   const tw=B?1.07:1;
   const legK=.9;
@@ -281,10 +282,10 @@ function anatomy(){
     {y:-.43,w:.045,d:.049,z:.002},{y:-.49,w:.046,d:.051,z:.008},{y:-.6,w:.051,d:.057,z:-.014},{y:-.75,w:.032,d:.035,z:-.004},{y:-.84,w:.025,d:.028},{y:LEG_END,w:.026,d:.029}
   ];leg.forEach((r,i)=>{if(i>0){r.w*=legK;r.d*=legK}});
   const foot0=[{y:0,w:.028,d:.032},{y:-.04,w:.036,d:.038,z:.004},{y:-.12,w:.042,d:.028,z:-.006},{y:-.2,w:.04,d:.019,z:-.015},{y:-.24,w:.03,d:.013,z:-.02},{y:-.255,w:.014,d:.007,z:-.022}];const foot=foot0.map(r=>({...r,y:r.y*.86,w:r.w*.88,d:r.d*.86,z:r.z?r.z*.86:0}));
-  const neck=[{y:1.52,w:.043,d:.044},{y:1.68,w:.037,d:.039,z:-.006}];
+  const neck=B?[{y:1.52,w:.043,d:.044},{y:1.68,w:.037,d:.039,z:-.006}]:[{y:1.52,w:.05,d:.05},{y:1.68,w:.043,d:.045,z:-.006}];
   const head=[
     [1.565,.014,.016,.05],[1.583,.036,.046,.034],[1.612,.056,.072,.014],[1.648,.071,.09,.004],[1.69,.08,.097,0],[1.735,.085,.101,-.004],[1.775,.081,.097,-.008],[1.806,.066,.08,-.01],[1.824,.036,.046,-.01],[1.831,.001,.001,-.01]
-  ].map(([y,w,d,z])=>({y:HY(y),w:w*HS,d:d*HS,z:z*HS}));
+  ].map(([y,w,d,z])=>({y:HY(y),w:(w+(!B&&y>1.58&&y<1.66?.006:0))*HS,d:d*HS,z:z*HS}));  // boys: slightly squarer jaw
   return{torso,arm,hand,leg,foot,neck,head,
     joints:{armL:{pos:[sh,1.47,0],rz:.3},armR:{pos:[-sh,1.47,0],rz:-.3},legL:{pos:[.088,.96,0],rz:.025},legR:{pos:[-.088,.96,0],rz:-.025}},
     feet:{L:[.098,.045,-.06],R:[-.098,.045,-.06]}};
@@ -329,6 +330,7 @@ function paintFace(){
   c.fillStyle=skin;c.fillRect(0,0,S,S);
   const ey=V(1.7),lash='#1a120e',hair=HAIRC[state.hairColor],ir=EYES[state.eyes];
   for(const sx of [-1,1]){const x=64+sx*12;
+    const girl=state.frame===1;
     c.fillStyle='#f8f6f2';c.fillRect(x-7,ey-7,14,13);                       // tall eye white
     c.fillStyle=shade(ir,-.2);c.fillRect(x-4-sx,ey-7,8,13);                 // iris (dark top)
     c.fillStyle=ir;c.fillRect(x-4-sx,ey-2,8,8);                             // iris mid
@@ -336,13 +338,13 @@ function paintFace(){
     c.fillStyle='#0b0908';c.fillRect(x-2-sx,ey-4,4,6);                      // pupil
     c.fillStyle='#ffffff';c.fillRect(x-3-sx,ey-5,3,3);c.fillRect(x+1-sx,ey+2,1,1); // highlights
     c.fillStyle=lash;c.fillRect(x-8,ey-9,16,3);                              // thick upper lash
-    c.fillRect(x+sx*7,ey-10,3*sx>0?3:3,2);c.fillRect(x+sx*9-(sx<0?1:0),ey-11,2,2); // outer wing
+    if(girl){c.fillRect(x+sx*7,ey-10,3,2);c.fillRect(x+sx*9-(sx<0?1:0),ey-11,2,2)}else{c.fillStyle=shade(skin,-.05);c.fillRect(x-7,ey-7,14,2);c.fillStyle=lash} // girl: lash wing; boy: flatter lid
     c.fillStyle=shade(skin,-.3);c.fillRect(x-5,ey+6,10,1);                  // lower lash
-    c.fillStyle=hair;c.fillRect(x-6,ey-16,12,2);c.fillRect(x+(sx>0?4:-8),ey-15,4,1); // thin brow
-    c.fillStyle=mix(skin,'#ff8a8a',.35);c.globalAlpha=.4;c.fillRect(x-5+sx*2,ey+9,9,2);c.globalAlpha=1; // blush
+    c.fillStyle=hair;if(girl){c.fillRect(x-6,ey-16,12,2);c.fillRect(x+(sx>0?4:-8),ey-15,4,1)}else{c.fillRect(x-7,ey-15,14,3)} // brow
+    c.fillStyle=mix(skin,'#ff8a8a',.35);c.globalAlpha=girl?.45:.15;c.fillRect(x-5+sx*2,ey+9,9,2);c.globalAlpha=1; // blush
   }
   const ny=V(1.662);c.fillStyle=shade(skin,-.16);c.fillRect(63,ny,2,1);      // nose hint
-  const my=V(1.625),lip=mix(skin,'#c0505c',.45);
+  const my=V(1.625),lip=mix(skin,'#c0505c',state.frame===1?.45:.15);
   c.fillStyle=shade(lip,-.25);c.fillRect(60,my,8,1);c.fillStyle=lip;c.fillRect(62,my+1,4,1);
   c.fillStyle=shade(skin,-.08);c.fillRect(0,V(1.588),S,3);
   faceTex.needsUpdate=true;
@@ -475,19 +477,58 @@ function buildHair(){
   if(st==='Spiky'){H.add(cap(1.73,.012));for(let i=0;i<10;i++){const a=(i/10-.5)*P*1.5,c=mesh(new THREE.ConeGeometry(.032,.09,4),m,'Spike');c.position.set(Math.sin(a)*.055,HY(1.815),Math.cos(a)*.055-.02);c.rotation.set(Math.cos(a)*.65,0,-Math.sin(a)*.65);H.add(c)}}
   outline(H);
 }
+/* ---------- drape: fabric hangs instead of hugging ---------- */
+const CLOTH={wrinkle:.05};
+// densify a ring list so drapes bend smoothly
+function dense(R,n=3){const out=[];for(let i=0;i<R.length-1;i++){for(let k=0;k<n;k++)out.push(lerpRing(R[i],R[i+1],k/n))}out.push(R.at(-1));return out}
+// torso: below the chest, cloth falls straight from the chest/shoulders (never pulls in at the waist), with optional flare
+function drapeTorso(R,off,flare=0,ease=.97){
+  const chest=A.torso.filter(r=>r.y>1.2&&r.y<1.45).reduce((a,r)=>r.w>a.w?r:a);
+  const ymin=Math.min(...R.map(r=>r.y));
+  return dense(R).map(r=>{
+    if(r.y>=chest.y)return{...r,w:r.w+off,d:r.d+off};
+    const t=(chest.y-r.y)/(chest.y-ymin||1);
+    return{...r,w:Math.max(r.w,chest.w*ease)+off+flare*t,d:Math.max(r.d,chest.d*ease)+off+flare*t*.75,z:(r.z||0)*(1-t)+(chest.z||0)*t*.5};
+  });
+}
+// limbs: radius follows a loose profile from the shoulder/thigh down; cuff=true gathers the last bit
+function drapeLimb(R,ref,off,profile,cuff=false){
+  const top=R[0].y,bot=R.at(-1).y,D=dense(R);
+  const out=D.map(r=>{const t=(top-r.y)/(top-bot||1),p=profile(t);
+    return{...r,w:Math.max(r.w+off,ref.w*p+off),d:Math.max(r.d+off,ref.d*p+off)}});
+  if(cuff){const last=out.at(-1),src=D.at(-1),cy=last.y+.035;
+    out.splice(out.length-1,0,{...ringAt(out,cy),y:cy});out[out.length-1]={...last,w:src.w+off+.006,d:src.d+off+.006}}
+  return out;
+}
+const DS={side:THREE.DoubleSide};
+const clothMatDS=(it,name)=>mat({map:texFor(it),...DS},name);
+
 function buildShirt(){
-  clear(G.shirt);if(!state.shirt)return;const it=CAT.shirt[state.shirt-1],m=clothMat(it,'Shirt'),o=.008;
-  G.shirt.add(mesh(loft(sub(A.torso,1.0,1.53,o),12,[true,false]),m,'ShirtBody'));
+  clear(G.shirt);if(!state.shirt)return;const it=CAT.shirt[state.shirt-1],m=clothMatDS(it,'Shirt'),o=.01;
+  const hem=it.cut==='Tank'?.98:.95;
+  G.shirt.add(mesh(loft(drapeTorso(sub(A.torso,hem,1.53,0),o,.012),14,[false,false],{...CLOTH,seed:1}),m,'ShirtBody'));
   G.shirt.add(mesh(loft([{y:1.515,w:.066,d:.063},{y:1.538,w:.062,d:.06}],10,[false,false]),plain(shade(it.c1,-.15),'Collar'),'Collar'));
-  if(it.cut!=='Tank'){const len=it.cut==='Tee'?-.2:-.55;onLimbs(G.shirt,'arm',()=>mesh(loft(sub(A.arm,.035,len,o),8,[true,false]),m,'Sleeve'),'Sleeve')}
+  if(it.cut!=='Tank'){
+    const ref=ringAt(A.arm,-.02);
+    const sleeve=it.cut==='Tee'
+      ?drapeLimb(sub(A.arm,.035,-.21,0),ref,o,t=>.92+.14*t)                       // short, open, slightly bell-shaped
+      :drapeLimb(sub(A.arm,.035,-.55,0),ref,o,t=>.92-.18*t,true);                 // loose long sleeve, gathered cuff
+    onLimbs(G.shirt,'arm',()=>mesh(loft(sleeve,9,[true,false],{...CLOTH,seed:2}),m,'Sleeve'),'Sleeve');
+  }
   outline(G.shirt);
 }
 function buildPants(){
-  clear(G.pants);if(!state.pants)return;const it=CAT.pants[state.pants-1],m=clothMat(it,'Pants'),o=.011;
-  const len={Jeans:-.87,Shorts:-.32,Capris:-.66}[it.cut];
-  G.pants.add(mesh(loft(sub(A.torso,.86,1.09,o),12,[true,false]),m,'PantsHips'));
+  clear(G.pants);if(!state.pants)return;const it=CAT.pants[state.pants-1],m=clothMatDS(it,'Pants'),o=.012;
+  const hipW=Math.max(...A.torso.filter(r=>r.y<1.05).map(r=>r.w)),hipD=Math.max(...A.torso.filter(r=>r.y<1.05).map(r=>r.d));
+  // loose seat: below the waistband the fabric sits out at hip width; the crotch drops a little
+  const seat=dense(sub(A.torso,.86,1.09,0)).map(r=>r.y>1.02?{...r,w:r.w+o,d:r.d+o}:{...r,w:Math.max(r.w,hipW*(r.y<.9?.82:.99))+o,d:Math.max(r.d,hipD*(r.y<.9?.86:.99))+o});
+  seat[0]={...seat[0],y:.84,w:.1,d:.07};
+  G.pants.add(mesh(loft(seat,14,[true,false],{...CLOTH,seed:3}),m,'PantsSeat'));
   G.pants.add(mesh(loft(sub(A.torso,1.07,1.1,o+.004),12,[false,false]),plain(shade(it.c1,-.22),'Waistband'),'Waistband'));
-  onLimbs(G.pants,'leg',()=>mesh(loft(sub(A.leg,0,len,o),8,[false,false]),m,'PantLeg'),'PantLeg');
+  const ref=ringAt(A.leg,-.06);
+  const prof={Jeans:t=>1.02-.36*t,Shorts:t=>1.04+.1*t,Capris:t=>1.02-.22*t}[it.cut];  // straight-leg taper / flared shorts
+  const len={Jeans:-.87,Shorts:-.32,Capris:-.66}[it.cut];
+  onLimbs(G.pants,'leg',()=>mesh(loft(drapeLimb(sub(A.leg,.03,len,0),ref,o,prof),10,[false,false],{...CLOTH,seed:4}),m,'PantLeg'),'PantLeg');
   outline(G.pants);
 }
 function buildSocks(){
@@ -509,20 +550,23 @@ function buildShoes(){
   outline(G.shoes);
 }
 function buildJacket(){
-  clear(G.jacket);if(!state.jacket)return;const it=CAT.jacket[state.jacket-1],m=clothMat(it,'Jacket'),o=.026;
+  clear(G.jacket);if(!state.jacket)return;const it=CAT.jacket[state.jacket-1],m=clothMatDS(it,'Jacket'),o=.032;
   const trim=plain(shade(it.c1,-.22),'JacketTrim');
-  let body=sub(A.torso,it.cut==='Bomber'?1.03:.96,1.53,o);
-  if(it.cut==='Trench'){const b=ringAt(A.torso,.98);body=[{y:.56,w:b.w+.07,d:b.d+.06},{y:.76,w:b.w+.045,d:b.d+.04},...body]}
-  G.jacket.add(mesh(loft(body,12,[false,false]),m,'JacketBody'));
-  onLimbs(G.jacket,'arm',()=>mesh(loft(sub(A.arm,.035,-.53,.022),8,[true,false]),m,'JacketSleeve'),'JacketSleeve');
-  const front=y=>{const r=ringAt(A.torso,y);return r.d+(r.z||0)+o+.004};
-  if(it.cut!=='Hoodie'){const z=mesh(new THREE.BoxGeometry(.008,.5,.006),trim,'Zip');z.position.set(0,1.26,front(1.26));G.jacket.add(z)}
+  let body=drapeTorso(sub(A.torso,it.cut==='Bomber'?1.0:.93,1.53,0),o,it.cut==='Hoodie'?.016:.006,1.0);   // boxy: hangs from the shoulders
+  if(it.cut==='Trench'){const b=body[0];body=[{...b,y:.56,w:b.w+.075,d:b.d+.06},{...b,y:.76,w:b.w+.045,d:b.d+.035},...body]}
+  if(it.cut==='Bomber'){const b=body[0];body=[{...b,y:.97,w:b.w-.022,d:b.d-.018},{...b,y:.99,w:b.w-.02,d:b.d-.016},...body]}   // gathered waistband
+  G.jacket.add(mesh(loft(body,14,[false,false],{...CLOTH,seed:5}),m,'JacketBody'));
+  const ref=ringAt(A.arm,-.02),sp={Hoodie:t=>1.0-.12*t,Bomber:t=>1.02-.1*t,Trench:t=>.98+.04*t}[it.cut];
+  const sleeve=drapeLimb(sub(A.arm,.035,-.53,0),ref,.026,sp,it.cut!=='Trench');
+  onLimbs(G.jacket,'arm',()=>mesh(loft(sleeve,9,[true,false],{...CLOTH,seed:6}),m,'JacketSleeve'),'JacketSleeve');
+  const frontZ=y=>{const r=ringAt(body,y);return r.d+(r.z||0)+.004};
+  if(it.cut!=='Hoodie'){const z=mesh(new THREE.BoxGeometry(.008,.46,.006),trim,'Zip');z.position.set(0,1.25,frontZ(1.25));G.jacket.add(z)}
   if(it.cut==='Hoodie'){
-    G.jacket.add(mesh(loft([{y:1.5,w:.13,d:.09,z:-.05},{y:1.56,w:.12,d:.1,z:-.06},{y:1.62,w:.08,d:.07,z:-.085}],10),m,'Hood'));
-    const p=mesh(new THREE.BoxGeometry(.2,.1,.016),m,'Pocket');p.position.set(0,1.06,front(1.06));G.jacket.add(p);
+    G.jacket.add(mesh(loft([{y:1.5,w:.135,d:.095,z:-.05},{y:1.56,w:.125,d:.105,z:-.062},{y:1.63,w:.085,d:.075,z:-.088}],10),m,'Hood'));
+    const p=mesh(new THREE.BoxGeometry(.2,.1,.016),m,'Pocket');p.position.set(0,1.04,frontZ(1.04));G.jacket.add(p);
   }
-  if(it.cut==='Bomber')G.jacket.add(mesh(loft([{y:1.51,w:.085,d:.08},{y:1.56,w:.075,d:.072}],10,[false,false]),trim,'Collar'));
-  if(it.cut==='Trench'){G.jacket.add(mesh(loft(sub(A.torso,1.1,1.13,o+.008),12,[false,false]),trim,'Belt'));G.jacket.add(mesh(loft([{y:1.49,w:.13,d:.1,z:.005},{y:1.56,w:.09,d:.08}],10,[false,false]),m,'Lapel'))}
+  if(it.cut==='Bomber')G.jacket.add(mesh(loft([{y:1.51,w:.088,d:.083},{y:1.56,w:.078,d:.075}],10,[false,false]),trim,'Collar'));
+  if(it.cut==='Trench'){const bl=ringAt(body,1.1);G.jacket.add(mesh(loft([{...bl,y:1.09,w:bl.w+.006,d:bl.d+.006},{...bl,y:1.12,w:bl.w+.006,d:bl.d+.006}],14,[false,false]),trim,'Belt'));G.jacket.add(mesh(loft([{y:1.49,w:.135,d:.105,z:.005},{y:1.56,w:.092,d:.082}],10,[false,false]),m,'Lapel'))}
   outline(G.jacket);
 }
 const BUILD={shirt:buildShirt,pants:buildPants,jacket:buildJacket,shoes:buildShoes,socks:buildSocks};
@@ -548,7 +592,7 @@ function renderPane(){
   if(tab==='body'){
     pane.appendChild(el(`<div class="ph"><h2>Body</h2><span>Base mannequin</span></div>`));
     pane.appendChild(chips('Render style',STYLES,'style',buildAll,true));
-    pane.appendChild(chips('Frame',FRAMES,'frame',buildAll));
+    pane.appendChild(chips('Gender',FRAMES,'frame',buildAll));
     pane.appendChild(swatches('Skin tone',SKINS,'skin',buildBody));
     pane.appendChild(chips('Hair',HAIRS,'hair',buildHair));
     pane.appendChild(swatches('Hair color',HAIRC,'hairColor',()=>{buildHair();buildBody()}));
