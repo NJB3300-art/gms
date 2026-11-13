@@ -5,49 +5,94 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Heemsworld</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#f4efe6;--panel:#fffaf2;--ink:#1d1a16;--muted:#7a7166;--line:#e6dccb;--accent:#ff5a36;--accent2:#2b2bd9}
+:root{
+  --fountain:#0d4f7c;--fountain-2:#156ea8;--sky:#cfe3ef;
+  --limestone:#efe8da;--stone-2:#e4dac6;--paper:#faf6ee;
+  --brick:#a8432a;--brass:#c9a24a;--ink:#16202a;--muted:#5f6b75;--line:#d6cbb5
+}
 *{box-sizing:border-box}
-html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif}
-#app{display:flex;height:100vh;width:100%}
-#stage{position:relative;flex:1;min-width:0;background:radial-gradient(ellipse at 50% 40%,#fff8ec 0%,#efe4d2 70%,#e5d6bf 100%)}
-#stage canvas{display:block;width:100%;height:100%;touch-action:none}
-.brand{position:absolute;top:18px;left:22px;font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:30px;letter-spacing:-1px;pointer-events:none}
-.brand span{color:var(--accent)}
-.brand small{display:block;font-family:Inter;font-weight:500;font-size:12px;letter-spacing:0;color:var(--muted);margin-top:2px}
-.actions{position:absolute;left:22px;bottom:20px;display:flex;gap:10px;flex-wrap:wrap}
-button{font:inherit;cursor:pointer;border:0}
-.btn{padding:11px 18px;border-radius:999px;font-weight:600;font-size:14px;background:var(--ink);color:#fff;box-shadow:0 2px 0 rgba(0,0,0,.15)}
-.btn.alt{background:#fff;color:var(--ink);border:1.5px solid var(--ink)}
-.btn.hot{background:var(--accent)}
-.btn:active{transform:translateY(1px)}
-#status{position:absolute;right:18px;bottom:22px;font-size:13px;color:var(--muted);max-width:50%;text-align:right}
-#panel{width:400px;max-width:100%;background:var(--panel);border-left:1.5px solid var(--line);display:flex;flex-direction:column;min-height:0}
-.tabs{display:flex;gap:4px;padding:12px 12px 0;flex-wrap:wrap}
-.tab{padding:8px 12px;border-radius:10px 10px 0 0;background:transparent;font-weight:600;font-size:13px;color:var(--muted)}
-.tab.on{background:var(--bg);color:var(--ink)}
-.pane{flex:1;overflow:auto;background:var(--bg);margin:0 12px 12px;border-radius:0 12px 12px 12px;padding:14px}
-.search{width:100%;padding:9px 12px;border-radius:10px;border:1.5px solid var(--line);background:#fff;font:inherit;font-size:14px;margin-bottom:10px}
-.count{font-size:12px;color:var(--muted);margin:0 0 10px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:8px}
-.card{background:#fff;border:2px solid transparent;border-radius:12px;padding:5px;text-align:left;display:flex;flex-direction:column;gap:4px}
-.card img,.card .none{width:100%;aspect-ratio:1;border-radius:8px;display:block;object-fit:cover}
-.card .none{background:repeating-linear-gradient(45deg,#eee,#eee 6px,#f8f8f8 6px,#f8f8f8 12px);display:grid;place-items:center;font-size:11px;color:var(--muted)}
-.card b{font-size:11px;font-weight:600}
+html,body{margin:0;height:100%;background:var(--limestone);color:var(--ink);font-family:Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
+#app{display:grid;grid-template-rows:auto 1fr;height:100vh}
+
+/* header */
+header{background:var(--fountain);color:#fff;display:flex;align-items:center;gap:18px;padding:0 22px;height:64px;position:relative}
+header::after{content:"";position:absolute;left:0;right:0;bottom:-6px;height:6px;background:repeating-linear-gradient(90deg,var(--brass) 0 18px,transparent 18px 24px,var(--brick) 24px 42px,transparent 42px 48px)}
+.logo{font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:32px;letter-spacing:.06em;text-transform:uppercase;line-height:1;display:flex;align-items:center;gap:10px}
+.logo svg{width:28px;height:28px}
+.tag{font-size:12px;letter-spacing:.14em;text-transform:uppercase;opacity:.75;border-left:1px solid rgba(255,255,255,.35);padding-left:14px}
+.hspace{flex:1}
+.hbtn{font-weight:600;font-size:14px;padding:10px 16px;border-radius:4px;border:1.5px solid rgba(255,255,255,.55)}
+.hbtn:hover{background:rgba(255,255,255,.1)}
+.hbtn.primary{background:var(--brass);border-color:var(--brass);color:var(--ink)}
+.hbtn.primary:hover{background:#d8b45c}
+.hbtn:disabled{opacity:.45;cursor:default}
+
+/* body */
+main{display:grid;grid-template-columns:1fr 420px;min-height:0}
+#stage{position:relative;min-width:0;background:
+  linear-gradient(180deg,var(--sky) 0%,#e9eef0 58%,var(--stone-2) 58.2%,var(--limestone) 100%)}
+#stage canvas{display:block;width:100%;height:100%;touch-action:none;image-rendering:pixelated}
+.deco{position:absolute;inset:16px;border:1.5px solid rgba(13,79,124,.18);pointer-events:none}
+.deco::before,.deco::after{content:"";position:absolute;width:26px;height:26px;border:3px solid var(--fountain);opacity:.55}
+.deco::before{top:-3px;left:-3px;border-right:0;border-bottom:0}
+.deco::after{bottom:-3px;right:-3px;border-left:0;border-top:0}
+#empty{position:absolute;left:50%;top:26px;transform:translateX(-50%);background:var(--paper);border:1.5px solid var(--line);border-radius:4px;padding:9px 16px;font-size:13px;color:var(--muted);box-shadow:0 2px 0 var(--line);white-space:nowrap}
+#empty b{color:var(--ink)}
+#status{position:absolute;left:28px;bottom:26px;font-size:12px;color:var(--muted);letter-spacing:.02em}
+.viewbtns{position:absolute;right:28px;bottom:22px;display:flex;gap:6px}
+.viewbtns button{background:var(--paper);border:1.5px solid var(--line);border-radius:4px;padding:7px 11px;font-size:12px;font-weight:600}
+.viewbtns button:hover{border-color:var(--fountain)}
+
+/* panel */
+#panel{background:var(--paper);border-left:1.5px solid var(--line);display:flex;flex-direction:column;min-height:0}
+.tabs{display:grid;grid-template-columns:repeat(6,1fr);border-bottom:1.5px solid var(--line)}
+.tab{padding:14px 4px 12px;font-family:'Big Shoulders Display',sans-serif;font-weight:800;font-size:16px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-1.5px}
+.tab.on{color:var(--fountain);border-bottom-color:var(--brick)}
+.tab:hover{color:var(--ink)}
+.pane{flex:1;overflow:auto;padding:18px}
+.ph{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px}
+.ph h2{margin:0;font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:26px;letter-spacing:.04em;text-transform:uppercase}
+.ph span{font-size:12px;color:var(--muted)}
+.search{width:100%;padding:10px 12px;border-radius:4px;border:1.5px solid var(--line);background:#fff;font:inherit;font-size:14px;margin-bottom:10px;outline:none}
+.search:focus{border-color:var(--fountain)}
+.filters{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.chip{padding:6px 11px;border-radius:999px;border:1.5px solid var(--line);font-size:12px;font-weight:600;background:#fff}
+.chip.on{background:var(--fountain);border-color:var(--fountain);color:#fff}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:8px}
+.card{background:#fff;border:1.5px solid var(--line);border-radius:4px;padding:5px;text-align:left;display:flex;flex-direction:column;gap:4px;transition:border-color .1s}
+.card:hover{border-color:var(--fountain-2)}
+.card img,.card .none{width:100%;aspect-ratio:1;border-radius:2px;display:block;image-rendering:pixelated}
+.card .none{background:var(--limestone);display:grid;place-items:center;font-size:11px;color:var(--muted);font-weight:600}
+.card b{font-size:11px;font-weight:700;color:var(--fountain)}
 .card i{font-style:normal;font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.card.on{border-color:var(--accent)}
-.row{margin-bottom:16px}
-.row label{display:block;font-size:12px;font-weight:600;margin-bottom:6px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
-.sw{display:flex;gap:7px;flex-wrap:wrap}
-.sw button{width:30px;height:30px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1.5px var(--line)}
-.sw button.on{box-shadow:0 0 0 2.5px var(--accent)}
+.card.on{border-color:var(--brick);box-shadow:inset 0 0 0 1.5px var(--brick)}
+.row{margin-bottom:20px}
+.row label{display:block;font-size:11px;font-weight:700;margin-bottom:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em}
+.sw{display:flex;gap:8px;flex-wrap:wrap}
+.sw button{width:32px;height:32px;border-radius:4px;border:2px solid #fff;box-shadow:0 0 0 1.5px var(--line)}
+.sw button.on{box-shadow:0 0 0 2.5px var(--brick)}
 .chips{display:flex;gap:6px;flex-wrap:wrap}
-.chips button{padding:7px 11px;border-radius:999px;background:#fff;border:1.5px solid var(--line);font-size:13px}
-.chips button.on{border-color:var(--ink);background:var(--ink);color:#fff}
-input[type=range]{width:100%;accent-color:var(--accent)}
-.wear{font-size:12px;color:var(--muted);padding:0 14px 12px;line-height:1.5}
-@media (max-width:760px){#app{flex-direction:column}#stage{flex:none;height:52vh}#panel{width:100%;flex:1;border-left:0;border-top:1.5px solid var(--line)}.brand{font-size:24px}#status{display:none}}
+input[type=range]{width:100%;accent-color:var(--fountain)}
+.wear{border-top:1.5px solid var(--line);padding:12px 18px;display:flex;flex-wrap:wrap;gap:6px;min-height:52px;align-items:center}
+.wear .lbl{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-right:4px}
+.pill{display:inline-flex;align-items:center;gap:6px;background:var(--limestone);border-radius:999px;padding:4px 6px 4px 10px;font-size:12px}
+.pill button{width:18px;height:18px;border-radius:50%;background:var(--ink);color:#fff;font-size:11px;line-height:18px}
+.wear .nothing{font-size:12px;color:var(--muted)}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:4px;font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.show{opacity:1}
+
+@media (max-width:860px){
+  #app{height:auto;min-height:100vh}
+  main{grid-template-columns:1fr}
+  #stage{height:56vh}
+  #panel{border-left:0;border-top:1.5px solid var(--line)}
+  .tag{display:none}.logo{font-size:26px}
+  .tab{font-size:14px}
+  #empty{white-space:normal;width:80%;text-align:center}
+}
 </style>
 <script type="importmap">
 {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}
@@ -55,34 +100,46 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 </head>
 <body>
 <div id="app">
-  <div id="stage">
-    <div class="brand">Heems<span>world</span><small>3D character maker</small></div>
-    <div class="actions">
-      <button class="btn hot" id="export">Export .glb</button>
-      <button class="btn alt" id="random">Randomize</button>
+  <header>
+    <div class="logo">
+      <svg viewBox="0 0 28 28" aria-hidden="true"><path d="M14 2 L26 14 L14 26 L2 14 Z" fill="none" stroke="#c9a24a" stroke-width="2.5"/><path d="M14 8 L20 14 L14 20 L8 14 Z" fill="#fff"/></svg>
+      Heemsworld
     </div>
-    <div id="status">Drag to spin · scroll to zoom</div>
-  </div>
-  <aside id="panel">
-    <div class="tabs" id="tabs"></div>
-    <div class="pane" id="pane"></div>
-    <div class="wear" id="wear"></div>
-  </aside>
+    <div class="tag">Character Maker · City of Fountains</div>
+    <div class="hspace"></div>
+    <button class="hbtn" id="random">Randomize</button>
+    <button class="hbtn" id="reset">Strip</button>
+    <button class="hbtn primary" id="export">Export .GLB</button>
+  </header>
+  <main>
+    <div id="stage">
+      <div class="deco"></div>
+      <div id="empty">Your Heem starts <b>blank</b>. Pick a shirt, pants, jacket, shoes or socks.</div>
+      <div id="status">Drag to rotate · scroll to zoom</div>
+      <div class="viewbtns"><button data-v="front">Front</button><button data-v="side">Side</button><button data-v="back">Back</button><button data-v="feet">Feet</button></div>
+    </div>
+    <aside id="panel">
+      <nav class="tabs" id="tabs"></nav>
+      <div class="pane" id="pane"></div>
+      <div class="wear" id="wear"></div>
+    </aside>
+  </main>
 </div>
+<div class="toast" id="toast"></div>
 
 <script type="module">
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {GLTFExporter} from 'three/addons/exporters/GLTFExporter.js';
 
-/* ---------- catalog ---------- */
+/* ================= catalog ================= */
 const COLORS=[['Black','#1d1d1f'],['White','#f2f2ee'],['Red','#c8323c'],['Crimson','#8e1b2b'],['Orange','#e8742a'],['Mustard','#d6a72b'],['Lime','#8cc63f'],['Forest','#2f6b3a'],['Teal','#1f8a8a'],['Sky','#5bb4e8'],['Navy','#1f2f5c'],['Royal','#3b55c9'],['Violet','#6f42c1'],['Pink','#e77fb0'],['Tan','#c9a77c'],['Gray','#7d8088']];
 const PATTERNS=['Solid','Striped','Pinstripe','Checker','Dotted','Diagonal','Gradient','Camo','Plaid'];
 function makeCatalog(cuts,salt){
   const out=[];
   for(let i=0;i<99;i++){
-    const cut=cuts[i%3], p=PATTERNS[Math.floor(i/3)%9];
-    const a=COLORS[(i*7+salt)%16]; let b=COLORS[(i*11+5+salt)%16]; if(b===a) b=COLORS[(i*11+6+salt)%16];
+    const cut=cuts[i%3],p=PATTERNS[Math.floor(i/3)%9];
+    const a=COLORS[(i*7+salt)%16];let b=COLORS[(i*11+5+salt)%16];if(b===a)b=COLORS[(i*11+6+salt)%16];
     out.push({id:i+1,cut,pattern:p,c1:a[1],c2:b[1],name:`${a[0]} ${p==='Solid'?'':p+' '}${cut}`,seed:i*97+salt+1});
   }
   return out;
@@ -98,14 +155,15 @@ const CAT={
     {id:3,cut:'Knee-high',pattern:'Striped',c1:'#f2f2ee',c2:'#c8323c',name:'Red Striped Knee-highs',seed:3}
   ]
 };
-const SKINS=['#f6d7c3','#eec3a3','#d9a37e','#b97d55','#8d5a3b','#5c3a26','#3d2518'];
-const HAIRC=['#151211','#3a2417','#6b4226','#a8743f','#e2c178','#b8b4ad','#c8323c','#3b55c9','#e77fb0'];
-const EYES=['#3a2417','#2f6b3a','#3b6fb6','#7d8088','#6f42c1'];
-const HAIRS=['Bald','Buzz','Short','Bun','Spiky','Long','Puff'];
+const SKINS=['#f3d6c1','#e8bf9f','#d39f7b','#b57a52','#8a5838','#5e3b27','#3d2619'];
+const HAIRC=['#151211','#3a2417','#6b4226','#a8743f','#e2c178','#b8b4ad','#a8432a','#0d4f7c'];
+const EYES=['#2b1a10','#2f6b3a','#2f63a8','#6b7178'];
+const HAIRS=['None','Buzz','Short','Bun','Spiky','Long','Puff'];
+const FRAMES=['Frame A','Frame B'];
 
-/* ---------- helpers ---------- */
+/* ================= textures ================= */
 function rng(s){return()=>{s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
-function shade(hex,a){const c=new THREE.Color(hex);const hsl={};c.getHSL(hsl);c.setHSL(hsl.h,hsl.s,Math.min(1,Math.max(0,hsl.l+a)));return '#'+c.getHexString()}
+function shade(hex,a){const c=new THREE.Color(hex);const h={};c.getHSL(h);c.setHSL(h.h,h.s,Math.min(1,Math.max(0,h.l+a)));return '#'+c.getHexString()}
 function drawPattern(ctx,s,it){
   const {pattern:p,c1,c2,seed}=it;
   ctx.fillStyle=c1;ctx.fillRect(0,0,s,s);ctx.fillStyle=c2;ctx.strokeStyle=c2;
@@ -118,217 +176,295 @@ function drawPattern(ctx,s,it){
   else if(p==='Camo'){const r=rng(seed);const cs=[c2,shade(c1,-.18),shade(c2,.2)];for(let i=0;i<46;i++){ctx.fillStyle=cs[i%3];ctx.beginPath();ctx.ellipse(r()*s,r()*s,s*(.05+r()*.1),s*(.03+r()*.06),r()*3,0,7);ctx.fill()}}
   else if(p==='Plaid'){ctx.globalAlpha=.45;for(let i=0;i<s;i+=s/4){ctx.fillRect(i,0,s/10,s);ctx.fillRect(0,i,s,s/10)}ctx.globalAlpha=.8;ctx.fillStyle=shade(c1,.35);for(let i=s/8;i<s;i+=s/4){ctx.fillRect(i,0,Math.max(1,s/64),s);ctx.fillRect(0,i,s,Math.max(1,s/64))}ctx.globalAlpha=1}
 }
-const texCache=new Map(), thumbCache=new Map();
+const texCache=new Map(),thumbCache=new Map();
 function texFor(it){
-  const k=it.name+it.seed; if(texCache.has(k)) return texCache.get(k);
-  const c=document.createElement('canvas');c.width=c.height=256;drawPattern(c.getContext('2d'),256,it);
+  const k=it.name+it.seed;if(texCache.has(k))return texCache.get(k);
+  const c=document.createElement('canvas');c.width=c.height=64;const x=c.getContext('2d');x.imageSmoothingEnabled=false;drawPattern(x,64,it);
   const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(2,2);
+  t.magFilter=THREE.NearestFilter;t.minFilter=THREE.NearestFilter;t.generateMipmaps=false;
   texCache.set(k,t);return t;
 }
 function thumbFor(it){
-  const k=it.name+it.seed; if(thumbCache.has(k)) return thumbCache.get(k);
-  const c=document.createElement('canvas');c.width=c.height=64;drawPattern(c.getContext('2d'),64,it);
+  const k=it.name+it.seed;if(thumbCache.has(k))return thumbCache.get(k);
+  const c=document.createElement('canvas');c.width=c.height=32;drawPattern(c.getContext('2d'),32,it);
   const u=c.toDataURL();thumbCache.set(k,u);return u;
 }
-const matFor=(it,name)=>{const m=new THREE.MeshStandardMaterial({map:texFor(it),roughness:.85});m.name=name;return m};
-const plain=(hex,name,r=.8)=>{const m=new THREE.MeshStandardMaterial({color:hex,roughness:r});m.name=name;return m};
+const MAT_OPTS={flatShading:true,roughness:.9,metalness:0};
+const clothMat=(it,name)=>{const m=new THREE.MeshStandardMaterial({...MAT_OPTS,map:texFor(it)});m.name=name;return m};
+const plain=(hex,name,r=.9)=>{const m=new THREE.MeshStandardMaterial({...MAT_OPTS,color:hex,roughness:r});m.name=name;return m};
 
-/* ---------- scene ---------- */
+/* ================= loft geometry (low-poly, PS1 style) ================= */
+// a ring = {y, w (half-width), d (half-depth), x, z (centre offsets)}
+function lerpRing(a,b,t){return{y:a.y+(b.y-a.y)*t,w:a.w+(b.w-a.w)*t,d:a.d+(b.d-a.d)*t,x:(a.x||0)+((b.x||0)-(a.x||0))*t,z:(a.z||0)+((b.z||0)-(a.z||0))*t}}
+function ringAt(R,y){
+  for(let i=0;i<R.length-1;i++){const a=R[i],b=R[i+1],lo=Math.min(a.y,b.y),hi=Math.max(a.y,b.y);if(y>=lo-1e-9&&y<=hi+1e-9)return lerpRing(a,b,(y-a.y)/(b.y-a.y))}
+  const e=Math.abs(y-R[0].y)<Math.abs(y-R.at(-1).y)?R[0]:R.at(-1);return{...e,y};
+}
+function sub(R,y0,y1,off=0,extra={}){
+  const lo=Math.min(y0,y1),hi=Math.max(y0,y1),asc=R.at(-1).y>R[0].y;
+  const mid=R.filter(r=>r.y>lo+1e-6&&r.y<hi-1e-6);
+  const out=asc?[ringAt(R,lo),...mid,ringAt(R,hi)]:[ringAt(R,hi),...mid,ringAt(R,lo)];
+  return out.map(r=>({...r,w:r.w+off+(extra.w||0),d:r.d+off+(extra.d||0),z:(r.z||0)+(extra.z||0)}));
+}
+function loft(R,seg=10,caps=[true,true]){
+  const asc=R.at(-1).y>R[0].y,y0=R[0].y,y1=R.at(-1).y,S=seg+1,P=[],U=[],I=[];
+  R.forEach(r=>{for(let i=0;i<=seg;i++){const a=i/seg*Math.PI*2;P.push(Math.sin(a)*r.w+(r.x||0),r.y,Math.cos(a)*r.d+(r.z||0));U.push(i/seg,(r.y-y0)/(y1-y0||1))}});
+  const tri=(a,b,c)=>asc?I.push(a,b,c):I.push(a,c,b);
+  for(let j=0;j<R.length-1;j++)for(let i=0;i<seg;i++){const a=j*S+i,b=a+1,c=a+S,d=c+1;tri(a,b,c);tri(b,d,c)}
+  const cap=(j,top)=>{const r=R[j],ci=P.length/3;P.push(r.x||0,r.y,r.z||0);U.push(.5,top?1:0);for(let i=0;i<seg;i++){const a=j*S+i,b=a+1;top?tri(ci,a,b):tri(ci,b,a)}};
+  if(caps[0])cap(0,false);if(caps[1])cap(R.length-1,true);
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(P,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(U,2));g.setIndex(I);
+  const n=g.toNonIndexed();n.computeVertexNormals();g.dispose();return n;
+}
+function mesh(geo,mat,name){const m=new THREE.Mesh(geo,mat);m.name=name;return m}
+
+/* ================= anatomy ================= */
+const state={frame:0,skin:2,hair:0,hairColor:1,eyes:0,height:1,build:1,shirt:0,pants:0,jacket:0,shoes:0,socks:0};
+
+function anatomy(){
+  const B=state.frame===1;
+  const torso=B?[
+    {y:.86,w:.15,d:.1},{y:.92,w:.185,d:.12,z:-.008},{y:1.0,w:.172,d:.112,z:-.006},{y:1.08,w:.133,d:.09},
+    {y:1.18,w:.142,d:.098,z:.004},{y:1.27,w:.156,d:.118,z:.02},{y:1.35,w:.164,d:.11,z:.012},{y:1.41,w:.172,d:.09},{y:1.46,w:.11,d:.066},{y:1.49,w:.056,d:.05}
+  ]:[
+    {y:.86,w:.145,d:.098},{y:.92,w:.168,d:.112,z:-.006},{y:1.0,w:.16,d:.104,z:-.004},{y:1.08,w:.145,d:.094},
+    {y:1.18,w:.156,d:.104,z:.006},{y:1.27,w:.172,d:.116,z:.016},{y:1.35,w:.182,d:.11,z:.01},{y:1.41,w:.192,d:.094},{y:1.46,w:.12,d:.07},{y:1.49,w:.06,d:.054}
+  ];
+  const sh=ringAt(torso,1.41).w-.012;
+  const arm=[
+    {y:.035,w:.03,d:.034},{y:0,w:.05,d:.054},{y:-.07,w:(B?.048:.055),d:(B?.05:.056)},{y:-.15,w:(B?.04:.046),d:(B?.042:.048)},
+    {y:-.27,w:.034,d:.036},{y:-.31,w:(B?.036:.04),d:(B?.037:.041)},{y:-.4,w:(B?.033:.037),d:(B?.031:.034)},{y:-.5,w:.027,d:.023},{y:-.56,w:.024,d:.019}
+  ];
+  const hand=[{y:-.555,w:.02,d:.024},{y:-.6,w:.017,d:.04},{y:-.66,w:.016,d:.044},{y:-.7,w:.013,d:.04},{y:-.75,w:.01,d:.031},{y:-.765,w:.006,d:.014}];
+  const leg=[
+    {y:.02,w:.06,d:.06},{y:0,w:(B?.09:.085),d:.09},{y:-.1,w:(B?.085:.08),d:.086,z:.006},{y:-.25,w:.066,d:.072,z:.004},
+    {y:-.4,w:.05,d:.054},{y:-.46,w:.05,d:.055,z:.007},{y:-.55,w:.053,d:.058,z:-.012},{y:-.7,w:.036,d:.04,z:-.004},{y:-.8,w:.029,d:.032},{y:-.845,w:.03,d:.033}
+  ];
+  const foot=[{y:0,w:.03,d:.034},{y:-.04,w:.038,d:.04,z:.004},{y:-.12,w:.044,d:.03,z:-.006},{y:-.2,w:.042,d:.02,z:-.015},{y:-.24,w:.031,d:.014,z:-.02},{y:-.255,w:.015,d:.008,z:-.022}];
+  const neck=[{y:1.46,w:.058,d:.056},{y:1.6,w:.05,d:.05,z:-.006}];
+  const head=[
+    {y:1.565,w:.024,d:.024,z:.056},{y:1.585,w:.046,d:.05,z:.036},{y:1.615,w:.06,d:.075,z:.012},{y:1.65,w:.07,d:.093,z:.003},
+    {y:1.69,w:.077,d:.098},{y:1.735,w:.079,d:.1,z:-.003},{y:1.775,w:.072,d:.092,z:-.006},{y:1.805,w:.052,d:.068,z:-.008},{y:1.823,w:.022,d:.03,z:-.008},{y:1.828,w:.001,d:.001,z:-.008}
+  ];
+  return{torso,arm,hand,leg,foot,neck,head,
+    joints:{armL:{pos:[sh,1.41,0],rz:.3},armR:{pos:[-sh,1.41,0],rz:-.3},legL:{pos:[.09,.92,0],rz:.02},legR:{pos:[-.09,.92,0],rz:-.02}},
+    feet:{L:[.098,.045,-.06],R:[-.098,.045,-.06]}};
+}
+let A=anatomy();
+
+function jointGroup(j,name){const g=new THREE.Group();g.name=name;g.position.set(...j.pos);g.rotation.z=j.rz;return g}
+function footGroup(p,name){const g=new THREE.Group();g.name=name;g.position.set(...p);g.rotation.x=-Math.PI/2;return g}
+// put a mesh on each side (L/R) of a limb
+function onLimbs(parent,kind,makeMesh,name){
+  const keys=kind==='arm'?['armL','armR']:['legL','legR'];
+  for(const k of keys){const g=jointGroup(A.joints[k],name+'_'+k.slice(-1));g.add(makeMesh(k));parent.add(g)}
+}
+function onFeet(parent,makeMesh,name){for(const s of ['L','R']){const g=footGroup(A.feet[s],name+'_'+s);g.add(makeMesh(s));parent.add(g)}}
+
+/* ================= scene ================= */
 const stage=document.getElementById('stage');
-const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true,preserveDrawingBuffer:true});
-renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.outputColorSpace=THREE.SRGBColorSpace;
+const renderer=new THREE.WebGLRenderer({antialias:false,alpha:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.outputColorSpace=THREE.SRGBColorSpace;
 stage.prepend(renderer.domElement);
 const scene=new THREE.Scene();
-const camera=new THREE.PerspectiveCamera(32,1,.05,50);camera.position.set(1.4,1.35,3.6);
-const controls=new OrbitControls(camera,renderer.domElement);controls.target.set(0,.95,0);controls.enableDamping=true;controls.minDistance=1.2;controls.maxDistance=7;controls.update();
-scene.add(new THREE.HemisphereLight(0xfff6e8,0x8a7a66,1.6));
-const key=new THREE.DirectionalLight(0xffffff,1.9);key.position.set(2,4,3);scene.add(key);
-const rim=new THREE.DirectionalLight(0xffd9b0,.9);rim.position.set(-3,2,-2);scene.add(rim);
-const floor=new THREE.Mesh(new THREE.CircleGeometry(.75,48),new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:.1}));
-floor.rotation.x=-Math.PI/2;floor.position.y=.001;scene.add(floor);
+const camera=new THREE.PerspectiveCamera(30,1,.05,50);
+const controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.minDistance=.8;controls.maxDistance=6;controls.enablePan=false;
+function view(v){
+  const T={front:[[0,1.2,3.9],[0,.92,0]],side:[[3.9,1.2,0],[0,.92,0]],back:[[0,1.2,-3.9],[0,.92,0]],feet:[[.7,.45,1.3],[0,.15,0]],start:[[1.3,1.25,3.6],[0,.92,0]]}[v];
+  camera.position.set(...T[0]);controls.target.set(...T[1]);controls.update();
+}
+view('start');
+document.querySelectorAll('.viewbtns button').forEach(b=>b.onclick=()=>view(b.dataset.v));
+scene.add(new THREE.HemisphereLight(0xfdf7ec,0x6d6250,1.7));
+const key=new THREE.DirectionalLight(0xffffff,2.0);key.position.set(1.5,3,3);scene.add(key);
+const rim=new THREE.DirectionalLight(0xcfe3ef,1.0);rim.position.set(-2,2.5,-3);scene.add(rim);
+// limestone plinth (not exported)
+const plinth=new THREE.Group();
+plinth.add(Object.assign(new THREE.Mesh(new THREE.CylinderGeometry(.5,.54,.06,8),new THREE.MeshStandardMaterial({color:0xe9e0cd,flatShading:true,roughness:1})),{position:new THREE.Vector3(0,-.03,0)}));
+plinth.add(Object.assign(new THREE.Mesh(new THREE.TorusGeometry(.5,.012,4,8),new THREE.MeshStandardMaterial({color:0x0d4f7c,flatShading:true})),{rotation:new THREE.Euler(Math.PI/2,0,Math.PI/8)}));
+scene.add(plinth);
 
 const root=new THREE.Group();root.name='Heemsworld_Character';scene.add(root);
 const G={};for(const n of ['body','hair','socks','shoes','pants','shirt','jacket']){G[n]=new THREE.Group();G[n].name=n[0].toUpperCase()+n.slice(1);root.add(G[n])}
-
-/* ---------- body geometry ---------- */
-const LIMB={
-  armL:{pos:[.25,1.44,0],rz:.2,len:.62,r0:.056,r1:.042},
-  armR:{pos:[-.25,1.44,0],rz:-.2,len:.62,r0:.056,r1:.042},
-  legL:{pos:[.105,.95,0],rz:0,len:.86,r0:.082,r1:.05},
-  legR:{pos:[-.105,.95,0],rz:0,len:.86,r0:.082,r1:.05}
-};
-const ZS=.62;
-const torsoR=y=>.17+(.2-.17)*THREE.MathUtils.clamp((y-.92)/(.56),0,1);
-function limbSeg(L,t0,t1,off,mat,name){
-  const r=t=>L.r0+(L.r1-L.r0)*t, h=(t1-t0)*L.len;
-  const m=new THREE.Mesh(new THREE.CylinderGeometry(r(t0)+off,r(t1)+off,h,24),mat);m.name=name;m.position.y=-(t0+t1)/2*L.len;
-  const g=new THREE.Group();g.name=name+'_joint';g.position.set(...L.pos);g.rotation.z=L.rz;g.add(m);return g;
-}
-function torsoSeg(yb,yt,off,mat,name,rb,rt){
-  rb=rb??torsoR(yb);rt=rt??torsoR(yt);
-  const m=new THREE.Mesh(new THREE.CylinderGeometry(rt+off,rb+off,yt-yb,32),mat);m.name=name;m.position.y=(yb+yt)/2;m.scale.z=ZS;return m;
-}
-function sphere(r,pos,mat,name,scale){const m=new THREE.Mesh(new THREE.SphereGeometry(r,24,16),mat);m.name=name;m.position.set(...pos);if(scale)m.scale.set(...scale);return m}
-function box(w,h,d,pos,mat,name){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);m.name=name;m.position.set(...pos);return m}
-function torus(R,r,pos,mat,name,rx=Math.PI/2,sz=ZS){const m=new THREE.Mesh(new THREE.TorusGeometry(R,r,10,32),mat);m.name=name;m.position.set(...pos);m.rotation.x=rx;m.scale.y=sz;return m}
-const FOOT=x=>[x,.04,.045];
-
-const state={skin:2,hair:2,hairColor:1,eyes:0,height:1,build:1,shirt:1,pants:1,jacket:0,shoes:1,socks:2};
-const skinMat=plain(SKINS[2],'Skin',.6);
-
 function clear(g){g.traverse(o=>{if(o.geometry)o.geometry.dispose()});g.clear()}
+const skinMat=plain(SKINS[2],'Skin',.75);
 
+/* ================= builders ================= */
 function buildBody(){
   clear(G.body);const B=G.body,s=skinMat;
-  B.add(torsoSeg(.88,1.48,0,s,'Torso'));
-  B.add(torsoSeg(.84,.95,0,s,'Hips',.17,.17));
-  B.add(new THREE.Mesh(new THREE.CylinderGeometry(.05,.055,.14,16),s)).position.y=1.54;
-  for(const k of ['armL','armR']){const L=LIMB[k];B.add(limbSeg(L,0,1,0,s,k));B.add(sphere(.06,L.pos,s,k+'_shoulder'));
-    const hx=L.pos[0]+Math.sin(L.rz)*L.len*1.05, hy=L.pos[1]-Math.cos(L.rz)*L.len*1.05;B.add(sphere(.048,[hx,hy,0],s,k+'_hand',[.85,1.25,.7]))}
-  for(const k of ['legL','legR']){B.add(limbSeg(LIMB[k],0,1,0,s,k))}
-  B.add(box(.1,.07,.22,FOOT(.105),s,'footL'));B.add(box(.1,.07,.22,FOOT(-.105),s,'footR'));
-  const hp=[0,1.7,0];
-  B.add(sphere(.115,hp,s,'Head',[1,1.12,1.02]));
-  B.add(sphere(.03,[.115,1.69,0],s,'earL',[.5,1,.8]));B.add(sphere(.03,[-.115,1.69,0],s,'earR',[.5,1,.8]));
-  B.add(sphere(.018,[0,1.685,.118],s,'Nose',[1,1,1.2]));
-  const white=plain('#ffffff','EyeWhite',.3), iris=plain(EYES[state.eyes],'Iris',.3), lip=plain(shade(SKINS[state.skin],-.18),'Lips',.6), brow=plain(HAIRC[state.hairColor],'Brow');
-  for(const x of [.042,-.042]){B.add(sphere(.021,[x,1.72,.097],white,'Eye',[1,1,.6]));B.add(sphere(.011,[x,1.72,.11],iris,'Pupil',[1,1,.5]));B.add(box(.04,.008,.01,[x,1.752,.104],brow,'Brow'))}
-  B.add(box(.045,.01,.01,[0,1.645,.108],lip,'Mouth'));
+  B.add(mesh(loft(A.torso,12),s,'Torso'));
+  B.add(mesh(loft(A.neck,8,[false,false]),s,'Neck'));
+  B.add(mesh(loft(A.head,12),s,'Head'));
+  onLimbs(B,'arm',()=>{const g=new THREE.Group();g.add(mesh(loft(A.arm,8),s,'Arm'));g.add(mesh(loft(A.hand,6),s,'Hand'));
+    const th=mesh(loft([{y:0,w:.011,d:.012},{y:-.045,w:.008,d:.009},{y:-.05,w:.002,d:.002}],5),s,'Thumb');th.position.set(0,-.585,.03);th.rotation.x=-.55;g.add(th);return g},'Arm');
+  onLimbs(B,'leg',()=>mesh(loft(A.leg,8),s,'Leg'),'Leg');
+  onFeet(B,()=>mesh(loft(A.foot,8),s,'Foot'),'Foot');
+  // face
+  const white=plain('#f4f1ea','EyeWhite',.5),iris=plain(EYES[state.eyes],'Iris',.4),brow=plain(HAIRC[state.hairColor],'Brow'),lip=plain(shade(SKINS[state.skin],-.14),'Lips');
+  for(const x of [.033,-.033]){
+    const e=mesh(new THREE.IcosahedronGeometry(.014,1),white,'Eye');e.position.set(x,1.712,.083);e.scale.set(1.2,.85,.6);B.add(e);
+    const p=mesh(new THREE.IcosahedronGeometry(.0085,0),iris,'Pupil');p.position.set(x,1.712,.093);p.scale.set(1,1,.5);B.add(p);
+    const b=mesh(new THREE.BoxGeometry(.03,.006,.01),brow,'Brow');b.position.set(x,1.738,.094);b.rotation.z=x>0?-.12:.12;B.add(b);
+  }
+  const nose=mesh(new THREE.ConeGeometry(.013,.034,4),s,'Nose');nose.position.set(0,1.682,.1);nose.rotation.set(Math.PI/2.4,0,Math.PI/4);B.add(nose);
+  const mouth=mesh(new THREE.BoxGeometry(.032,.006,.01),lip,'Mouth');mouth.position.set(0,1.637,.09);B.add(mouth);
+  for(const x of [.079,-.079]){const ear=mesh(new THREE.BoxGeometry(.012,.038,.026),s,'Ear');ear.position.set(x,1.7,-.008);ear.rotation.y=x>0?.2:-.2;B.add(ear)}
 }
-
 function buildHair(){
-  clear(G.hair);const st=HAIRS[state.hair];if(st==='Bald')return;
-  const m=plain(HAIRC[state.hairColor],'Hair',.9);m.side=THREE.DoubleSide;
-  const cap=(r,th,name)=>{const c=new THREE.Mesh(new THREE.SphereGeometry(r,32,16,0,Math.PI*2,0,th),m);c.name=name;c.position.set(0,1.7,-.005);c.scale.set(1,1.12,1.02);c.rotation.x=-.35;return c};
-  if(st==='Buzz'){G.hair.add(cap(.119,Math.PI*.5,'Buzz'));return}
-  G.hair.add(cap(.126,Math.PI*.52,'HairCap'));
-  if(st==='Bun')G.hair.add(sphere(.055,[0,1.86,-.06],m,'Bun'));
-  if(st==='Spiky'){for(let i=0;i<14;i++){const a=i/14*Math.PI*2, r=.07;const c=new THREE.Mesh(new THREE.ConeGeometry(.025,.09,8),m);c.name='Spike';c.position.set(Math.cos(a)*r,1.81,Math.sin(a)*r-.01);c.lookAt(Math.cos(a)*.4,2.2,Math.sin(a)*.4-.01);c.rotateX(Math.PI/2);G.hair.add(c)}G.hair.add(sphere(.04,[0,1.84,0],m,'SpikeTop'))}
-  if(st==='Long'){const b=new THREE.Mesh(new THREE.CylinderGeometry(.12,.14,.34,24,1,true,Math.PI*.5,Math.PI),m);b.name='LongBack';b.position.set(0,1.58,-.02);b.scale.z=.8;G.hair.add(b)}
-  if(st==='Puff')G.hair.add(sphere(.16,[0,1.78,-.02],m,'Puff',[1,.9,1]));
+  clear(G.hair);const st=HAIRS[state.hair];if(st==='None')return;
+  const m=plain(HAIRC[state.hairColor],'Hair');
+  if(st==='Buzz'){G.hair.add(mesh(loft(sub(A.head,1.725,1.828,.004),12,[false,true]),m,'Buzz'));return}
+  G.hair.add(mesh(loft(sub(A.head,1.715,1.828,.012),12,[false,true]),m,'HairTop'));
+  G.hair.add(mesh(loft(sub(A.head,1.63,1.72,.01,{z:-.022,w:-.004}),12),m,'HairBack'));
+  if(st==='Bun'){const b=mesh(new THREE.IcosahedronGeometry(.045,0),m,'Bun');b.position.set(0,1.8,-.085);G.hair.add(b)}
+  if(st==='Spiky'){for(let i=0;i<9;i++){const a=(i/9-.5)*Math.PI*1.4,c=mesh(new THREE.ConeGeometry(.03,.085,4),m,'Spike');c.position.set(Math.sin(a)*.05,1.815,Math.cos(a)*.05-.02);c.rotation.set(Math.cos(a)*.6,0,-Math.sin(a)*.6);G.hair.add(c)}}
+  if(st==='Long'){G.hair.add(mesh(loft([{y:1.44,w:.07,d:.04,z:-.06},{y:1.52,w:.085,d:.06,z:-.045},{y:1.62,w:.088,d:.085,z:-.03},{y:1.72,w:.09,d:.1,z:-.02}],10),m,'LongBack'))}
+  if(st==='Puff'){const p=mesh(new THREE.IcosahedronGeometry(.13,1),m,'Puff');p.position.set(0,1.775,-.02);p.scale.set(1,.88,1);G.hair.add(p)}
 }
-
 function buildShirt(){
-  clear(G.shirt);if(!state.shirt)return;const it=CAT.shirt[state.shirt-1],m=matFor(it,'Shirt'),o=.012;
-  G.shirt.add(torsoSeg(.9,1.48,o,m,'ShirtBody'));
-  G.shirt.add(torus(.062,.012,[0,1.48,0],plain(shade(it.c1,-.12),'Collar'),'Collar',Math.PI/2,1));
-  if(it.cut!=='Tank'){const len=it.cut==='Tee'?.34:.93;for(const k of ['armL','armR']){G.shirt.add(sphere(.06+o,LIMB[k].pos,m,'ShirtShoulder'));G.shirt.add(limbSeg(LIMB[k],0,len,o,m,'Sleeve'))}}
+  clear(G.shirt);if(!state.shirt)return;const it=CAT.shirt[state.shirt-1],m=clothMat(it,'Shirt'),o=.008;
+  G.shirt.add(mesh(loft(sub(A.torso,.94,1.47,o),12,[true,false]),m,'ShirtBody'));
+  G.shirt.add(mesh(loft([{y:1.455,w:.068,d:.063},{y:1.475,w:.065,d:.06}],8,[false,false]),plain(shade(it.c1,-.15),'Collar'),'Collar'));
+  if(it.cut!=='Tank'){const len=it.cut==='Tee'?-.2:-.55;onLimbs(G.shirt,'arm',()=>mesh(loft(sub(A.arm,.035,len,o),8,[true,false]),m,'Sleeve'),'Sleeve')}
 }
 function buildPants(){
-  clear(G.pants);if(!state.pants)return;const it=CAT.pants[state.pants-1],m=matFor(it,'Pants'),o=.015;
-  const len={Jeans:.97,Shorts:.42,Capris:.72}[it.cut];
-  G.pants.add(torsoSeg(.83,.99,o,m,'PantsHips',.17,.172));
-  G.pants.add(torus(.18,.012,[0,.985,0],plain(shade(it.c1,-.2),'Waistband'),'Waistband'));
-  for(const k of ['legL','legR'])G.pants.add(limbSeg(LIMB[k],0,len,o,m,'PantLeg'));
+  clear(G.pants);if(!state.pants)return;const it=CAT.pants[state.pants-1],m=clothMat(it,'Pants'),o=.011;
+  const len={Jeans:-.83,Shorts:-.3,Capris:-.62}[it.cut];
+  G.pants.add(mesh(loft(sub(A.torso,.86,1.03,o),12,[true,false]),m,'PantsHips'));
+  G.pants.add(mesh(loft(sub(A.torso,1.01,1.04,o+.004),12,[false,false]),plain(shade(it.c1,-.22),'Waistband'),'Waistband'));
+  onLimbs(G.pants,'leg',()=>mesh(loft(sub(A.leg,.02,len,o),8,[true,false]),m,'PantLeg'),'PantLeg');
 }
 function buildSocks(){
-  clear(G.socks);if(!state.socks)return;const it=CAT.socks[state.socks-1],m=matFor(it,'Socks');
-  const a={Ankle:.93,Crew:.78,'Knee-high':.5}[it.cut];
-  for(const k of ['legL','legR'])G.socks.add(limbSeg(LIMB[k],a,1,.006,m,'Sock'));
-  G.socks.add(box(.112,.08,.232,FOOT(.105),m,'SockFootL'));G.socks.add(box(.112,.08,.232,FOOT(-.105),m,'SockFootR'));
+  clear(G.socks);if(!state.socks)return;const it=CAT.socks[state.socks-1],m=clothMat(it,'Socks');
+  const top={Ankle:-.79,Crew:-.66,'Knee-high':-.45}[it.cut];
+  onLimbs(G.socks,'leg',()=>mesh(loft(sub(A.leg,top,-.845,.004),8,[false,true]),m,'Sock'),'Sock');
+  onFeet(G.socks,()=>mesh(loft(sub(A.foot,0,-.255,.004),8),m,'SockFoot'),'SockFoot');
 }
 function buildShoes(){
-  clear(G.shoes);if(!state.shoes)return;const it=CAT.shoes[state.shoes-1],m=matFor(it,'Shoes');
-  const sole=plain(it.cut==='Sneakers'?'#f4f1ea':'#2a211b','Sole',.9);
-  for(const x of [.105,-.105]){
-    if(it.cut==='Sneakers'){G.shoes.add(box(.125,.085,.26,[x,.055,.05],m,'Sneaker'));G.shoes.add(box(.13,.03,.27,[x,.015,.05],sole,'Sole'));G.shoes.add(box(.07,.012,.08,[x,.1,.1],plain('#ffffff','Laces'),'Laces'))}
-    if(it.cut==='Boots'){G.shoes.add(box(.13,.1,.26,[x,.06,.05],m,'Boot'));G.shoes.add(box(.135,.03,.27,[x,.015,.05],sole,'Sole'))}
-    if(it.cut==='Loafers'){G.shoes.add(box(.12,.065,.25,[x,.045,.05],m,'Loafer'));G.shoes.add(box(.124,.022,.255,[x,.011,.05],sole,'Sole'));G.shoes.add(box(.06,.01,.02,[x,.08,.12],plain(shade(it.c1,-.25),'Strap'),'Strap'))}
-  }
-  if(it.cut==='Boots')for(const k of ['legL','legR'])G.shoes.add(limbSeg(LIMB[k],.78,1,.03,m,'BootShaft'));
+  clear(G.shoes);if(!state.shoes)return;const it=CAT.shoes[state.shoes-1],m=clothMat(it,'Shoes');
+  const sole=plain(it.cut==='Sneakers'?'#f1ede4':'#2a211b','Sole');
+  const off=it.cut==='Boots'?.016:.011;
+  onFeet(G.shoes,()=>{const g=new THREE.Group();
+    const R=it.cut==='Loafers'?sub(A.foot,-.02,-.255,off):sub(A.foot,.005,-.255,off);
+    g.add(mesh(loft(R,8),m,'Upper'));
+    const s=mesh(loft(sub(A.foot,.01,-.258,off+.004,{d:-.02,z:-.018}),8),sole,'Sole');g.add(s);
+    if(it.cut==='Sneakers'){const l=mesh(new THREE.BoxGeometry(.04,.06,.008),plain('#ffffff','Laces'),'Laces');l.position.set(0,-.09,.04);l.rotation.x=.35;g.add(l)}
+    return g},'Shoe');
+  if(it.cut==='Boots')onLimbs(G.shoes,'leg',()=>mesh(loft(sub(A.leg,-.66,-.845,.018),8,[true,false]),m,'BootShaft'),'BootShaft');
 }
 function buildJacket(){
-  clear(G.jacket);if(!state.jacket)return;const it=CAT.jacket[state.jacket-1],m=matFor(it,'Jacket'),o=.035;
-  const trim=plain(shade(it.c1,-.2),'JacketTrim');
-  G.jacket.add(torsoSeg(.86,1.5,o,m,'JacketBody'));
-  for(const k of ['armL','armR']){G.jacket.add(sphere(.06+o,LIMB[k].pos,m,'JacketShoulder'));G.jacket.add(limbSeg(LIMB[k],0,.9,.028,m,'JacketSleeve'))}
-  if(it.cut!=='Hoodie')G.jacket.add(box(.008,.6,.01,[0,1.17,torsoR(1.17)*ZS+o*ZS+.008],trim,'Zip'));
+  clear(G.jacket);if(!state.jacket)return;const it=CAT.jacket[state.jacket-1],m=clothMat(it,'Jacket'),o=.026;
+  const trim=plain(shade(it.c1,-.22),'JacketTrim');
+  let body=sub(A.torso,it.cut==='Bomber'?.97:.9,1.47,o);
+  if(it.cut==='Trench'){const b=ringAt(A.torso,.92);body=[{y:.5,w:b.w+.07,d:b.d+.06},{y:.7,w:b.w+.045,d:b.d+.04},...body]}
+  G.jacket.add(mesh(loft(body,12,[false,false]),m,'JacketBody'));
+  onLimbs(G.jacket,'arm',()=>mesh(loft(sub(A.arm,.035,-.53,.022),8,[true,false]),m,'JacketSleeve'),'JacketSleeve');
+  const front=y=>{const r=ringAt(A.torso,y);return r.d+(r.z||0)+o+.004};
+  if(it.cut!=='Hoodie'){const z=mesh(new THREE.BoxGeometry(.008,.5,.006),trim,'Zip');z.position.set(0,1.2,front(1.2));G.jacket.add(z)}
   if(it.cut==='Hoodie'){
-    const h=new THREE.Mesh(new THREE.TorusGeometry(.12,.05,12,32,Math.PI*1.3),m);h.name='Hood';h.position.set(0,1.5,-.03);h.rotation.set(Math.PI/2+.25,0,-Math.PI*.15+Math.PI);h.scale.set(1,.95,1);G.jacket.add(h);
-    G.jacket.add(box(.2,.11,.02,[0,1.03,torsoR(1.03)*ZS+o*ZS+.01],m,'Pocket'));
-    G.jacket.add(torus(torsoR(.86)+o,.018,[0,.87,0],trim,'Hem'));
+    G.jacket.add(mesh(loft([{y:1.44,w:.13,d:.09,z:-.05},{y:1.5,w:.12,d:.1,z:-.06},{y:1.56,w:.08,d:.07,z:-.085}],10),m,'Hood'));
+    const p=mesh(new THREE.BoxGeometry(.2,.1,.016),m,'Pocket');p.position.set(0,1.0,front(1.0));G.jacket.add(p);
+    G.jacket.add(mesh(loft(sub(A.torso,.885,.92,o+.006),12,[false,false]),trim,'Hem'));
   }
-  if(it.cut==='Bomber'){G.jacket.add(torus(torsoR(.86)+o+.004,.026,[0,.87,0],trim,'Waistband'));G.jacket.add(torus(.08,.02,[0,1.5,0],trim,'Collar',Math.PI/2,1))}
-  if(it.cut==='Trench'){G.jacket.add(torsoSeg(.5,.87,o,m,'TrenchSkirt',.27,torsoR(.87)));G.jacket.add(torus(torsoR(1.0)+o+.004,.016,[0,1.0,0],trim,'Belt'));G.jacket.add(torus(.09,.025,[0,1.5,.01],m,'Lapel',Math.PI/2+.3,1))}
+  if(it.cut==='Bomber'){G.jacket.add(mesh(loft(sub(A.torso,.95,.99,o+.008),12,[false,false]),trim,'Waistband'));G.jacket.add(mesh(loft([{y:1.45,w:.085,d:.08},{y:1.5,w:.075,d:.072}],10,[false,false]),trim,'Collar'))}
+  if(it.cut==='Trench'){G.jacket.add(mesh(loft(sub(A.torso,1.04,1.07,o+.008),12,[false,false]),trim,'Belt'));G.jacket.add(mesh(loft([{y:1.43,w:.13,d:.1,z:.005},{y:1.5,w:.09,d:.08}],10,[false,false]),m,'Lapel'))}
 }
-function buildAll(){buildBody();buildHair();buildSocks();buildShoes();buildPants();buildShirt();buildJacket();applyShape();updateWear()}
+const BUILD={shirt:buildShirt,pants:buildPants,jacket:buildJacket,shoes:buildShoes,socks:buildSocks};
+function buildAll(){A=anatomy();buildBody();buildHair();for(const k in BUILD)BUILD[k]();applyShape();updateWear()}
 function applyShape(){root.scale.set(state.build,state.height,state.build)}
 
-/* ---------- UI ---------- */
+/* ================= UI ================= */
 const TABS=[['body','Body'],['shirt','Shirts'],['pants','Pants'],['jacket','Jackets'],['shoes','Shoes'],['socks','Socks']];
-let tab='shirt',query='';
+let tab='body',query='',cutFilter='';
 const tabsEl=document.getElementById('tabs'),pane=document.getElementById('pane');
-function renderTabs(){tabsEl.innerHTML='';for(const [k,l] of TABS){const b=document.createElement('button');b.className='tab'+(tab===k?' on':'');b.textContent=l;b.onclick=()=>{tab=k;query='';renderTabs();renderPane()};tabsEl.appendChild(b)}}
+function renderTabs(){tabsEl.innerHTML='';for(const [k,l] of TABS){const b=document.createElement('button');b.className='tab'+(tab===k?' on':'');b.textContent=l;b.onclick=()=>{tab=k;query='';cutFilter='';renderTabs();renderPane()};tabsEl.appendChild(b)}}
+function el(h){const t=document.createElement('template');t.innerHTML=h.trim();return t.content.firstChild}
 function swatches(label,list,key,onPick){
-  const r=document.createElement('div');r.className='row';r.innerHTML=`<label>${label}</label>`;const w=document.createElement('div');w.className='sw';
-  list.forEach((c,i)=>{const b=document.createElement('button');b.style.background=c;b.className=state[key]===i?'on':'';b.title=c;b.onclick=()=>{state[key]=i;onPick();renderPane()};w.appendChild(b)});r.appendChild(w);return r}
+  const r=el(`<div class="row"><label>${label}</label><div class="sw"></div></div>`),w=r.lastChild;
+  list.forEach((c,i)=>{const b=document.createElement('button');b.style.background=c;b.className=state[key]===i?'on':'';b.setAttribute('aria-label',label+' '+(i+1));b.onclick=()=>{state[key]=i;onPick();renderPane()};w.appendChild(b)});return r}
+function chips(label,list,key,onPick){
+  const r=el(`<div class="row"><label>${label}</label><div class="chips"></div></div>`),w=r.lastChild;
+  list.forEach((c,i)=>{const b=document.createElement('button');b.textContent=c;b.className='chip'+(state[key]===i?' on':'');b.onclick=()=>{state[key]=i;onPick();renderPane()};w.appendChild(b)});return r}
 function slider(label,key,min,max){
-  const r=document.createElement('div');r.className='row';r.innerHTML=`<label>${label}</label>`;const s=document.createElement('input');s.type='range';s.min=min;s.max=max;s.step=.01;s.value=state[key];s.oninput=()=>{state[key]=+s.value;applyShape()};r.appendChild(s);return r}
+  const r=el(`<div class="row"><label>${label}</label></div>`),s=document.createElement('input');s.type='range';s.min=min;s.max=max;s.step=.01;s.value=state[key];s.oninput=()=>{state[key]=+s.value;applyShape()};r.appendChild(s);return r}
 function renderPane(){
   pane.innerHTML='';
   if(tab==='body'){
+    pane.appendChild(el(`<div class="ph"><h2>Body</h2><span>Base mannequin</span></div>`));
+    pane.appendChild(chips('Frame',FRAMES,'frame',buildAll));
     pane.appendChild(swatches('Skin tone',SKINS,'skin',()=>{skinMat.color.set(SKINS[state.skin]);buildBody()}));
-    const r=document.createElement('div');r.className='row';r.innerHTML='<label>Hair style</label>';const ch=document.createElement('div');ch.className='chips';
-    HAIRS.forEach((h,i)=>{const b=document.createElement('button');b.textContent=h;b.className=state.hair===i?'on':'';b.onclick=()=>{state.hair=i;buildHair();renderPane()};ch.appendChild(b)});r.appendChild(ch);pane.appendChild(r);
+    pane.appendChild(chips('Hair',HAIRS,'hair',buildHair));
     pane.appendChild(swatches('Hair color',HAIRC,'hairColor',()=>{buildHair();buildBody()}));
     pane.appendChild(swatches('Eye color',EYES,'eyes',buildBody));
-    pane.appendChild(slider('Height','height',.85,1.15));
-    pane.appendChild(slider('Build','build',.82,1.25));
+    pane.appendChild(slider('Height','height',.9,1.1));
+    pane.appendChild(slider('Build','build',.88,1.18));
     return;
   }
-  const list=CAT[tab];
-  if(list.length>3){const s=document.createElement('input');s.className='search';s.placeholder=`Search ${list.length} ${tab==='shoes'?'shoes':tab+'s'} (e.g. "camo", "navy", "${list[1].cut.toLowerCase()}")`;s.value=query;s.oninput=()=>{query=s.value;fill()};pane.appendChild(s)}
-  const cnt=document.createElement('p');cnt.className='count';pane.appendChild(cnt);
-  const grid=document.createElement('div');grid.className='grid';pane.appendChild(grid);
+  const list=CAT[tab],label=TABS.find(t=>t[0]===tab)[1];
+  pane.appendChild(el(`<div class="ph"><h2>${label}</h2><span>${list.length} styles</span></div>`));
+  const grid=document.createElement('div');grid.className='grid';
+  if(list.length>3){
+    const s=el(`<input class="search" placeholder="Search by colour, pattern or number">`);s.value=query;s.oninput=()=>{query=s.value;fill()};pane.appendChild(s);
+    const f=el(`<div class="filters"></div>`);
+    ['All',...new Set(list.map(i=>i.cut))].forEach(c=>{const b=el(`<button class="chip">${c}</button>`);const v=c==='All'?'':c;if(cutFilter===v)b.classList.add('on');b.onclick=()=>{cutFilter=v;f.querySelectorAll('.chip').forEach(x=>x.classList.toggle('on',x===b));fill()};f.appendChild(b)});
+    pane.appendChild(f);
+  }
+  pane.appendChild(grid);
   function fill(){
     grid.innerHTML='';const q=query.trim().toLowerCase();
-    const items=list.filter(it=>!q||it.name.toLowerCase().includes(q)||String(it.id)===q);
-    cnt.textContent=`${items.length} of ${list.length} · #${state[tab]||'—'} selected`;
-    if(!q){const b=document.createElement('button');b.className='card'+(state[tab]===0?' on':'');b.innerHTML='<div class="none">None</div><b>None</b><i>&nbsp;</i>';b.onclick=()=>pick(0);grid.appendChild(b)}
-    for(const it of items){const b=document.createElement('button');b.className='card'+(state[tab]===it.id?' on':'');b.title=it.name;b.innerHTML=`<img alt="" src="${thumbFor(it)}"><b>#${String(it.id).padStart(2,'0')}</b><i>${it.name}</i>`;b.onclick=()=>pick(it.id);grid.appendChild(b)}
+    const items=list.filter(it=>(!cutFilter||it.cut===cutFilter)&&(!q||it.name.toLowerCase().includes(q)||String(it.id)===q.replace('#','')));
+    const none=el(`<button class="card${state[tab]===0?' on':''}"><div class="none">None</div><b>—</b><i>Nothing</i></button>`);none.onclick=()=>pick(0);grid.appendChild(none);
+    for(const it of items){const b=el(`<button class="card${state[tab]===it.id?' on':''}" title="${it.name}"><img alt="" src="${thumbFor(it)}"><b>#${String(it.id).padStart(2,'0')}</b><i>${it.name}</i></button>`);b.onclick=()=>pick(it.id);grid.appendChild(b)}
   }
-  function pick(id){state[tab]=id;({shirt:buildShirt,pants:buildPants,jacket:buildJacket,shoes:buildShoes,socks:buildSocks})[tab]();updateWear();fill()}
+  function pick(id){state[tab]=id;BUILD[tab]();updateWear();fill()}
   fill();
 }
 function updateWear(){
-  const n=k=>state[k]?CAT[k][state[k]-1].name:'none';
-  document.getElementById('wear').textContent=`Wearing: ${n('shirt')} · ${n('pants')} · ${n('jacket')} · ${n('shoes')} · ${n('socks')}`;
+  const w=document.getElementById('wear');w.innerHTML='<span class="lbl">Wearing</span>';
+  let any=false;
+  for(const k of ['shirt','pants','jacket','shoes','socks']){if(!state[k])continue;any=true;
+    const p=el(`<span class="pill">${CAT[k][state[k]-1].name}<button aria-label="Remove">×</button></span>`);p.lastChild.onclick=()=>{state[k]=0;BUILD[k]();updateWear();if(tab===k)renderPane()};w.appendChild(p)}
+  if(!any)w.appendChild(el('<span class="nothing">Nothing yet</span>'));
+  document.getElementById('empty').style.display=any?'none':'';
+  document.getElementById('export').disabled=false;
 }
+const toastEl=document.getElementById('toast');let tt;
+function toast(t){toastEl.textContent=t;toastEl.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>toastEl.classList.remove('show'),2600)}
 document.getElementById('random').onclick=()=>{
   const r=n=>Math.floor(Math.random()*n);
-  Object.assign(state,{skin:r(SKINS.length),hair:r(HAIRS.length),hairColor:r(HAIRC.length),eyes:r(EYES.length),shirt:1+r(99),pants:1+r(99),jacket:Math.random()<.45?1+r(99):0,shoes:1+r(99),socks:1+r(3),height:.9+Math.random()*.2,build:.88+Math.random()*.25});
+  Object.assign(state,{frame:r(2),skin:r(SKINS.length),hair:r(HAIRS.length),hairColor:r(HAIRC.length),eyes:r(EYES.length),shirt:1+r(99),pants:1+r(99),jacket:Math.random()<.4?1+r(99):0,shoes:1+r(99),socks:1+r(3)});
   skinMat.color.set(SKINS[state.skin]);buildAll();renderPane();
 };
+document.getElementById('reset').onclick=()=>{for(const k in BUILD)state[k]=0;buildAll();renderPane()};
 
-/* ---------- GLB export ---------- */
-const statusEl=document.getElementById('status');
+/* ================= GLB export ================= */
 let downloads=null;
 try{window.claude?.use?.('downloads').then(d=>{downloads=d}).catch(()=>{})}catch(e){}
 const CRC=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0}return t})();
 function crc32(d){let c=0xFFFFFFFF;for(let i=0;i<d.length;i++)c=CRC[(c^d[i])&255]^(c>>>8);return(c^0xFFFFFFFF)>>>0}
 function zipOne(name,data){
   const nb=new TextEncoder().encode(name),crc=crc32(data),L=data.length;
-  const lh=new DataView(new ArrayBuffer(30));[[0,0x04034b50,4],[4,20,2],[12,0x21,2],[14,crc,4],[18,L,4],[22,L,4],[26,nb.length,2]].forEach(([o,v,s])=>s===4?lh.setUint32(o,v,true):lh.setUint16(o,v,true));
-  const cd=new DataView(new ArrayBuffer(46));[[0,0x02014b50,4],[4,20,2],[6,20,2],[14,0x21,2],[16,crc,4],[20,L,4],[24,L,4],[28,nb.length,2]].forEach(([o,v,s])=>s===4?cd.setUint32(o,v,true):cd.setUint16(o,v,true));
-  const end=new DataView(new ArrayBuffer(22));[[0,0x06054b50,4],[8,1,2],[10,1,2],[12,46+nb.length,4],[16,30+nb.length+L,4]].forEach(([o,v,s])=>s===4?end.setUint32(o,v,true):end.setUint16(o,v,true));
+  const put=(dv,arr)=>arr.forEach(([o,v,s])=>s===4?dv.setUint32(o,v,true):dv.setUint16(o,v,true));
+  const lh=new DataView(new ArrayBuffer(30));put(lh,[[0,0x04034b50,4],[4,20,2],[12,0x21,2],[14,crc,4],[18,L,4],[22,L,4],[26,nb.length,2]]);
+  const cd=new DataView(new ArrayBuffer(46));put(cd,[[0,0x02014b50,4],[4,20,2],[6,20,2],[14,0x21,2],[16,crc,4],[20,L,4],[24,L,4],[28,nb.length,2]]);
+  const end=new DataView(new ArrayBuffer(22));put(end,[[0,0x06054b50,4],[8,1,2],[10,1,2],[12,46+nb.length,4],[16,30+nb.length+L,4]]);
   return new Blob([lh,nb,data,cd,nb,end]);
 }
 document.getElementById('export').onclick=()=>{
-  statusEl.textContent='Building .glb…';
-  root.updateMatrixWorld(true);
+  toast('Building .glb…');root.updateMatrixWorld(true);
   new GLTFExporter().parse(root,async buf=>{
     const bytes=new Uint8Array(buf),kb=(bytes.length/1024).toFixed(0);
     if(downloads){
-      try{await downloads.save({filename:'heemsworld-character.zip',data:zipOne('heemsworld-character.glb',bytes)});statusEl.textContent=`Saved heemsworld-character.glb (${kb} KB, zipped)`}
-      catch(e){statusEl.textContent=e?.code==='declined'?'Export cancelled':'Export failed: '+(e?.message||e?.code||e)}
+      try{await downloads.save({filename:'heemsworld-character.zip',data:zipOne('heemsworld-character.glb',bytes)});toast(`Saved heemsworld-character.glb (${kb} KB, in a .zip)`)}
+      catch(e){toast(e?.code==='declined'?'Export cancelled':'Export failed: '+(e?.message||e?.code||e))}
     }else{
       const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([bytes],{type:'model/gltf-binary'}));a.download='heemsworld-character.glb';document.body.appendChild(a);a.click();a.remove();
-      statusEl.textContent=`Exported heemsworld-character.glb (${kb} KB)`;
+      toast(`Exported heemsworld-character.glb (${kb} KB)`);
     }
-  },err=>{statusEl.textContent='Export failed: '+err},{binary:true});
+  },err=>toast('Export failed: '+err),{binary:true});
 };
 
-/* ---------- loop ---------- */
+/* ================= loop ================= */
 function resize(){const w=stage.clientWidth,h=stage.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}
 new ResizeObserver(resize).observe(stage);resize();
 renderer.setAnimationLoop(()=>{controls.update();renderer.render(scene,camera)});
