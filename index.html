@@ -137,6 +137,12 @@ input[type=range]{width:100%;accent-color:var(--fountain)}
 .sw button.on{box-shadow:inset 0 -4px 6px rgba(0,0,0,.18),inset 0 3px 3px rgba(255,255,255,.55),0 0 0 3px #f06aa4!important}
 .card .tryon{position:absolute;right:6px;top:6px;z-index:3;font-size:9px;padding:2px 6px;border-radius:999px;background:#fff;border:1px solid #f6bcd5;color:#c93a74;opacity:0;transition:opacity .15s}
 .card:hover .tryon{opacity:1}
+.eyegrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(74px,1fr));gap:6px}
+.eyecard{position:relative;overflow:hidden;border-radius:14px;padding:4px 4px 3px;background:linear-gradient(180deg,#fff,#fff3f8);border:1.5px solid #f6c6da;display:flex;flex-direction:column;align-items:center;gap:2px;box-shadow:0 2px 0 rgba(214,69,127,.1)}
+.eyecard img{width:100%;border-radius:9px;image-rendering:pixelated;display:block}
+.eyecard span{font-size:10px;font-weight:600;color:#9a4a70;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.eyecard.on{border-color:#d6457f;box-shadow:0 0 0 2px #f06aa4}
+.eyecard::before{content:"";position:absolute;left:10%;right:10%;top:1px;height:22%;border-radius:999px;background:linear-gradient(180deg,rgba(255,255,255,.9),rgba(255,255,255,0));pointer-events:none}
 </style>
 <script type="importmap">
 {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}
@@ -231,7 +237,7 @@ const EYES=['#3b2414','#2f6b3a','#2f63a8','#6b7178','#7a3fa8'];
 const HAIRS=['None','Buzz','Bob','Pixie','Wolf Cut','Long','Curtains','Ponytail','Twin Tails','Bun','Space Buns','Braids','Dreads','Puff','Mohawk','Spiky'];
 const FRAMES=['Boy','Girl'];
 const STYLES=['Toon','Retro'];
-const EYE_SHAPES=['Round','Almond','Sleepy','Sharp','Cat','Droopy','Sparkle','Happy'];
+const EYE_SHAPES=['Round','Almond','Sleepy','Sharp','Cat','Droopy','Sparkle','Happy','Wide','Narrow','Hooded','Upturned','Downturned','Fierce','Worried','Shocked','Dot','Hollow Iris','Star Pupil','Heart Pupil','Glassy','Teary','Wink L','Wink R','Smiling','Lashy','Doll','Heavy Lid','Squint','Glow','Two-tone','Double Shine','Monolid','Tired','Dizzy','Knocked Out','Determined','Soft','Feline','Starry'];
 const BROWS=['Soft','Straight','Thick','Arched','Fierce','Worried'];
 const MOUTHS=['Smile','Neutral','Smirk','Open','Grin','Pout','Oh','Cat','Frown'];
 const MARKS=['None','Freckles','Rosy','Beauty mark','Bandage'];
@@ -410,46 +416,86 @@ function paintSkin(kind){
 const faceCanvas=document.createElement('canvas');faceCanvas.width=faceCanvas.height=128;
 const faceTex=canvasTex(faceCanvas);
 /* ---------- face presets (pixel-painted) ---------- */
+// eye recipe: w/h size, slope (+ = outer corner up), ih iris height, lid (covers top px), plus style switches
 const EYE_P={
-  Round:{w:14,h:13,slope:0,ih:11},Almond:{w:14,h:9,slope:1,ih:9,wing:1},Sleepy:{w:14,h:12,slope:0,ih:10,lid:5},
-  Sharp:{w:15,h:7,slope:2,ih:7,wing:1},Cat:{w:14,h:9,slope:2,ih:9,slit:1,wing:2},Droopy:{w:14,h:10,slope:-2,ih:9},
-  Sparkle:{w:14,h:13,slope:0,ih:11,sparkle:1},Happy:{closed:1}
+  Round:{w:14,h:13,ih:11},Almond:{w:14,h:9,slope:1,ih:9,wing:1},Sleepy:{w:14,h:12,ih:10,lid:5},Sharp:{w:15,h:7,slope:2,ih:7,wing:1},
+  Cat:{w:14,h:9,slope:2,ih:9,pupil:'slit',wing:2},Droopy:{w:14,h:10,slope:-2,ih:9},Sparkle:{w:14,h:13,ih:11,hl:3},Happy:{closed:'happy'},
+  Wide:{w:16,h:14,ih:12},Narrow:{w:15,h:6,ih:6},Hooded:{w:14,h:11,ih:10,lid:3,crease:1},Upturned:{w:14,h:10,slope:2.5,ih:9},
+  Downturned:{w:14,h:10,slope:-2.5,ih:9,lowLash:1},Fierce:{w:15,h:8,slope:3,ih:8,lash:1,wing:1},Worried:{w:14,h:11,slope:-3,ih:9},
+  Shocked:{w:15,h:14,ih:12,pupil:'tiny',iris:'flat',hl:0},Dot:{dot:1},'Hollow Iris':{w:14,h:12,ih:11,iris:'ring'},
+  'Star Pupil':{w:14,h:13,ih:11,pupil:'star'},'Heart Pupil':{w:14,h:13,ih:11,pupil:'heart'},Glassy:{w:14,h:12,ih:11,hl:0,iris:'flat'},
+  Teary:{w:14,h:13,ih:11,hl:2,tear:1},'Wink L':{w:14,h:12,ih:11,wink:-1},'Wink R':{w:14,h:12,ih:11,wink:1},
+  Smiling:{w:14,h:7,ih:7,smile:1},Lashy:{w:14,h:12,ih:10,lash:2,lowLash:1,wing:2},Doll:{w:15,h:15,ih:13,lowLash:2,hl:2},
+  'Heavy Lid':{w:14,h:12,ih:10,lid:7},Squint:{w:14,h:4,ih:4,hl:0},Glow:{w:14,h:13,ih:11,iris:'glow'},
+  'Two-tone':{w:14,h:13,ih:11,iris:'two'},'Double Shine':{w:14,h:13,ih:11,hl:2},Monolid:{w:15,h:8,ih:8,mono:1},
+  Tired:{w:14,h:11,ih:9,lid:3,bags:1},Dizzy:{w:14,h:13,ih:11,pupil:'spiral',iris:'flat',hl:0},'Knocked Out':{w:14,h:12,ih:11,pupil:'x',iris:'none',hl:0},
+  Determined:{w:15,h:9,slope:1.5,ih:9,lash:1,lowLine:1},Soft:{w:14,h:12,ih:11,thin:1},Feline:{w:15,h:10,slope:2.5,ih:10,pupil:'slit',wing:2,iris:'glow'},
+  Starry:{w:14,h:13,ih:11,hl:4}
 };
-function eyeBox(sx,P,dx){const t=dx*sx/(P.w*1.15/2),shift=P.slope*t,round=Math.abs(t)>.72?2:0;
+function eyeBox(sx,P,dx){const t=dx*sx/(P.w*1.15/2),shift=(P.slope||0)*t,round=Math.abs(t)>.72?2:0;
   return{top:-P.h/2-shift+round,bot:P.h/2-shift*.5-round}}
-function drawEyes(c,ey,skin){
-  const P=EYE_P[EYE_SHAPES[state.eyeShape]],ir=EYES[state.eyes],lash='#1a120e',girl=state.frame===1,thick=girl?3:2;
+function drawEyes(c,ey,skin,shapeIdx=state.eyeShape){
+  const P=EYE_P[EYE_SHAPES[shapeIdx]],ir=EYES[state.eyes],lash='#1a120e',girl=state.frame===1,thick=(P.thin?1:(girl?3:2))+(P.lash||0);
+  const px=(x,y,col,w=1,h=1)=>{c.fillStyle=col;c.fillRect(x,y,w,h)};
   for(const sx of [-1,1]){const x=64+sx*12;
-    if(P.closed){c.fillStyle=lash;for(let dx=-7;dx<=7;dx++){const y=Math.round(ey-3+Math.abs(dx)*.5);c.fillRect(x+dx,y,1,2)}
-      if(girl){c.fillRect(x+sx*7,ey,2,1);c.fillRect(x+sx*8,ey+1,1,1)}continue}
-    const hw=Math.floor(P.w*1.15/2),ix=x-sx;
-    for(let dx=-hw;dx<=hw;dx++){const b=eyeBox(sx,P,dx),top=Math.round(ey+b.top+(P.lid||0)),bot=Math.round(ey+b.bot);
-      if(bot<=top)continue;
-      c.fillStyle='#f8f6f2';c.fillRect(x+dx,top,1,bot-top);
-      const cx=x+dx;
-      if(cx>=ix-4&&cx<=ix+4){                                                   // iris column (wider)
-        const it=Math.max(top,Math.round(ey-P.ih/2)),ib=Math.min(bot,Math.round(ey+P.ih/2));
-        if(ib>it){const g=c.createLinearGradient(0,it,0,ib);g.addColorStop(0,shade(ir,-.25));g.addColorStop(.55,ir);g.addColorStop(1,shade(ir,.22));c.fillStyle=g;c.fillRect(cx,it,1,ib-it)}
+    const closed=P.closed||(P.wink===sx?'line':null);
+    if(closed==='happy'){c.fillStyle=lash;for(let dx=-7;dx<=7;dx++){const y=Math.round(ey-3+Math.abs(dx)*.5);c.fillRect(x+dx,y,1,2)}if(girl){c.fillRect(x+sx*8,ey,2,1)}continue}
+    if(closed==='line'){c.fillStyle=lash;for(let dx=-7;dx<=7;dx++){const y=Math.round(ey+1-Math.abs(dx)*.25);c.fillRect(x+dx,y,1,2)}px(x+sx*8,ey-1,lash,2,1);continue}
+    if(P.dot){px(x-2,ey-4,'#0b0908',5,8);px(x-3,ey-3,'#0b0908',7,6);px(x-1,ey-3,'#ffffff',2,2);continue}
+    const hw=Math.floor(P.w*1.15/2),ix=x-sx,it0=Math.round(ey-P.ih/2),ib0=Math.round(ey+P.ih/2);
+    for(let dx=-hw;dx<=hw;dx++){const b=eyeBox(sx,P,dx);let top=Math.round(ey+b.top+(P.lid||0)),bot=Math.round(ey+b.bot);
+      if(P.smile){bot=Math.round(ey+b.bot-(1-Math.abs(dx)/hw)*3)}                          // lower lid pushed up by the cheeks
+      if(bot<=top)continue;const cx=x+dx;
+      px(cx,top,'#f8f6f2',1,bot-top);
+      if(P.iris!=='none'&&cx>=ix-4&&cx<=ix+4){const it=Math.max(top,it0),ib=Math.min(bot,ib0);
+        if(ib>it){let g;
+          if(P.iris==='flat'){c.fillStyle=ir}
+          else if(P.iris==='two'){g=c.createLinearGradient(0,it,0,ib);g.addColorStop(0,ir);g.addColorStop(.5,ir);g.addColorStop(.5,EYES[(state.eyes+2)%EYES.length]);g.addColorStop(1,EYES[(state.eyes+2)%EYES.length]);c.fillStyle=g}
+          else if(P.iris==='glow'){g=c.createLinearGradient(0,it,0,ib);g.addColorStop(0,shade(ir,.05));g.addColorStop(1,shade(ir,.4));c.fillStyle=g}
+          else{g=c.createLinearGradient(0,it,0,ib);g.addColorStop(0,shade(ir,-.25));g.addColorStop(.55,ir);g.addColorStop(1,shade(ir,.22));c.fillStyle=g}
+          c.fillRect(cx,it,1,ib-it);
+          if(P.iris==='ring'&&Math.abs(cx-ix)<=2&&ib-it>4){px(cx,it+2,shade(ir,.35),1,ib-it-4)}                   // hollow centre
+          if(P.iris==='glow'&&(cx===ix-4||cx===ix+4))px(cx,it,shade(ir,.5),1,ib-it)}
       }
-      c.fillStyle=lash;c.fillRect(cx,top-thick+1,1,thick);                      // upper lash follows the lid
-      if(Math.abs(dx)<hw-1){c.fillStyle=shade(skin,-.28);c.fillRect(cx,bot,1,1)}  // lower lash
+      px(cx,top-thick+1,lash,1,thick);                                                                    // upper lash
+      if(P.mono)px(cx,top-thick,lash,1,1);
+      if(Math.abs(dx)<hw-1)px(cx,bot,P.lowLash?lash:shade(skin,-.28),1,P.lowLash===2&&dx%3===0?2:1);       // lower lash
+      if(P.lowLine&&Math.abs(dx)<hw-2)px(cx,bot+1,shade(skin,-.12));
     }
-    // pupil
-    c.fillStyle='#0b0908';
-    if(P.slit)c.fillRect(ix-1,Math.round(ey-P.ih/2)+1,2,P.ih-2);
-    else{const ph=Math.max(2,Math.round(P.ih*.5));c.fillRect(ix-2,Math.round(ey-ph/2)-(P.lid?-1:1),4,ph)}
+    const mid=Math.round(ey+(P.lid||0)/2);
+    // pupils
+    const pc='#0b0908',pp=P.pupil||'round';
+    if(pp==='round'){const ph=Math.max(2,Math.round(P.ih*.5));px(ix-2,Math.round(ey-ph/2)-(P.lid?-1:1),pc,4,ph)}
+    if(pp==='slit')px(ix-1,it0+1,pc,2,P.ih-2);
+    if(pp==='tiny')px(ix-1,ey-1,pc,2,2);
+    if(pp==='star'){px(ix-1,mid-3,'#fff6b0',2,6);px(ix-3,mid-1,'#fff6b0',6,2);px(ix-2,mid-2,'#fff6b0',4,4)}
+    if(pp==='heart'){const hc='#ff5c9a';px(ix-3,mid-2,hc,2,2);px(ix+1,mid-2,hc,2,2);px(ix-3,mid,hc,6,2);px(ix-2,mid+2,hc,4,1);px(ix-1,mid+3,hc,2,1)}
+    if(pp==='spiral'){const sc='#2a1d18';px(ix-3,mid-3,sc,7,1);px(ix+3,mid-3,sc,1,6);px(ix-3,mid+2,sc,7,1);px(ix-3,mid-1,sc,1,4);px(ix-1,mid-1,sc,3,1);px(ix+1,mid-1,sc,1,2)}
+    if(pp==='x'){for(let k=-3;k<=3;k++){px(ix+k,mid+k,lash,1,1);px(ix+k,mid-k,lash,1,1)}}
     // highlights
-    c.fillStyle='#ffffff';const ht=Math.round(ey-P.ih/2)+1+(P.lid||0);
-    c.fillRect(ix-3,ht,P.ih>8?3:2,P.ih>8?3:2);c.fillRect(ix+1,Math.round(ey+P.ih/2)-3,1,1);
-    if(P.sparkle){c.fillRect(ix+2,ey+1,2,2);c.fillRect(ix-2,ey+3,1,1);c.fillRect(ix+3,ht,1,1)}
-    // lid crease for sleepy, wing for some shapes / girls
-    if(P.lid){c.fillStyle=shade(skin,-.12);for(let dx=-hw+1;dx<hw;dx++){const b=eyeBox(sx,P,dx);c.fillRect(x+dx,Math.round(ey+b.top)-1,1,1)}}
+    const hl=P.hl??1,ht=it0+1+(P.lid||0);
+    if(hl>=1){px(ix-3,ht,'#ffffff',P.ih>8?3:2,P.ih>8?3:2);px(ix+1,ib0-3,'#ffffff')}
+    if(hl===2){px(ix+1,ht+1,'#ffffff',2,2);px(ix-3,ib0-3,'#ffffff',2,1)}
+    if(hl===3){px(ix+2,ey+1,'#ffffff',2,2);px(ix-2,ey+3,'#ffffff');px(ix+3,ht,'#ffffff')}
+    if(hl===4){for(const [a,b] of [[-3,0],[2,1],[0,4],[3,-2],[-1,-2]])px(ix+a,ey+b,'#ffffff');px(ix-3,ht,'#ffffff',2,2)}
+    // lids, crease, wing, bags, tear
+    if(P.lid||P.crease){for(let dx=-hw+1;dx<hw;dx++){const b=eyeBox(sx,P,dx);px(x+dx,Math.round(ey+b.top)-(P.crease?3:1),shade(skin,-.12))}}
     const wing=(P.wing||0)+(girl?1:0);
-    if(wing){const b=eyeBox(sx,P,sx*hw),wx=x+sx*hw,wy=Math.round(ey+b.top+(P.lid||0))-thick+1;c.fillStyle=lash;
-      for(let k=1;k<=wing+1;k++)c.fillRect(wx+sx*k-(sx<0?0:0),wy-k,2,1)}
-    // blush under eyes (girls by default)
-    if(girl||MARKS[state.mark]==='Rosy'){c.fillStyle=mix(skin,'#ff8a8a',.35);c.globalAlpha=MARKS[state.mark]==='Rosy'?.7:.4;c.fillRect(x-6+sx*2,ey+9,11,2);c.globalAlpha=1}
+    if(wing&&!P.mono){const b=eyeBox(sx,P,sx*hw),wx=x+sx*hw,wy=Math.round(ey+b.top+(P.lid||0))-thick+1;for(let k=1;k<=wing+1;k++)px(wx+sx*k,wy-k,lash,2,1)}
+    if(P.bags){px(x-5,ey+8,shade(skin,-.14),10,1);px(x-3,ey+9,shade(skin,-.08),6,1)}
+    if(P.tear){px(x+sx*5,ey+7,'#cdeeff',2,3);px(x+sx*5,ey+10,'#9fd8ff',2,2)}
+    if(girl||MARKS[state.mark]==='Rosy'){c.fillStyle=mix(skin,'#ff8a8a',.35);c.globalAlpha=MARKS[state.mark]==='Rosy'?.7:.4;c.fillRect(x-5+sx*2,ey+9,9,2);c.globalAlpha=1}
   }
+}
+// small pixel preview of an eye preset for the Face tab
+const eyeThumbCache=new Map();
+function eyeThumb(i){
+  const key=[i,state.eyes,state.skin,state.frame,state.mark].join(',');if(eyeThumbCache.has(key))return eyeThumbCache.get(key);
+  const c=document.createElement('canvas');c.width=c.height=128;const x=c.getContext('2d');x.imageSmoothingEnabled=false;
+  x.fillStyle=SKINS[state.skin];x.fillRect(0,0,128,128);drawEyes(x,64,SKINS[state.skin],i);
+  const o=document.createElement('canvas');o.width=112;o.height=56;const y=o.getContext('2d');y.imageSmoothingEnabled=false;
+  y.drawImage(c,36,50,56,28,0,0,112,56);
+  const u=o.toDataURL();eyeThumbCache.set(key,u);return u;
 }
 function drawBrows(c,ey,skin){
   const st=BROWS[state.brow],col=HAIRC[state.hairColor],girl=state.frame===1;
@@ -917,7 +963,10 @@ function renderPane(){
     const rf=el(`<div class="row"><button class="chip">${gl('🎲 Random face')}</button></div>`);
     rf.firstChild.onclick=()=>{const r=k=>Math.floor(Math.random()*k);Object.assign(state,{eyeShape:r(EYE_SHAPES.length),brow:r(BROWS.length),mouth:r(MOUTHS.length),eyes:r(EYES.length),mark:r(MARKS.length)});buildBody();renderPane()};
     pane.appendChild(rf);
-    pane.appendChild(chips('Eyes',EYE_SHAPES,'eyeShape',buildBody));
+    {const r=el(`<div class="row"><label>${gl('Eyes · '+EYE_SHAPES.length+' styles')}</label><div class="eyegrid"></div></div>`),g=r.lastChild;
+     EYE_SHAPES.forEach((n,i)=>{const b=el(`<button class="eyecard${state.eyeShape===i?' on':''}" title="${n}"><img alt="${n}" src="${eyeThumb(i)}"><span>${n}</span></button>`);
+       b.onclick=()=>{state.eyeShape=i;buildBody();g.querySelectorAll('.eyecard').forEach(x=>x.classList.toggle('on',x===b))};g.appendChild(b)});
+     pane.appendChild(r)}
     pane.appendChild(swatches('Eye color',EYES,'eyes',buildBody));
     pane.appendChild(chips('Brows',BROWS,'brow',buildBody));
     pane.appendChild(chips('Mouth',MOUTHS,'mouth',buildBody));
