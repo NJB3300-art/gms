@@ -49,7 +49,7 @@ main{display:grid;grid-template-columns:1fr 420px;min-height:0}
 /* panel */
 #panel{background:var(--paper);border-left:1.5px solid var(--line);display:flex;flex-direction:column;min-height:0}
 .tabs{display:grid;grid-template-columns:repeat(6,1fr);border-bottom:1.5px solid var(--line)}
-.tab{padding:14px 4px 12px;font-family:'Big Shoulders Display',sans-serif;font-weight:800;font-size:16px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-1.5px}
+.tab{padding:14px 2px 12px;font-family:'Big Shoulders Display',sans-serif;font-weight:800;font-size:15px;letter-spacing:.03em;text-transform:uppercase;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-1.5px}
 .tab.on{color:var(--fountain);border-bottom-color:var(--brick)}
 .tab:hover{color:var(--ink)}
 .pane{flex:1;overflow:auto;padding:18px}
@@ -235,7 +235,7 @@ function anatomy(){
     {y:.035,w:.03,d:.034},{y:0,w:.05,d:.054},{y:-.07,w:(B?.048:.055),d:(B?.05:.056)},{y:-.15,w:(B?.04:.046),d:(B?.042:.048)},
     {y:-.27,w:.034,d:.036},{y:-.31,w:(B?.036:.04),d:(B?.037:.041)},{y:-.4,w:(B?.033:.037),d:(B?.031:.034)},{y:-.5,w:.027,d:.023},{y:-.56,w:.024,d:.019}
   ];
-  const hand=[{y:-.555,w:.02,d:.024},{y:-.6,w:.017,d:.04},{y:-.66,w:.016,d:.044},{y:-.7,w:.013,d:.04},{y:-.75,w:.01,d:.031},{y:-.765,w:.006,d:.014}];
+  const hand=[{y:-.555,w:.02,d:.024},{y:-.6,w:.017,d:.04},{y:-.66,w:.016,d:.044},{y:-.7,w:.013,d:.04},{y:-.745,w:.012,d:.034},{y:-.77,w:.01,d:.026},{y:-.78,w:.007,d:.014}];
   const leg=[
     {y:.02,w:.06,d:.06},{y:0,w:(B?.09:.085),d:.09},{y:-.1,w:(B?.085:.08),d:.086,z:.006},{y:-.25,w:.066,d:.072,z:.004},
     {y:-.4,w:.05,d:.054},{y:-.46,w:.05,d:.055,z:.007},{y:-.55,w:.053,d:.058,z:-.012},{y:-.7,w:.036,d:.04,z:-.004},{y:-.8,w:.029,d:.032},{y:-.845,w:.03,d:.033}
@@ -280,8 +280,8 @@ const key=new THREE.DirectionalLight(0xffffff,2.0);key.position.set(1.5,3,3);sce
 const rim=new THREE.DirectionalLight(0xcfe3ef,1.0);rim.position.set(-2,2.5,-3);scene.add(rim);
 // limestone plinth (not exported)
 const plinth=new THREE.Group();
-plinth.add(Object.assign(new THREE.Mesh(new THREE.CylinderGeometry(.5,.54,.06,8),new THREE.MeshStandardMaterial({color:0xe9e0cd,flatShading:true,roughness:1})),{position:new THREE.Vector3(0,-.03,0)}));
-plinth.add(Object.assign(new THREE.Mesh(new THREE.TorusGeometry(.5,.012,4,8),new THREE.MeshStandardMaterial({color:0x0d4f7c,flatShading:true})),{rotation:new THREE.Euler(Math.PI/2,0,Math.PI/8)}));
+{const base=new THREE.Mesh(new THREE.CylinderGeometry(.5,.54,.06,8),new THREE.MeshStandardMaterial({color:0xe9e0cd,flatShading:true,roughness:1}));base.position.y=-.03;plinth.add(base);
+ const ring=new THREE.Mesh(new THREE.TorusGeometry(.5,.012,4,8),new THREE.MeshStandardMaterial({color:0x0d4f7c,flatShading:true}));ring.rotation.set(Math.PI/2,0,Math.PI/8);plinth.add(ring);}
 scene.add(plinth);
 
 const root=new THREE.Group();root.name='Heemsworld_Character';scene.add(root);
