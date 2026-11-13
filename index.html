@@ -415,19 +415,19 @@ const EYE_P={
   Sharp:{w:15,h:7,slope:2,ih:7,wing:1},Cat:{w:14,h:9,slope:2,ih:9,slit:1,wing:2},Droopy:{w:14,h:10,slope:-2,ih:9},
   Sparkle:{w:14,h:13,slope:0,ih:11,sparkle:1},Happy:{closed:1}
 };
-function eyeBox(sx,P,dx){const t=dx*sx/(P.w*1.3/2),shift=P.slope*t,round=Math.abs(t)>.72?2:0;
+function eyeBox(sx,P,dx){const t=dx*sx/(P.w*1.15/2),shift=P.slope*t,round=Math.abs(t)>.72?2:0;
   return{top:-P.h/2-shift+round,bot:P.h/2-shift*.5-round}}
 function drawEyes(c,ey,skin){
   const P=EYE_P[EYE_SHAPES[state.eyeShape]],ir=EYES[state.eyes],lash='#1a120e',girl=state.frame===1,thick=girl?3:2;
-  for(const sx of [-1,1]){const x=64+sx*15;
-    if(P.closed){c.fillStyle=lash;for(let dx=-8;dx<=8;dx++){const y=Math.round(ey-3+Math.abs(dx)*.45);c.fillRect(x+dx,y,1,2)}
+  for(const sx of [-1,1]){const x=64+sx*12;
+    if(P.closed){c.fillStyle=lash;for(let dx=-7;dx<=7;dx++){const y=Math.round(ey-3+Math.abs(dx)*.5);c.fillRect(x+dx,y,1,2)}
       if(girl){c.fillRect(x+sx*7,ey,2,1);c.fillRect(x+sx*8,ey+1,1,1)}continue}
-    const hw=Math.floor(P.w*1.3/2),ix=x-sx;
+    const hw=Math.floor(P.w*1.15/2),ix=x-sx;
     for(let dx=-hw;dx<=hw;dx++){const b=eyeBox(sx,P,dx),top=Math.round(ey+b.top+(P.lid||0)),bot=Math.round(ey+b.bot);
       if(bot<=top)continue;
       c.fillStyle='#f8f6f2';c.fillRect(x+dx,top,1,bot-top);
       const cx=x+dx;
-      if(cx>=ix-5&&cx<=ix+4){                                                   // iris column (wider)
+      if(cx>=ix-4&&cx<=ix+4){                                                   // iris column (wider)
         const it=Math.max(top,Math.round(ey-P.ih/2)),ib=Math.min(bot,Math.round(ey+P.ih/2));
         if(ib>it){const g=c.createLinearGradient(0,it,0,ib);g.addColorStop(0,shade(ir,-.25));g.addColorStop(.55,ir);g.addColorStop(1,shade(ir,.22));c.fillStyle=g;c.fillRect(cx,it,1,ib-it)}
       }
@@ -456,8 +456,8 @@ function drawBrows(c,ey,skin){
   const prof={Soft:t=>-Math.round((1-t*t)*1.5),Straight:t=>0,Thick:t=>-Math.round((1-t*t)),Arched:t=>-Math.round((1-Math.abs(t-.2))*3),Fierce:t=>Math.round((1-t)*2.2)-1,Worried:t=>-Math.round((1-t)*2.2)+1}[st];
   const th=st==='Thick'?3:(girl&&st!=='Fierce'?1:2);
   c.fillStyle=col;
-  for(const sx of [-1,1]){const x=64+sx*15,by=ey-15;
-    for(let dx=-7;dx<=7;dx++){const t=(dx*sx+7)/14;c.fillRect(x+dx,by+prof(t*2-1),1,th)}}   // t: 0 = inner end, 1 = outer
+  for(const sx of [-1,1]){const x=64+sx*12,by=ey-14;
+    for(let dx=-6;dx<=6;dx++){const t=(dx*sx+6)/12;c.fillRect(x+dx,by+prof(t*2-1),1,th)}}   // t: 0 = inner end, 1 = outer
 }
 function drawMouth(c,my,skin){
   const st=MOUTHS[state.mouth],girl=state.frame===1,lip=mix(skin,'#c0505c',girl?.45:.18),line=shade(lip,-.3),inside='#5a1f26',tongue='#e07a86';
@@ -482,7 +482,7 @@ function paintFace(){
   const c=faceCanvas.getContext('2d'),S=128,skin=SKINS[state.skin],R=A.head;c.imageSmoothingEnabled=false;
   const V=y=>Math.round((1-vOf(R,HY(y)))*S);
   c.fillStyle=skin;c.fillRect(0,0,S,S);
-  const ey=V(1.684),girl=state.frame===1;   // upper lash on the 1/2 line, eye just below
+  const ey=V(1.676),girl=state.frame===1;   // upper lash on the 1/2 line, eye just below
   drawEyes(c,ey,skin);drawBrows(c,ey,skin);drawMouth(c,V(1.598),skin);drawMarks(c,ey,skin);
   const ny=V(1.628);c.fillStyle=shade(skin,-.14);c.fillRect(62,ny,4,1);      // shadow under the nose tip
   c.fillStyle=shade(skin,-.08);c.fillRect(0,V(1.588),S,3);
