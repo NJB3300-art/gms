@@ -259,8 +259,17 @@ const CAT0={
     {id:3,cut:'Knee-high',pattern:'Striped',c1:'#f2f2ee',c2:'#c8323c',name:'Red Striped Knee-highs',seed:3}
   ]
 };
+// plain regular shirts: every colour, short sleeve + long sleeve
+const SHIRT_COLORS=[['White','#f6f4ef'],['Off-White','#ece6da'],['Cream','#efe3c6'],['Ivory','#f3ecd8'],['Beige','#d8c3a2'],['Tan','#c9a77c'],['Khaki','#b5a27a'],['Camel','#b7884f'],['Brown','#6b4630'],['Chocolate','#3f2a1f'],
+  ['Black','#1d1d1f'],['Charcoal','#3a3b40'],['Gray','#7d8088'],['Light Gray','#b9bbc1'],['Silver','#c9ccd4'],['Navy','#1f2f5c'],['Royal Blue','#3b55c9'],['Blue','#2f6fd0'],['Sky Blue','#5bb4e8'],['Baby Blue','#a9d8f5'],
+  ['Teal','#1f8a8a'],['Turquoise','#2ec4c0'],['Aqua','#7fe0e0'],['Mint','#a8f0d1'],['Sage','#9fb59a'],['Olive','#6b7036'],['Forest','#2f6b3a'],['Green','#3aa04a'],['Lime','#8cc63f'],['Yellow','#f2d43a'],
+  ['Butter','#fbe7a1'],['Mustard','#d6a72b'],['Gold','#c9a24a'],['Orange','#e8742a'],['Peach','#f5b48e'],['Coral','#f07a62'],['Salmon','#f19a86'],['Red','#c8323c'],['Cherry','#e0263c'],['Burgundy','#7a1f2e'],
+  ['Maroon','#5e1a24'],['Pink','#e77fb0'],['Baby Pink','#f9c4d9'],['Hot Pink','#ff3fa4'],['Magenta','#c2307f'],['Rose','#d9708a'],['Lilac','#c9a7f0'],['Lavender','#b8b0e8'],['Purple','#6f42c1'],['Plum','#5b2d5e']];
+const SOLID_SHIRTS=SHIRT_COLORS.flatMap(([n,c],i)=>[
+  {id:i*2+1,cut:'Tee',pattern:'Solid',c1:c,c2:c,name:`${n} Short Sleeve`,seed:i*2+1},
+  {id:i*2+2,cut:'Longsleeve',pattern:'Solid',c1:c,c2:c,name:`${n} Long Sleeve`,seed:i*2+2}]);
 const CAT={
-  shirt:[...CAT0.shirt,...makeY2K(['Baby Tee','Tube Top','Halter Cami'],1)],
+  shirt:SOLID_SHIRTS,
   pants:[...CAT0.pants,...makeY2K(['Low-rise Flares','Cargo Pants','Pleated Mini'],4)],
   jacket:[...CAT0.jacket,...makeY2K(['Cropped Puffer','Velour Track','Shrug'],7)],
   shoes:[...CAT0.shoes,...makeY2K(['Platform Sneakers','Platform Boots','Mary Janes'],10)],
@@ -1420,7 +1429,7 @@ function renderPane(){
   if(list.length>3){
     const s=el(`<input class="search" placeholder="Search by colour, pattern or number">`);s.value=query;s.oninput=()=>{query=s.value;fill()};pane.appendChild(s);
     const f=el(`<div class="filters"></div>`);
-    ['All','Classic','Y2K ✦',...new Set(list.map(i=>i.cut))].forEach(c=>{const b=el(`<button class="chip">${gl(c)}</button>`);const v=c==='All'?'':c;if(cutFilter===v)b.classList.add('on');b.onclick=()=>{cutFilter=v;f.querySelectorAll('.chip').forEach(x=>x.classList.toggle('on',x===b));fill()};f.appendChild(b)});
+    (list.some(x=>x.y2k)?['All','Classic','Y2K ✦',...new Set(list.map(i=>i.cut))]:['All',...new Set(list.map(i=>i.cut))]).forEach(c=>{const b=el(`<button class="chip">${gl({Tee:'Short Sleeve',Longsleeve:'Long Sleeve'}[c]||c)}</button>`);const v=c==='All'?'':c;if(cutFilter===v)b.classList.add('on');b.onclick=()=>{cutFilter=v;f.querySelectorAll('.chip').forEach(x=>x.classList.toggle('on',x===b));fill()};f.appendChild(b)});
     pane.appendChild(f);
   }
   pane.appendChild(grid);
