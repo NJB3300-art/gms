@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Heemsworld</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
   --fountain:#d6457f;--fountain-2:#ec6fa2;--sky:#ffd9e8;
@@ -13,16 +13,16 @@
   --brick:#b8326a;--brass:#f4c56a;--ink:#2a1420;--muted:#8a5a70;--line:#f3cadb
 }
 *{box-sizing:border-box}
-html,body{margin:0;height:100%;background:var(--limestone);color:var(--ink);font-family:Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+html,body{margin:0;height:100%;background:var(--limestone);color:var(--ink);font-family:'Fredoka',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
 button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
 #app{display:grid;grid-template-rows:auto 1fr;height:100vh}
 
 /* header */
 header{background:linear-gradient(90deg,#c93a74,#e8609a);color:#fff;display:flex;align-items:center;gap:18px;padding:0 22px;height:64px;position:relative}
 header::after{content:"";position:absolute;left:0;right:0;bottom:-6px;height:6px;background:repeating-linear-gradient(90deg,var(--brass) 0 18px,transparent 18px 24px,var(--brick) 24px 42px,transparent 42px 48px)}
-.logo{font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:32px;letter-spacing:.06em;text-transform:uppercase;line-height:1;display:flex;align-items:center;gap:10px}
+.logo{font-family:'Fredoka',sans-serif;font-weight:900;font-size:32px;letter-spacing:.06em;text-transform:uppercase;line-height:1;display:flex;align-items:center;gap:10px}
 .logo svg{width:28px;height:28px}
-.tag{font-size:12px;letter-spacing:.14em;text-transform:uppercase;opacity:.75;border-left:1px solid rgba(255,255,255,.35);padding-left:14px}
+.tag{font-size:13px;letter-spacing:.14em;text-transform:uppercase;opacity:.75;border-left:1px solid rgba(255,255,255,.35);padding-left:14px}
 .hspace{flex:1}
 .hbtn{font-weight:600;font-size:14px;padding:10px 16px;border-radius:4px;border:1.5px solid rgba(255,255,255,.55)}
 .hbtn:hover{background:rgba(255,255,255,.1)}
@@ -52,12 +52,12 @@ main{display:grid;grid-template-columns:1fr 420px;min-height:0}
 /* panel */
 #panel{background:linear-gradient(180deg,var(--paper) 0%,#ffeef5 100%);border-left:1.5px solid var(--line);display:flex;flex-direction:column;min-height:0}
 .tabs{display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1.5px solid var(--line)}
-.tab{padding:14px 1px 12px;font-family:'Big Shoulders Display',sans-serif;font-weight:800;font-size:14px;letter-spacing:.03em;text-transform:uppercase;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-1.5px}
+.tab{padding:14px 1px 12px;font-family:'Fredoka',sans-serif;font-weight:800;font-size:14px;letter-spacing:.03em;text-transform:uppercase;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-1.5px}
 .tab.on{color:var(--fountain);border-bottom-color:var(--brick)}
 .tab:hover{color:var(--ink)}
 .pane{flex:1;overflow:auto;padding:18px 18px 48px;-webkit-mask-image:linear-gradient(180deg,#000 82%,transparent);mask-image:linear-gradient(180deg,#000 82%,transparent)}
 .ph{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px}
-.ph h2{margin:0;font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:26px;letter-spacing:.04em;text-transform:uppercase}
+.ph h2{margin:0;font-family:'Fredoka',sans-serif;font-weight:900;font-size:26px;letter-spacing:.04em;text-transform:uppercase}
 .ph span{font-size:12px;color:var(--muted)}
 .search{width:100%;padding:10px 12px;border-radius:4px;border:1.5px solid var(--line);background:#fff;font:inherit;font-size:14px;margin-bottom:10px;outline:none}
 .search:focus{border-color:var(--fountain)}
@@ -96,6 +96,47 @@ input[type=range]{width:100%;accent-color:var(--fountain)}
   .tab{font-size:14px}
   #empty{white-space:normal;width:80%;text-align:center}
 }
+
+/* ===== bubble text + glossy bubble controls ===== */
+.g{display:inline-block;background:linear-gradient(180deg,#fff 0%,#fff 36%,#ffc8df 44%,#f06aa4 72%,#c93a74 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-stroke:.7px rgba(150,24,84,.6);
+  filter:drop-shadow(0 1.5px 0 rgba(255,255,255,.95)) drop-shadow(0 2px 3px rgba(201,58,116,.35));letter-spacing:.01em;line-height:1.15}
+.g.w,.on .g,.hbtn .g,header .g{background:linear-gradient(180deg,#fff 0%,#fff 42%,#ffe2ee 50%,#ffc4dc 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-stroke:.9px rgba(110,0,50,.85);
+  filter:drop-shadow(0 1.5px 0 rgba(120,10,60,.35)) drop-shadow(0 0 6px rgba(255,255,255,.35))}
+.hbtn.primary .g{background:linear-gradient(180deg,#fff 0%,#ffd0e4 40%,#f06aa4 60%,#c93a74 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-stroke:.7px rgba(150,24,84,.6);filter:drop-shadow(0 1px 0 #fff)}
+.logo{font-weight:700;letter-spacing:.04em;text-transform:none;font-size:34px}
+.logo .g{-webkit-text-stroke:1.2px rgba(120,10,60,.6)}
+.tab{text-transform:none!important;letter-spacing:0!important;font-weight:700!important;font-size:15px!important}
+.ph h2{text-transform:none;letter-spacing:0;font-weight:700;font-size:30px}
+.ph h2 .g{-webkit-text-stroke:1px rgba(150,24,84,.6)}
+.row label{text-transform:none;letter-spacing:.02em;font-size:14px;font-weight:700}
+/* glossy bubble buttons / chips / cards */
+.chip,.viewbtns button,.card,.hbtn,.pill,.search{position:relative;overflow:hidden;border-radius:999px}
+#empty{position:absolute;overflow:hidden;border-radius:999px;z-index:2}
+#stage{overflow:hidden}
+#stage canvas{position:absolute;inset:0}
+.chip,.viewbtns button{background:linear-gradient(180deg,#ffffff 0%,#fff3f8 50%,#ffe0ec 100%)!important;border:1.5px solid #f6bcd5!important;
+  box-shadow:inset 0 -3px 0 rgba(214,69,127,.12),0 2px 0 rgba(214,69,127,.12)}
+.chip::before,.viewbtns button::before,.card::before,.hbtn::before,.pill::before,#empty::before{content:"";position:absolute;left:10%;right:10%;top:2px;height:42%;border-radius:999px;
+  background:linear-gradient(180deg,rgba(255,255,255,.95),rgba(255,255,255,0));pointer-events:none}
+.chip.on{background:linear-gradient(180deg,#ff9cc6 0%,#f06aa4 45%,#d6457f 100%)!important;border-color:#c93a74!important;box-shadow:inset 0 -3px 0 rgba(120,10,60,.2),0 2px 0 rgba(150,24,84,.25)}
+.chip.on::before{background:linear-gradient(180deg,rgba(255,255,255,.75),rgba(255,255,255,0))}
+.hbtn{background:linear-gradient(180deg,rgba(255,255,255,.35),rgba(255,255,255,.08))!important;border:1.5px solid rgba(255,255,255,.7)!important;box-shadow:inset 0 -3px 0 rgba(120,10,60,.15)}
+.hbtn::before{background:linear-gradient(180deg,rgba(255,255,255,.55),rgba(255,255,255,0))}
+.hbtn.primary{background:linear-gradient(180deg,#fff 0%,#ffeef5 60%,#ffd6e7 100%)!important}
+.card{border-radius:18px!important;background:linear-gradient(180deg,#fff 0%,#fff5f9 100%);border:1.5px solid #f6c6da!important;box-shadow:0 2px 0 rgba(214,69,127,.12)}
+.card::before{height:22%;top:1px;left:8%;right:8%;z-index:2}
+.card img,.card .none{border-radius:14px!important;background:radial-gradient(circle at 50% 35%,#fff,#ffe3ee)}
+.card.on{border-color:#d6457f!important;box-shadow:0 0 0 2px #f06aa4,0 3px 8px rgba(214,69,127,.3)!important}
+.card b{font-weight:700}
+.card i{font-family:'Fredoka';color:#9a5a78}
+.pill{background:linear-gradient(180deg,#fff,#ffe3ee)!important;border:1.5px solid #f6bcd5}
+.search{border-radius:999px!important;background:linear-gradient(180deg,#fff,#fff6fa)!important;border:1.5px solid #f6bcd5!important;box-shadow:inset 0 2px 4px rgba(214,69,127,.1)}
+#empty{border-radius:999px!important;background:linear-gradient(180deg,#fff,#ffeef5)!important;border:1.5px solid #f6bcd5!important}
+.sw button{border-radius:50%!important;position:relative;box-shadow:inset 0 -4px 6px rgba(0,0,0,.18),inset 0 3px 3px rgba(255,255,255,.55),0 0 0 1.5px #f6bcd5!important}
+.sw button.on{box-shadow:inset 0 -4px 6px rgba(0,0,0,.18),inset 0 3px 3px rgba(255,255,255,.55),0 0 0 3px #f06aa4!important}
+.card .tryon{position:absolute;right:6px;top:6px;z-index:3;font-size:9px;padding:2px 6px;border-radius:999px;background:#fff;border:1px solid #f6bcd5;color:#c93a74;opacity:0;transition:opacity .15s}
+.card:hover .tryon{opacity:1}
 </style>
 <script type="importmap">
 {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}
@@ -106,20 +147,20 @@ input[type=range]{width:100%;accent-color:var(--fountain)}
   <header>
     <div class="logo">
       <svg viewBox="0 0 28 28" aria-hidden="true"><path d="M14 2 L26 14 L14 26 L2 14 Z" fill="none" stroke="#c9a24a" stroke-width="2.5"/><path d="M14 8 L20 14 L14 20 L8 14 Z" fill="#fff"/></svg>
-      Heemsworld
+      <span class="g w">Heemsworld</span>
     </div>
-    <div class="tag">Character Maker</div>
+    <div class="tag"><span class="g w">Character Maker</span></div>
     <div class="hspace"></div>
-    <button class="hbtn" id="random">Randomize</button>
-    <button class="hbtn" id="reset">Strip</button>
-    <button class="hbtn primary" id="export">Export .GLB</button>
+    <button class="hbtn" id="random"><span class="g">Randomize</span></button>
+    <button class="hbtn" id="reset"><span class="g">Strip</span></button>
+    <button class="hbtn primary" id="export"><span class="g">Export .GLB</span></button>
   </header>
   <main>
     <div id="stage">
       <div class="deco"></div>
-      <div id="empty">Your Heem starts <b>blank</b>. Pick a shirt, pants, jacket, shoes or socks.</div>
-      <div id="status">Drag to rotate · scroll to zoom where you point · right-drag to move</div>
-      <div class="viewbtns"><button data-v="front">Front</button><button data-v="side">Side</button><button data-v="back">Back</button><button data-v="face">Face</button><button data-v="feet">Feet</button></div>
+      <div id="empty"><span class="g">Your Heem starts blank — pick some clothes!</span></div>
+      <div id="status"><span class="g">Drag to spin · scroll to zoom · right-drag to move</span></div>
+      <div class="viewbtns"><button data-v="front"><span class="g">Front</span></button><button data-v="side"><span class="g">Side</span></button><button data-v="back"><span class="g">Back</span></button><button data-v="face"><span class="g">Face</span></button><button data-v="feet"><span class="g">Feet</span></button></div>
     </div>
     <aside id="panel">
       <nav class="tabs" id="tabs"></nav>
@@ -670,26 +711,55 @@ const BUILD={shirt:buildShirt,pants:buildPants,jacket:buildJacket,shoes:buildSho
 function buildAll(){A=anatomy();buildBody();buildHair();for(const k in BUILD)BUILD[k]();applyShape();updateWear()}
 function applyShape(){root.scale.set(state.build,state.height,state.build)}
 
+/* ================= 3D clothing previews ================= */
+const PREV=144;
+const thumbR=new THREE.WebGLRenderer({antialias:true,alpha:true,preserveDrawingBuffer:true});thumbR.setSize(PREV,PREV);thumbR.setPixelRatio(1);thumbR.outputColorSpace=THREE.SRGBColorSpace;
+const tScene=new THREE.Scene();tScene.add(new THREE.HemisphereLight(0xfff6fb,0x8a6a7a,1.7));{const d=new THREE.DirectionalLight(0xffffff,2.1);d.position.set(1.5,3,3);tScene.add(d)}
+const tCam=new THREE.PerspectiveCamera(30,1,.01,10);
+const SHOT={shirt:[[.5,1.33,1.55],[0,1.22,0]],jacket:[[.6,1.3,2.0],[0,1.12,0]],pants:[[.55,.72,2.05],[0,.52,0]],shoes:[[.32,.28,.55],[0,.04,.06]],socks:[[.42,.42,1.0],[0,.2,0]]};
+const previewCache=new Map();let previewQueue=[],previewGen=0;
+function previewKey(cat,id){return cat+id+'|'+state.frame+state.style}
+function renderPreview(cat,id){
+  const key=previewKey(cat,id);if(previewCache.has(key))return previewCache.get(key);
+  const live=G[cat],prev=state[cat];G[cat]=new THREE.Group();state[cat]=id;
+  BUILD[cat]();tScene.add(G[cat]);
+  tCam.position.set(...SHOT[cat][0]);tCam.lookAt(...SHOT[cat][1]);thumbR.render(tScene,tCam);
+  const url=thumbR.domElement.toDataURL('image/png');
+  tScene.remove(G[cat]);clear(G[cat]);G[cat]=live;state[cat]=prev;
+  previewCache.set(key,url);return url;
+}
+function pumpPreviews(){
+  const gen=previewGen,t0=performance.now();
+  while(previewQueue.length&&performance.now()-t0<14){const {cat,id,img}=previewQueue.shift();if(img.isConnected)img.src=renderPreview(cat,id)}
+  if(previewQueue.length&&gen===previewGen)requestAnimationFrame(pumpPreviews);
+}
+// hover to try on, click to keep
+let tryCat=null,tryPrev=null;
+function tryOn(cat,id){if(tryCat===null){tryCat=cat;tryPrev=state[cat]}state[cat]=id;BUILD[cat]()}
+function tryOff(){if(tryCat===null)return;state[tryCat]=tryPrev;BUILD[tryCat]();tryCat=null;tryPrev=null}
+const canHover=matchMedia('(hover:hover)').matches;
+
 /* ================= UI ================= */
 const TABS=[['body','Body'],['face','Face'],['shirt','Shirts'],['pants','Pants'],['jacket','Jackets'],['shoes','Shoes'],['socks','Socks']];
 let tab='body',query='',cutFilter='';
 const tabsEl=document.getElementById('tabs'),pane=document.getElementById('pane');
-function renderTabs(){tabsEl.innerHTML='';for(const [k,l] of TABS){const b=document.createElement('button');b.className='tab'+(tab===k?' on':'');b.textContent=l;b.onclick=()=>{tab=k;query='';cutFilter='';renderTabs();renderPane();if(k==='face')view('face')};tabsEl.appendChild(b)}}
+function renderTabs(){tabsEl.innerHTML='';for(const [k,l] of TABS){const b=document.createElement('button');b.className='tab'+(tab===k?' on':'');b.innerHTML=gl(l);b.onclick=()=>{tryOff();tab=k;query='';cutFilter='';renderTabs();renderPane();if(k==='face')view('face')};tabsEl.appendChild(b)}}
+const gl=t=>`<span class="g">${t}</span>`;
 function el(h){const t=document.createElement('template');t.innerHTML=h.trim();return t.content.firstChild}
 function swatches(label,list,key,onPick){
-  const r=el(`<div class="row"><label>${label}</label><div class="sw"></div></div>`),w=r.lastChild;
+  const r=el(`<div class="row"><label>${gl(label)}</label><div class="sw"></div></div>`),w=r.lastChild;
   list.forEach((c,i)=>{const b=document.createElement('button');b.style.background=c;b.className=state[key]===i?'on':'';b.setAttribute('aria-label',label+' '+(i+1));b.onclick=()=>{state[key]=i;onPick();renderPane()};w.appendChild(b)});return r}
 function chips(label,list,key,onPick,byValue=false){
-  const r=el(`<div class="row"><label>${label}</label><div class="chips"></div></div>`),w=r.lastChild;
-  list.forEach((c,i)=>{const v=byValue?c:i,b=document.createElement('button');b.textContent=c;b.className='chip'+(state[key]===v?' on':'');b.onclick=()=>{state[key]=v;onPick();renderPane()};w.appendChild(b)});return r}
+  const r=el(`<div class="row"><label>${gl(label)}</label><div class="chips"></div></div>`),w=r.lastChild;
+  list.forEach((c,i)=>{const v=byValue?c:i,b=document.createElement('button');b.innerHTML=gl(c);b.className='chip'+(state[key]===v?' on':'');b.onclick=()=>{state[key]=v;onPick();renderPane()};w.appendChild(b)});return r}
 function slider(label,key,min,max){
-  const r=el(`<div class="row"><label>${label}</label></div>`),s=document.createElement('input');s.type='range';s.min=min;s.max=max;s.step=.01;s.value=state[key];s.oninput=()=>{state[key]=+s.value;applyShape()};r.appendChild(s);return r}
+  const r=el(`<div class="row"><label>${gl(label)}</label></div>`),s=document.createElement('input');s.type='range';s.min=min;s.max=max;s.step=.01;s.value=state[key];s.oninput=()=>{state[key]=+s.value;applyShape()};r.appendChild(s);return r}
 function renderPane(){
   pane.innerHTML='';
   if(tab==='face'){
     const n=EYE_SHAPES.length*BROWS.length*MOUTHS.length*EYES.length*MARKS.length;
-    pane.appendChild(el(`<div class="ph"><h2>Face</h2><span>${n.toLocaleString()} combos</span></div>`));
-    const rf=el('<div class="row"><button class="chip">🎲 Random face</button></div>');
+    pane.appendChild(el(`<div class="ph"><h2>${gl('Face')}</h2><span>${gl(n.toLocaleString()+' combos')}</span></div>`));
+    const rf=el(`<div class="row"><button class="chip">${gl('🎲 Random face')}</button></div>`);
     rf.firstChild.onclick=()=>{const r=k=>Math.floor(Math.random()*k);Object.assign(state,{eyeShape:r(EYE_SHAPES.length),brow:r(BROWS.length),mouth:r(MOUTHS.length),eyes:r(EYES.length),mark:r(MARKS.length)});buildBody();renderPane()};
     pane.appendChild(rf);
     pane.appendChild(chips('Eyes',EYE_SHAPES,'eyeShape',buildBody));
@@ -700,7 +770,7 @@ function renderPane(){
     return;
   }
   if(tab==='body'){
-    pane.appendChild(el(`<div class="ph"><h2>Body</h2><span>Base mannequin</span></div>`));
+    pane.appendChild(el(`<div class="ph"><h2>${gl('Body')}</h2><span>${gl('Base mannequin')}</span></div>`));
     pane.appendChild(chips('Render style',STYLES,'style',buildAll,true));
     pane.appendChild(chips('Gender',FRAMES,'frame',buildAll));
     pane.appendChild(swatches('Skin tone',SKINS,'skin',buildBody));
@@ -711,30 +781,38 @@ function renderPane(){
     return;
   }
   const list=CAT[tab],label=TABS.find(t=>t[0]===tab)[1];
-  pane.appendChild(el(`<div class="ph"><h2>${label}</h2><span>${list.length} styles</span></div>`));
+  pane.appendChild(el(`<div class="ph"><h2>${gl(label)}</h2><span>${gl(list.length+' styles · hover to try on')}</span></div>`));
   const grid=document.createElement('div');grid.className='grid';
   if(list.length>3){
     const s=el(`<input class="search" placeholder="Search by colour, pattern or number">`);s.value=query;s.oninput=()=>{query=s.value;fill()};pane.appendChild(s);
     const f=el(`<div class="filters"></div>`);
-    ['All',...new Set(list.map(i=>i.cut))].forEach(c=>{const b=el(`<button class="chip">${c}</button>`);const v=c==='All'?'':c;if(cutFilter===v)b.classList.add('on');b.onclick=()=>{cutFilter=v;f.querySelectorAll('.chip').forEach(x=>x.classList.toggle('on',x===b));fill()};f.appendChild(b)});
+    ['All',...new Set(list.map(i=>i.cut))].forEach(c=>{const b=el(`<button class="chip">${gl(c)}</button>`);const v=c==='All'?'':c;if(cutFilter===v)b.classList.add('on');b.onclick=()=>{cutFilter=v;f.querySelectorAll('.chip').forEach(x=>x.classList.toggle('on',x===b));fill()};f.appendChild(b)});
     pane.appendChild(f);
   }
   pane.appendChild(grid);
   function fill(){
     grid.innerHTML='';const q=query.trim().toLowerCase();
     const items=list.filter(it=>(!cutFilter||it.cut===cutFilter)&&(!q||it.name.toLowerCase().includes(q)||String(it.id)===q.replace('#','')));
-    const none=el(`<button class="card${state[tab]===0?' on':''}"><div class="none">None</div><b>—</b><i>Nothing</i></button>`);none.onclick=()=>pick(0);grid.appendChild(none);
-    for(const it of items){const b=el(`<button class="card${state[tab]===it.id?' on':''}" title="${it.name}"><img alt="" src="${thumbFor(it)}"><b>#${String(it.id).padStart(2,'0')}</b><i>${it.name}</i></button>`);b.onclick=()=>pick(it.id);grid.appendChild(b)}
+    const none=el(`<button class="card${state[tab]===0?' on':''}"><div class="none">${gl('None')}</div><b>${gl('—')}</b><i>Nothing</i></button>`);none.onclick=()=>{tryCat=null;pick(0)};grid.appendChild(none);
+    previewGen++;previewQueue=[];
+    for(const it of items){
+      const key=previewKey(tab,it.id),cached=previewCache.get(key);
+      const b=el(`<button class="card${state[tab]===it.id?' on':''}" title="${it.name}"><span class="tryon">try on</span><img alt="${it.name}" src="${cached||thumbFor(it)}"><b>${gl('#'+String(it.id).padStart(2,'0'))}</b><i>${it.name}</i></button>`);
+      if(!cached)previewQueue.push({cat:tab,id:it.id,img:b.querySelector('img')});
+      b.onclick=()=>{tryCat=null;tryPrev=null;pick(it.id)};
+      if(canHover){b.onmouseenter=()=>tryOn(tab,it.id);b.onmouseleave=tryOff}
+      grid.appendChild(b)}
+    requestAnimationFrame(pumpPreviews);
   }
   function pick(id){state[tab]=id;BUILD[tab]();updateWear();fill()}
   fill();
 }
 function updateWear(){
-  const w=document.getElementById('wear');w.innerHTML='<span class="lbl">Wearing</span>';
+  const w=document.getElementById('wear');w.innerHTML=`<span class="lbl">${gl('Wearing')}</span>`;
   let any=false;
   for(const k of ['shirt','pants','jacket','shoes','socks']){if(!state[k])continue;any=true;
-    const p=el(`<span class="pill">${CAT[k][state[k]-1].name}<button aria-label="Remove">×</button></span>`);p.lastChild.onclick=()=>{state[k]=0;BUILD[k]();updateWear();if(tab===k)renderPane()};w.appendChild(p)}
-  if(!any)w.appendChild(el('<span class="nothing">Nothing yet</span>'));
+    const p=el(`<span class="pill">${gl(CAT[k][state[k]-1].name)}<button aria-label="Remove">×</button></span>`);p.lastChild.onclick=()=>{state[k]=0;BUILD[k]();updateWear();if(tab===k)renderPane()};w.appendChild(p)}
+  if(!any)w.appendChild(el(`<span class="nothing">${gl('Nothing yet')}</span>`));
   document.getElementById('empty').style.display=any?'none':'';
 }
 const toastEl=document.getElementById('toast');let tt;
