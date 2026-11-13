@@ -51,8 +51,8 @@ main{display:grid;grid-template-columns:1fr 420px;min-height:0}
 
 /* panel */
 #panel{background:linear-gradient(180deg,var(--paper) 0%,#ffeef5 100%);border-left:1.5px solid var(--line);display:flex;flex-direction:column;min-height:0}
-.tabs{display:grid;grid-template-columns:repeat(6,1fr);border-bottom:1.5px solid var(--line)}
-.tab{padding:14px 2px 12px;font-family:'Big Shoulders Display',sans-serif;font-weight:800;font-size:15px;letter-spacing:.03em;text-transform:uppercase;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-1.5px}
+.tabs{display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1.5px solid var(--line)}
+.tab{padding:14px 1px 12px;font-family:'Big Shoulders Display',sans-serif;font-weight:800;font-size:14px;letter-spacing:.03em;text-transform:uppercase;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-1.5px}
 .tab.on{color:var(--fountain);border-bottom-color:var(--brick)}
 .tab:hover{color:var(--ink)}
 .pane{flex:1;overflow:auto;padding:18px 18px 48px;-webkit-mask-image:linear-gradient(180deg,#000 82%,transparent);mask-image:linear-gradient(180deg,#000 82%,transparent)}
@@ -166,6 +166,10 @@ const EYES=['#3b2414','#2f6b3a','#2f63a8','#6b7178','#7a3fa8'];
 const HAIRS=['None','Buzz','Bob','Pixie','Wolf Cut','Long','Curtains','Ponytail','Twin Tails','Bun','Space Buns','Braids','Dreads','Puff','Mohawk','Spiky'];
 const FRAMES=['Boy','Girl'];
 const STYLES=['Toon','Retro'];
+const EYE_SHAPES=['Round','Almond','Sleepy','Sharp','Cat','Droopy','Sparkle','Happy'];
+const BROWS=['Soft','Straight','Thick','Arched','Fierce','Worried'];
+const MOUTHS=['Smile','Neutral','Smirk','Open','Grin','Pout','Oh','Cat','Frown'];
+const MARKS=['None','Freckles','Rosy','Beauty mark','Bandage'];
 
 /* ================= paint helpers ================= */
 function rng(s){return()=>{s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
@@ -257,16 +261,16 @@ function loft(R,seg=10,caps=[true,true],opts={}){
 function mesh(geo,m,name){const o=new THREE.Mesh(geo,m);o.name=name;return o}
 
 /* ================= anatomy (stylised: long legs, narrow waist, slightly larger head) ================= */
-const state={style:'Toon',frame:0,skin:2,hair:0,hairColor:1,eyes:0,height:1,build:1,shirt:0,pants:0,jacket:0,shoes:0,socks:0};
+const state={eyeShape:0,brow:0,mouth:0,mark:0,style:'Toon',frame:0,skin:2,hair:0,hairColor:1,eyes:0,height:1,build:1,shirt:0,pants:0,jacket:0,shoes:0,socks:0};
 const H0=1.625,HS=1.22,HV=1.08,HY=y=>H0+(y-1.565)*HV;   // wider than tall = rounder anime head   // head-space helper (y measured on the original 1.565–1.828 head)
 const LEG_END=-.885;
 
 function anatomy(){
   const B=state.frame===1;
   const torso=(B?[
-    [.86,.065,.055],[.9,.135,.09],[.96,.172,.11,-.01],[1.01,.164,.104,-.008],[1.06,.134,.088],[1.14,.112,.08],[1.24,.124,.088,.004],[1.33,.142,.108,.018],[1.41,.15,.1,.01],[1.47,.158,.084],[1.52,.098,.06],[1.55,.046,.044]
+    [.86,.065,.055],[.9,.135,.09],[.96,.172,.11,-.01],[1.01,.164,.104,-.008],[1.06,.134,.088],[1.14,.112,.08],[1.24,.124,.088,.004],[1.33,.142,.108,.018],[1.41,.15,.1,.01],[1.45,.156,.092],[1.475,.152,.082],[1.5,.13,.072],[1.525,.094,.06],[1.55,.046,.044]
   ]:[
-    [.86,.065,.055],[.9,.128,.088],[.96,.158,.104,-.006],[1.01,.154,.1,-.006],[1.06,.138,.092],[1.14,.124,.084],[1.24,.138,.094,.006],[1.33,.156,.106,.014],[1.41,.176,.1,.008],[1.47,.185,.088],[1.52,.105,.062],[1.55,.048,.046]
+    [.86,.065,.055],[.9,.128,.088],[.96,.158,.104,-.006],[1.01,.154,.1,-.006],[1.06,.138,.092],[1.14,.124,.084],[1.24,.138,.094,.006],[1.33,.156,.106,.014],[1.41,.176,.1,.008],[1.45,.183,.094],[1.475,.178,.086],[1.5,.152,.074],[1.525,.108,.062],[1.55,.048,.046]
   ]).map(([y,w,d,z=0])=>({y,w,d,z}));
   const sh=ringAt(torso,1.47).w-.012;
   const arm=[
@@ -324,28 +328,82 @@ function paintSkin(kind){
 }
 const faceCanvas=document.createElement('canvas');faceCanvas.width=faceCanvas.height=128;
 const faceTex=canvasTex(faceCanvas);
+/* ---------- face presets (pixel-painted) ---------- */
+const EYE_P={
+  Round:{w:14,h:13,slope:0,ih:11},Almond:{w:14,h:9,slope:1,ih:9,wing:1},Sleepy:{w:14,h:12,slope:0,ih:10,lid:5},
+  Sharp:{w:15,h:7,slope:2,ih:7,wing:1},Cat:{w:14,h:9,slope:2,ih:9,slit:1,wing:2},Droopy:{w:14,h:10,slope:-2,ih:9},
+  Sparkle:{w:14,h:13,slope:0,ih:11,sparkle:1},Happy:{closed:1}
+};
+function eyeBox(sx,P,dx){const t=dx*sx/(P.w/2),shift=P.slope*t,round=Math.abs(t)>.72?2:0;
+  return{top:-P.h/2-shift+round,bot:P.h/2-shift*.5-round}}
+function drawEyes(c,ey,skin){
+  const P=EYE_P[EYE_SHAPES[state.eyeShape]],ir=EYES[state.eyes],lash='#1a120e',girl=state.frame===1,thick=girl?3:2;
+  for(const sx of [-1,1]){const x=64+sx*12;
+    if(P.closed){c.fillStyle=lash;for(let dx=-6;dx<=6;dx++){const y=Math.round(ey-3+Math.abs(dx)*.55);c.fillRect(x+dx,y,1,2)}
+      if(girl){c.fillRect(x+sx*7,ey,2,1);c.fillRect(x+sx*8,ey+1,1,1)}continue}
+    const hw=Math.floor(P.w/2),ix=x-sx;
+    for(let dx=-hw;dx<=hw;dx++){const b=eyeBox(sx,P,dx),top=Math.round(ey+b.top+(P.lid||0)),bot=Math.round(ey+b.bot);
+      if(bot<=top)continue;
+      c.fillStyle='#f8f6f2';c.fillRect(x+dx,top,1,bot-top);
+      const cx=x+dx;
+      if(cx>=ix-4&&cx<=ix+3){                                                   // iris column
+        const it=Math.max(top,Math.round(ey-P.ih/2)),ib=Math.min(bot,Math.round(ey+P.ih/2));
+        if(ib>it){const g=c.createLinearGradient(0,it,0,ib);g.addColorStop(0,shade(ir,-.25));g.addColorStop(.55,ir);g.addColorStop(1,shade(ir,.22));c.fillStyle=g;c.fillRect(cx,it,1,ib-it)}
+      }
+      c.fillStyle=lash;c.fillRect(cx,top-thick+1,1,thick);                      // upper lash follows the lid
+      if(Math.abs(dx)<hw-1){c.fillStyle=shade(skin,-.28);c.fillRect(cx,bot,1,1)}  // lower lash
+    }
+    // pupil
+    c.fillStyle='#0b0908';
+    if(P.slit)c.fillRect(ix-1,Math.round(ey-P.ih/2)+1,2,P.ih-2);
+    else{const ph=Math.max(2,Math.round(P.ih*.5));c.fillRect(ix-2,Math.round(ey-ph/2)-(P.lid?-1:1),4,ph)}
+    // highlights
+    c.fillStyle='#ffffff';const ht=Math.round(ey-P.ih/2)+1+(P.lid||0);
+    c.fillRect(ix-3,ht,P.ih>8?3:2,P.ih>8?3:2);c.fillRect(ix+1,Math.round(ey+P.ih/2)-3,1,1);
+    if(P.sparkle){c.fillRect(ix+2,ey+1,2,2);c.fillRect(ix-2,ey+3,1,1);c.fillRect(ix+3,ht,1,1)}
+    // lid crease for sleepy, wing for some shapes / girls
+    if(P.lid){c.fillStyle=shade(skin,-.12);for(let dx=-hw+1;dx<hw;dx++){const b=eyeBox(sx,P,dx);c.fillRect(x+dx,Math.round(ey+b.top)-1,1,1)}}
+    const wing=(P.wing||0)+(girl?1:0);
+    if(wing){const b=eyeBox(sx,P,sx*hw),wx=x+sx*hw,wy=Math.round(ey+b.top+(P.lid||0))-thick+1;c.fillStyle=lash;
+      for(let k=1;k<=wing+1;k++)c.fillRect(wx+sx*k-(sx<0?0:0),wy-k,2,1)}
+    // blush under eyes (girls by default)
+    if(girl||MARKS[state.mark]==='Rosy'){c.fillStyle=mix(skin,'#ff8a8a',.35);c.globalAlpha=MARKS[state.mark]==='Rosy'?.7:.4;c.fillRect(x-5+sx*2,ey+9,9,2);c.globalAlpha=1}
+  }
+}
+function drawBrows(c,ey,skin){
+  const st=BROWS[state.brow],col=HAIRC[state.hairColor],girl=state.frame===1;
+  const prof={Soft:t=>-Math.round((1-t*t)*1.5),Straight:t=>0,Thick:t=>-Math.round((1-t*t)),Arched:t=>-Math.round((1-Math.abs(t-.2))*3),Fierce:t=>Math.round((1-t)*2.2)-1,Worried:t=>-Math.round((1-t)*2.2)+1}[st];
+  const th=st==='Thick'?3:(girl&&st!=='Fierce'?1:2);
+  c.fillStyle=col;
+  for(const sx of [-1,1]){const x=64+sx*12,by=ey-15;
+    for(let dx=-6;dx<=6;dx++){const t=(dx*sx+6)/12;c.fillRect(x+dx,by+prof(t*2-1),1,th)}}   // t: 0 = inner end, 1 = outer
+}
+function drawMouth(c,my,skin){
+  const st=MOUTHS[state.mouth],girl=state.frame===1,lip=mix(skin,'#c0505c',girl?.45:.18),line=shade(lip,-.3),inside='#5a1f26',tongue='#e07a86';
+  const px=(x,y,col)=>{c.fillStyle=col;c.fillRect(x,y,1,1)};
+  if(st==='Smile'){for(let dx=-4;dx<=4;dx++)px(64+dx,my-Math.round(dx*dx/9)+1,line);if(girl){c.fillStyle=lip;c.fillRect(62,my+2,4,1)}}
+  if(st==='Neutral'){c.fillStyle=line;c.fillRect(60,my,8,1);if(girl){c.fillStyle=lip;c.fillRect(62,my+1,4,1)}}
+  if(st==='Smirk'){c.fillStyle=line;c.fillRect(60,my+1,6,1);px(66,my,line);px(67,my-1,line);px(68,my-1,line)}
+  if(st==='Open'){c.fillStyle=inside;c.fillRect(59,my-1,10,2);c.fillRect(60,my+1,8,2);c.fillRect(61,my+3,6,1);c.fillStyle=tongue;c.fillRect(61,my+2,6,2);c.fillStyle=line;c.fillRect(59,my-2,10,1)}
+  if(st==='Grin'){c.fillStyle=inside;c.fillRect(58,my-1,12,4);c.fillStyle='#f6f3ee';c.fillRect(59,my-1,10,2);c.fillStyle=line;c.fillRect(58,my-2,12,1);c.fillRect(59,my+3,10,1)}
+  if(st==='Pout'){c.fillStyle=lip;c.fillRect(62,my-1,4,3);c.fillStyle=line;c.fillRect(62,my,4,1);px(63,my-1,shade(lip,.2))}
+  if(st==='Oh'){c.fillStyle=inside;c.fillRect(63,my-1,3,4);c.fillRect(62,my,5,2);c.fillStyle=line;c.fillRect(63,my-2,3,1)}
+  if(st==='Cat'){for(const [dx,dy] of [[-4,0],[-3,1],[-2,1],[-1,0],[0,0],[1,1],[2,1],[3,0]])px(64+dx,my+dy,line)}
+  if(st==='Frown'){for(let dx=-4;dx<=4;dx++)px(64+dx,my+Math.round(dx*dx/9)-1,line)}
+}
+function drawMarks(c,ey,skin){
+  const st=MARKS[state.mark];
+  if(st==='Freckles'){c.fillStyle=shade(skin,-.2);for(const [x,y] of [[48,10],[51,12],[54,10],[46,13],[53,14],[74,10],[77,12],[80,10],[82,13],[75,14],[62,8],[66,9]])c.fillRect(x,ey+y-2,1,1)}
+  if(st==='Beauty mark'){c.fillStyle='#2a1810';c.fillRect(73,ey+17,2,2)}
+  if(st==='Bandage'){c.fillStyle='#f1d9b5';c.fillRect(74,ey+9,10,4);c.fillStyle=shade('#f1d9b5',-.15);c.fillRect(78,ey+9,2,4);c.fillStyle='#d8bd94';c.fillRect(74,ey+9,10,1)}
+}
 function paintFace(){
   const c=faceCanvas.getContext('2d'),S=128,skin=SKINS[state.skin],R=A.head;c.imageSmoothingEnabled=false;
   const V=y=>Math.round((1-vOf(R,HY(y)))*S);
   c.fillStyle=skin;c.fillRect(0,0,S,S);
-  const ey=V(1.7),lash='#1a120e',hair=HAIRC[state.hairColor],ir=EYES[state.eyes];
-  for(const sx of [-1,1]){const x=64+sx*12;
-    const girl=state.frame===1;
-    c.fillStyle='#f8f6f2';c.fillRect(x-7,ey-7,14,13);                       // tall eye white
-    c.fillStyle=shade(ir,-.2);c.fillRect(x-4-sx,ey-7,8,13);                 // iris (dark top)
-    c.fillStyle=ir;c.fillRect(x-4-sx,ey-2,8,8);                             // iris mid
-    c.fillStyle=shade(ir,.2);c.fillRect(x-3-sx,ey+3,6,3);                   // iris glow bottom
-    c.fillStyle='#0b0908';c.fillRect(x-2-sx,ey-4,4,6);                      // pupil
-    c.fillStyle='#ffffff';c.fillRect(x-3-sx,ey-5,3,3);c.fillRect(x+1-sx,ey+2,1,1); // highlights
-    c.fillStyle=lash;c.fillRect(x-8,ey-9,16,3);                              // thick upper lash
-    if(girl){c.fillRect(x+sx*7,ey-10,3,2);c.fillRect(x+sx*9-(sx<0?1:0),ey-11,2,2)}else{c.fillStyle=shade(skin,-.05);c.fillRect(x-7,ey-7,14,2);c.fillStyle=lash} // girl: lash wing; boy: flatter lid
-    c.fillStyle=shade(skin,-.3);c.fillRect(x-5,ey+6,10,1);                  // lower lash
-    c.fillStyle=hair;if(girl){c.fillRect(x-6,ey-16,12,2);c.fillRect(x+(sx>0?4:-8),ey-15,4,1)}else{c.fillRect(x-7,ey-15,14,3)} // brow
-    c.fillStyle=mix(skin,'#ff8a8a',.35);c.globalAlpha=girl?.45:.15;c.fillRect(x-5+sx*2,ey+9,9,2);c.globalAlpha=1; // blush
-  }
+  const ey=V(1.7),girl=state.frame===1;
+  drawEyes(c,ey,skin);drawBrows(c,ey,skin);drawMouth(c,V(1.626),skin);drawMarks(c,ey,skin);
   const ny=V(1.662);c.fillStyle=shade(skin,-.16);c.fillRect(63,ny,2,1);      // nose hint
-  const my=V(1.625),lip=mix(skin,'#c0505c',state.frame===1?.45:.15);
-  c.fillStyle=shade(lip,-.25);c.fillRect(60,my,8,1);c.fillStyle=lip;c.fillRect(62,my+1,4,1);
   c.fillStyle=shade(skin,-.08);c.fillRect(0,V(1.588),S,3);
   faceTex.needsUpdate=true;
 }
@@ -417,7 +475,7 @@ function buildHair(){
   clear(G.hair);const st=HAIRS[state.hair];if(st==='None')return;
   const m=mat({color:HAIRC[state.hairColor],side:THREE.DoubleSide},'Hair'),H=G.hair,R=A.head,top=R.at(-1).y,P=Math.PI;
   const cap=(from,off)=>mesh(loft(sub(R,HY(from),top,off),14,[false,true]),m,'HairCap');
-  const fringe=(to,swept=0)=>mesh(hairShell(HY(1.8),HY(to),.02,.026,[-1.1+swept,1.1+swept],.022),m,'Fringe');
+  const fringe=(to,swept=0)=>mesh(hairShell(HY(1.8),HY(to+.03),.02,.026,[-1.1+swept,1.1+swept],.022),m,'Fringe');
   if(st==='Buzz'){H.add(cap(1.722,.005));outline(H);return}
   if(st==='Bob'){H.add(cap(1.735,.017));H.add(mesh(hairShell(HY(1.77),HY(1.605),.019,.034,[.8,2*P-.8],.026),m,'BobShell'));H.add(fringe(1.735))}
   if(st==='Pixie'){H.add(cap(1.735,.016));H.add(mesh(hairShell(HY(1.77),HY(1.66),.017,.022,[.95,2*P-.95],.024),m,'PixieBack'));H.add(fringe(1.742,.35))}
@@ -495,6 +553,7 @@ function drapeTorso(R,off,flare=0,ease=.97){
 function drapeLimb(R,ref,off,profile,cuff=false){
   const top=R[0].y,bot=R.at(-1).y,D=dense(R);
   const out=D.map(r=>{const t=(top-r.y)/(top-bot||1),p=profile(t);
+    if(r.y>-.01){const k=Math.max(0,Math.min(1,(-r.y+.035)/.045));return{...r,w:r.w+off+(ref.w*p-r.w)*Math.max(0,k)*.35,d:r.d+off+(ref.d*p-r.d)*Math.max(0,k)*.35}}
     return{...r,w:Math.max(r.w+off,ref.w*p+off),d:Math.max(r.d+off,ref.d*p+off)}});
   if(cuff){const last=out.at(-1),src=D.at(-1),cy=last.y+.035;
     out.splice(out.length-1,0,{...ringAt(out,cy),y:cy});out[out.length-1]={...last,w:src.w+off+.006,d:src.d+off+.006}}
@@ -506,14 +565,15 @@ const clothMatDS=(it,name)=>mat({map:texFor(it),...DS},name);
 function buildShirt(){
   clear(G.shirt);if(!state.shirt)return;const it=CAT.shirt[state.shirt-1],m=clothMatDS(it,'Shirt'),o=.01;
   const hem=it.cut==='Tank'?.98:.95;
-  G.shirt.add(mesh(loft(drapeTorso(sub(A.torso,hem,1.53,0),o,.012),14,[false,false],{...CLOTH,seed:1}),m,'ShirtBody'));
-  G.shirt.add(mesh(loft([{y:1.515,w:.066,d:.063},{y:1.538,w:.062,d:.06}],10,[false,false]),plain(shade(it.c1,-.15),'Collar'),'Collar'));
+  G.shirt.add(mesh(loft(drapeTorso(sub(A.torso,hem,1.54,0),o,.012),14,[false,false],{...CLOTH,seed:1}),m,'ShirtBody'));
+  {const a=ringAt(A.torso,1.532),b=ringAt(A.torso,1.552);G.shirt.add(mesh(loft([{...a,w:a.w+o+.004,d:a.d+o+.004},{...b,y:1.552,w:b.w+o+.006,d:b.d+o+.006}],12,[false,false]),plain(shade(it.c1,-.15),'Collar'),'Collar'))}
   if(it.cut!=='Tank'){
     const ref=ringAt(A.arm,-.02);
     const sleeve=it.cut==='Tee'
-      ?drapeLimb(sub(A.arm,.035,-.21,0),ref,o,t=>.92+.14*t)                       // short, open, slightly bell-shaped
-      :drapeLimb(sub(A.arm,.035,-.55,0),ref,o,t=>.92-.18*t,true);                 // loose long sleeve, gathered cuff
-    onLimbs(G.shirt,'arm',()=>mesh(loft(sleeve,9,[true,false],{...CLOTH,seed:2}),m,'Sleeve'),'Sleeve');
+      ?drapeLimb(sub(A.arm,-.005,-.21,0),ref,o,t=>.86+.18*t)                       // short, open, slightly bell-shaped
+      :drapeLimb(sub(A.arm,-.005,-.55,0),ref,o,t=>.86-.14*t,true);                 // loose long sleeve, gathered cuff
+    // shoulder seam: fabric hugs the shoulder dome, then the sleeve hangs loose below it
+    onLimbs(G.shirt,'arm',()=>{const g=new THREE.Group();g.add(mesh(loft(sub(A.arm,.036,-.01,o),9,[true,false]),m,'ShoulderSeam'));g.add(mesh(loft(sleeve,9,[false,false],{...CLOTH,seed:2}),m,'Sleeve'));return g},'Sleeve');
   }
   outline(G.shirt);
 }
@@ -557,8 +617,8 @@ function buildJacket(){
   if(it.cut==='Bomber'){const b=body[0];body=[{...b,y:.97,w:b.w-.022,d:b.d-.018},{...b,y:.99,w:b.w-.02,d:b.d-.016},...body]}   // gathered waistband
   G.jacket.add(mesh(loft(body,14,[false,false],{...CLOTH,seed:5}),m,'JacketBody'));
   const ref=ringAt(A.arm,-.02),sp={Hoodie:t=>1.0-.12*t,Bomber:t=>1.02-.1*t,Trench:t=>.98+.04*t}[it.cut];
-  const sleeve=drapeLimb(sub(A.arm,.035,-.53,0),ref,.026,sp,it.cut!=='Trench');
-  onLimbs(G.jacket,'arm',()=>mesh(loft(sleeve,9,[true,false],{...CLOTH,seed:6}),m,'JacketSleeve'),'JacketSleeve');
+  const sleeve=drapeLimb(sub(A.arm,-.005,-.53,0),ref,.026,sp,it.cut!=='Trench');
+  onLimbs(G.jacket,'arm',()=>{const g=new THREE.Group();g.add(mesh(loft(sub(A.arm,.037,-.01,.024),9,[true,false]),m,'JacketShoulder'));g.add(mesh(loft(sleeve,9,[false,false],{...CLOTH,seed:6}),m,'JacketSleeve'));return g},'JacketSleeve');
   const frontZ=y=>{const r=ringAt(body,y);return r.d+(r.z||0)+.004};
   if(it.cut!=='Hoodie'){const z=mesh(new THREE.BoxGeometry(.008,.46,.006),trim,'Zip');z.position.set(0,1.25,frontZ(1.25));G.jacket.add(z)}
   if(it.cut==='Hoodie'){
@@ -574,10 +634,10 @@ function buildAll(){A=anatomy();buildBody();buildHair();for(const k in BUILD)BUI
 function applyShape(){root.scale.set(state.build,state.height,state.build)}
 
 /* ================= UI ================= */
-const TABS=[['body','Body'],['shirt','Shirts'],['pants','Pants'],['jacket','Jackets'],['shoes','Shoes'],['socks','Socks']];
+const TABS=[['body','Body'],['face','Face'],['shirt','Shirts'],['pants','Pants'],['jacket','Jackets'],['shoes','Shoes'],['socks','Socks']];
 let tab='body',query='',cutFilter='';
 const tabsEl=document.getElementById('tabs'),pane=document.getElementById('pane');
-function renderTabs(){tabsEl.innerHTML='';for(const [k,l] of TABS){const b=document.createElement('button');b.className='tab'+(tab===k?' on':'');b.textContent=l;b.onclick=()=>{tab=k;query='';cutFilter='';renderTabs();renderPane()};tabsEl.appendChild(b)}}
+function renderTabs(){tabsEl.innerHTML='';for(const [k,l] of TABS){const b=document.createElement('button');b.className='tab'+(tab===k?' on':'');b.textContent=l;b.onclick=()=>{tab=k;query='';cutFilter='';renderTabs();renderPane();if(k==='face')view('face')};tabsEl.appendChild(b)}}
 function el(h){const t=document.createElement('template');t.innerHTML=h.trim();return t.content.firstChild}
 function swatches(label,list,key,onPick){
   const r=el(`<div class="row"><label>${label}</label><div class="sw"></div></div>`),w=r.lastChild;
@@ -589,6 +649,19 @@ function slider(label,key,min,max){
   const r=el(`<div class="row"><label>${label}</label></div>`),s=document.createElement('input');s.type='range';s.min=min;s.max=max;s.step=.01;s.value=state[key];s.oninput=()=>{state[key]=+s.value;applyShape()};r.appendChild(s);return r}
 function renderPane(){
   pane.innerHTML='';
+  if(tab==='face'){
+    const n=EYE_SHAPES.length*BROWS.length*MOUTHS.length*EYES.length*MARKS.length;
+    pane.appendChild(el(`<div class="ph"><h2>Face</h2><span>${n.toLocaleString()} combos</span></div>`));
+    const rf=el('<div class="row"><button class="chip">🎲 Random face</button></div>');
+    rf.firstChild.onclick=()=>{const r=k=>Math.floor(Math.random()*k);Object.assign(state,{eyeShape:r(EYE_SHAPES.length),brow:r(BROWS.length),mouth:r(MOUTHS.length),eyes:r(EYES.length),mark:r(MARKS.length)});buildBody();renderPane()};
+    pane.appendChild(rf);
+    pane.appendChild(chips('Eyes',EYE_SHAPES,'eyeShape',buildBody));
+    pane.appendChild(swatches('Eye color',EYES,'eyes',buildBody));
+    pane.appendChild(chips('Brows',BROWS,'brow',buildBody));
+    pane.appendChild(chips('Mouth',MOUTHS,'mouth',buildBody));
+    pane.appendChild(chips('Details',MARKS,'mark',buildBody));
+    return;
+  }
   if(tab==='body'){
     pane.appendChild(el(`<div class="ph"><h2>Body</h2><span>Base mannequin</span></div>`));
     pane.appendChild(chips('Render style',STYLES,'style',buildAll,true));
@@ -596,7 +669,6 @@ function renderPane(){
     pane.appendChild(swatches('Skin tone',SKINS,'skin',buildBody));
     pane.appendChild(chips('Hair',HAIRS,'hair',buildHair));
     pane.appendChild(swatches('Hair color',HAIRC,'hairColor',()=>{buildHair();buildBody()}));
-    pane.appendChild(swatches('Eye color',EYES,'eyes',buildBody));
     pane.appendChild(slider('Height','height',.9,1.1));
     pane.appendChild(slider('Build','build',.88,1.18));
     return;
@@ -632,7 +704,7 @@ const toastEl=document.getElementById('toast');let tt;
 function toast(t){toastEl.textContent=t;toastEl.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>toastEl.classList.remove('show'),2600)}
 document.getElementById('random').onclick=()=>{
   const r=n=>Math.floor(Math.random()*n);
-  Object.assign(state,{frame:r(2),skin:r(SKINS.length),hair:1+r(HAIRS.length-1),hairColor:r(HAIRC.length),eyes:r(EYES.length),shirt:1+r(99),pants:1+r(99),jacket:Math.random()<.4?1+r(99):0,shoes:1+r(99),socks:1+r(3)});
+  Object.assign(state,{eyeShape:r(EYE_SHAPES.length),brow:r(BROWS.length),mouth:r(MOUTHS.length),mark:Math.random()<.6?0:r(MARKS.length),frame:r(2),skin:r(SKINS.length),hair:1+r(HAIRS.length-1),hairColor:r(HAIRC.length),eyes:r(EYES.length),shirt:1+r(99),pants:1+r(99),jacket:Math.random()<.4?1+r(99):0,shoes:1+r(99),socks:1+r(3)});
   buildAll();renderPane();
 };
 document.getElementById('reset').onclick=()=>{for(const k in BUILD)state[k]=0;buildAll();renderPane()};
