@@ -786,7 +786,7 @@ const G={};for(const n of ['body','under','hair','socks','shoes','pants','shirt'
 function clear(g){const geos=new Set();g.traverse(o=>{if(o.geometry)geos.add(o.geometry)});geos.forEach(x=>x.dispose());g.clear()}
 function outline(g){
   if(state.style!=='Toon')return;
-  const ms=[];g.traverse(o=>{if(o.isMesh&&!o.userData.outline&&!['Nose','EarInner','EarLobe','Thumb'].includes(o.name))ms.push(o)});
+  const ms=[];g.traverse(o=>{if(o.isMesh&&!o.userData.outline&&!['Nose','EarInner','EarLobe','Thumb','BraStrap','StrapSlider','CupTrim','BraClasp'].includes(o.name))ms.push(o)});
   for(const m of ms){const o=new THREE.Mesh(m.geometry,['Hair','HairAccent','Scalp'].includes(m.name)?outlineHair:outlineMat);o.userData.outline=true;o.name='Outline';o.raycast=()=>{};m.add(o)}
 }
 
@@ -954,7 +954,7 @@ const DS={side:THREE.DoubleSide};
 const clothMatDS=(it,name)=>mat({map:texFor(it),...DS},name);
 
 function buildShirt(){
-  clear(G.shirt);if(!state.shirt)return;const it=itemOf('shirt',state.shirt),m=clothMatDS(it,'Shirt'),o=.01;
+  clear(G.shirt);underVis();if(!state.shirt)return;const it=itemOf('shirt',state.shirt),m=clothMatDS(it,'Shirt'),o=.01;
   if(it.y2k){y2kShirt(it,m);outline(G.shirt);return}
   const hem=it.cut==='Tank'?.98:.95;
   G.shirt.add(mesh(loft(drapeTorso(sub(A.torso,hem,1.54,0),o,.012).map(r=>r.y<1.12?{...r,w:r.w+.012,d:r.d+.012}:r),14,[false,false],{...CLOTH,seed:1}),m,'ShirtBody'));
@@ -1006,6 +1006,7 @@ function buildShoes(){
 }
 /* ================= underwear (base layer: boxer briefs / bra + briefs) ================= */
 const UNDER_COLS=[['White','#f4f1ea'],['Black','#1d1d1f'],['Gray','#9a9ca3'],['Pink','#f6a6c8'],['Baby Blue','#a9d8f5'],['Lilac','#c9a7f0'],['Nude','#d9b49a'],['Red','#c8323c']];
+function underVis(){const covered=!!(state.shirt||state.jacket);G.under.traverse(o=>{if(['StrapSlider','CupTrim','BraClasp','BraStrap'].includes(o.name))o.visible=!covered})}   // straps/hardware tuck away under tops
 function buildUnder(){
   clear(G.under);if(!state.underwear)return;
   const U=G.under,col=state.underCol,m=mat({color:col,side:THREE.DoubleSide},'Underwear'),trim=plain(shade(col,col==='#1d1d1f'?.18:-.14),'UnderwearTrim'),o=.0035;
@@ -1019,12 +1020,32 @@ function buildUnder(){
     U.add(mesh(loft(sub(A.torso,.86,.99,o),20,[true,false]),m,'Briefs'));
     U.add(mesh(loft(sub(A.torso,.975,.995,o+.002),20,[false,false]),trim,'BriefsBand'));
     onLimbs(U,'leg',()=>mesh(loft(sub(A.leg,.04,-.005,o),12,[false,false]),m,'BriefsLeg'),'BriefsLeg');
-    // bra: follows the chest shape, with an under-band and shoulder straps
-    U.add(mesh(loft(sub(A.torso,1.235,1.385,o),20,[false,false]),m,'Bra'));
-    U.add(mesh(loft(sub(A.torso,1.225,1.25,o+.003),20,[false,false]),trim,'BraBand'));
-    const nk=ringAt(A.torso,1.5);
-    for(const sx of [-1,1]){const f=onRing(A.torso,1.385,sx*.5,o+.002),b=onRing(A.torso,1.385,sx*(Math.PI-.55),o+.002);
-      U.add(mesh(cord([f,[sx*nk.w*.72,1.5,(nk.z||0)+nk.d*.55],[sx*nk.w*.78,1.515,(nk.z||0)],[sx*nk.w*.72,1.5,(nk.z||0)-nk.d*.6],b],.004),trim,'BraStrap'))}
+    // bra: two shaped cups + centre gore, under-band with back clasp, straps over the shoulders with front adjusters
+    const tz=(a,y,off)=>{const q=ringAt(A.torso,y);return[Math.sin(a)*(q.w+off),y,Math.cos(a)*(q.d+off)+(q.z||0)+TORSO_BUMP(a,y)*1.03]};
+    function patch(a0,a1,yb,ytFn,off,segA=12,segY=8){
+      const P=[],UV=[],I=[];
+      for(let jj=0;jj<=segY;jj++)for(let ii=0;ii<=segA;ii++){const a=a0+(a1-a0)*ii/segA,yt=ytFn(a),y=yb+(yt-yb)*jj/segY;P.push(...tz(a,y,off));UV.push(ii/segA,jj/segY)}
+      for(let jj=0;jj<segY;jj++)for(let ii=0;ii<segA;ii++){const a0i=jj*(segA+1)+ii,b0=a0i+1,c0=a0i+segA+1,d0=c0+1;I.push(a0i,b0,c0,b0,d0,c0)}
+      const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(P,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(UV,2));g.setIndex(I);g.computeVertexNormals();return g}
+    const cupTop=a=>{const u=(Math.abs(a)-.07)/1.08;return 1.33+.058*Math.exp(-Math.pow((u-.45)/.26,2))+.016*u};   // peaks where the strap attaches
+    for(const sx of [-1,1]){
+      const a0=sx>0?.07:-1.15,a1=sx>0?1.15:-.07;
+      U.add(mesh(patch(a0,a1,1.245,cupTop,o+.0015),m,'BraCup'));
+      // trim along the top edge of the cup
+      const edge=[];for(let k=0;k<=12;k++){const a=a0+(a1-a0)*k/12;edge.push(tz(a,cupTop(a),o+.0018))}
+      U.add(mesh(cord(edge.sort((p,q)=>p[0]-q[0]),.0018,4),trim,'CupTrim'));
+    }
+    U.add(mesh(patch(-.08,.08,1.245,()=>1.3,o+.001,4,4),m,'BraGore'));
+    U.add(mesh(loft(sub(A.torso,1.222,1.252,o+.003),20,[false,false]),trim,'BraBand'));
+    // straps: cup peak -> over the shoulder -> down the back to the band
+    const strapM=plain(shade(col,col==='#1d1d1f'?.1:-.06),'BraStrap');
+    for(const sx of [-1,1]){const aF=sx*.55,aB=sx*(Math.PI-.58);
+      const pts=[tz(aF,cupTop(aF)-.004,o),tz(sx*.6,1.43,o),tz(sx*.72,1.48,o+.001),[sx*ringAt(A.torso,1.505).w*.78,1.512,(ringAt(A.torso,1.505).z||0)],
+        tz(sx*(Math.PI-.75),1.48,o+.001),tz(sx*(Math.PI-.66),1.42,o),tz(aB,1.33,o),tz(aB,1.255,o)];
+      U.add(mesh(cord(pts,.003,5),strapM,'BraStrap'));
+      const adj=mesh(new THREE.BoxGeometry(.011,.007,.002),plain('#d9d9de','StrapSlider'),'StrapSlider');adj.position.set(...tz(sx*.6,1.435,o+.003));adj.lookAt(0,1.435,-1);adj.rotateY(Math.PI);U.add(adj)}
+    const clasp=mesh(new THREE.BoxGeometry(.024,.022,.005),trim,'BraClasp');clasp.position.set(...tz(Math.PI,1.237,o+.006));U.add(clasp);
+    underVis();
   }
   outline(U);
 }
@@ -1129,7 +1150,7 @@ function cord(pts,r=.005,seg=5){return loft(pts.map(p=>({y:p[1],w:r,d:r,x:p[0],z
 // point on a draped ring list at angle a (0 = front), pushed out by off
 function onRing(R,y,a,off=0){const q=ringAt(R,y);return[Math.sin(a)*(q.w+off),y,Math.cos(a)*(q.d+off)+(q.z||0)]}
 function buildJacket(){
-  clear(G.jacket);if(!state.jacket)return;const it=itemOf('jacket',state.jacket),m=clothMatDS(it,'Jacket'),o=.032,J=G.jacket,P=Math.PI;
+  clear(G.jacket);underVis();if(!state.jacket)return;const it=itemOf('jacket',state.jacket),m=clothMatDS(it,'Jacket'),o=.032,J=G.jacket,P=Math.PI;
   if(it.y2k){y2kJacket(it,m);outline(J);return}
   const trimCol=shade(it.c1,-.22),trim=plain(trimCol,'JacketTrim'),rib=clothMatDS({...it,cut:'Hoodie',pattern:'Solid',c1:shade(it.c1,-.1),name:it.name+' rib',seed:it.seed+5},'Rib');
   const hood=it.cut==='Hoodie',bomber=it.cut==='Bomber',trench=it.cut==='Trench';
@@ -1212,7 +1233,7 @@ function renderPreview(cat,id){
   BUILD[cat]();tScene.add(G[cat]);
   tCam.position.set(...SHOT[cat][0]);tCam.lookAt(...SHOT[cat][1]);thumbR.render(tScene,tCam);
   const url=thumbR.domElement.toDataURL('image/png');
-  tScene.remove(G[cat]);if(hd)tScene.remove(hd);clear(G[cat]);G[cat]=live;state[sk]=prev;applyShape();
+  tScene.remove(G[cat]);if(hd)tScene.remove(hd);clear(G[cat]);G[cat]=live;state[sk]=prev;applyShape();underVis();
   previewCache.set(key,url);return url;
 }
 function pumpPreviews(){
