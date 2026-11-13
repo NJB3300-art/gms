@@ -180,6 +180,9 @@ main{grid-template-columns:500px 1fr!important}
 .h.e{right:-8px;top:calc(50% - 7px);cursor:ew-resize}.h.w{left:-8px;top:calc(50% - 7px);cursor:ew-resize}
 .h.ne{right:-8px;top:-8px;cursor:nesw-resize}.h.sw{left:-8px;bottom:-8px;cursor:nesw-resize}.h.nw{left:-8px;top:-8px;cursor:nwse-resize}.h.se{right:-8px;bottom:-8px;cursor:nwse-resize}
 .rzvals{text-align:center;margin-top:6px;font-size:13px}
+.hairgrid .card img{background:radial-gradient(circle at 50% 40%,#fff,#ffe3ee)}
+.card .era{position:absolute;left:6px;top:6px;z-index:3;font-style:normal;font-size:9px;padding:1px 6px;border-radius:999px;background:rgba(255,255,255,.9);border:1px solid #f6bcd5;color:#c93a74}
+select.search{appearance:none;cursor:pointer}
 </style>
 <script type="importmap">
 {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}
@@ -273,6 +276,66 @@ const HAIRC=['#151211','#3a2417','#6b4226','#a8743f','#e2c178','#b8b4ad','#a8432
 const EYES=['#3b2414','#2f6b3a','#2f63a8','#6b7178','#7a3fa8'];
 const HAIRS=['None','Buzz','Bob','Pixie','Wolf Cut','Long','Curtains','Ponytail','Twin Tails','Bun','Space Buns','Braids','Dreads','Puff','Mohawk','Spiky'];
 const FRAMES=['Boy','Girl'];
+/* ---------- 1000 hair presets, 2000s → now (generated from trend bases × cut × colour) ---------- */
+const HAIR_NAT=[['Black','#151211'],['Espresso','#2e1d14'],['Brown','#5a3a24'],['Chestnut','#7a4a2a'],['Caramel','#a8743f'],['Honey','#c99a55'],['Blonde','#e2c178'],['Platinum','#ece4d2'],['Ash','#9c968c'],['Auburn','#8e3a22'],['Ginger','#c8642c']];
+const HAIR_DYE=[['Pink','#f27aa8'],['Hot Pink','#ff3f9a'],['Lilac','#b89be8'],['Purple','#7a4fd0'],['Blue','#2b6fd6'],['Teal','#1fa59a'],['Mint','#8fe3c4'],['Red','#d0283c'],['Silver','#c9ccd4'],['Peach','#f5a98a']];
+const HAIR_ALL=[...HAIR_NAT,...HAIR_DYE];
+const HAIR_BASES=[
+  {n:'Emo Fringe',era:'2000s',kind:'layered',len:.2,fringe:'side',vol:.9,layers:2},
+  {n:'Scene Cut',era:'2000s',kind:'layered',len:.17,fringe:'side',vol:1.4,layers:3,spiky:1},
+  {n:'Frosted Spikes',era:'2000s',kind:'spiky',len:.08,fringe:'none',vol:1},
+  {n:'Side-swept Bob',era:'2000s',kind:'bob',len:.18,fringe:'side',vol:1},
+  {n:'Sleek Straight',era:'2000s',kind:'layered',len:.42,fringe:'none',vol:.8,layers:1,part:'mid'},
+  {n:'Choppy Layers',era:'2000s',kind:'layered',len:.26,fringe:'choppy',vol:1.1,layers:3},
+  {n:'Pigtails',era:'2000s',kind:'twin',len:.32,fringe:'blunt',vol:1},
+  {n:'Messy Bun',era:'2000s',kind:'bun',len:0,fringe:'side',vol:1},
+  {n:'Crimped Layers',era:'2000s',kind:'layered',len:.34,fringe:'choppy',vol:1.3,layers:2},
+  {n:'Spiky Crop',era:'2000s',kind:'spiky',len:.06,fringe:'choppy',vol:.9},
+  {n:'Undercut',era:'2010s',kind:'undercut',len:.09,fringe:'none',vol:1},
+  {n:'Top Knot',era:'2010s',kind:'bun',len:0,fringe:'none',vol:.9,high:1},
+  {n:'High Pony',era:'2010s',kind:'pony',len:.36,fringe:'none',vol:1,high:1},
+  {n:'Ombré Waves',era:'2010s',kind:'layered',len:.4,fringe:'none',vol:1.1,layers:2},
+  {n:'Space Buns',era:'2010s',kind:'spacebuns',len:0,fringe:'blunt',vol:1},
+  {n:'Box Braids',era:'2010s',kind:'locs',len:.42,fringe:'none',vol:1,thin:1},
+  {n:'Locs',era:'2010s',kind:'locs',len:.32,fringe:'none',vol:1},
+  {n:'Twin Braids',era:'2010s',kind:'braids',len:.36,fringe:'blunt',vol:1},
+  {n:'Afro',era:'2010s',kind:'afro',len:0,fringe:'none',vol:1},
+  {n:'Faux Hawk',era:'2010s',kind:'mohawk',len:.1,fringe:'none',vol:1},
+  {n:'Lob',era:'2010s',kind:'bob',len:.24,fringe:'none',vol:1,part:'side'},
+  {n:'Half-up',era:'2010s',kind:'halfup',len:.36,fringe:'none',vol:1},
+  {n:'Wolf Cut',era:'2020s',kind:'wolf',len:.2,fringe:'choppy',vol:1.3},
+  {n:'Curtain Bangs',era:'2020s',kind:'layered',len:.34,fringe:'curtain',vol:1,layers:2},
+  {n:'Butterfly Layers',era:'2020s',kind:'layered',len:.4,fringe:'curtain',vol:1.3,layers:3},
+  {n:'Bixie',era:'2020s',kind:'pixie',len:.13,fringe:'side',vol:1.1},
+  {n:'Shag',era:'2020s',kind:'wolf',len:.26,fringe:'curtain',vol:1.2},
+  {n:'Mullet',era:'2020s',kind:'wolf',len:.3,fringe:'choppy',vol:1,mullet:1},
+  {n:'Fluffy Fringe',era:'2020s',kind:'pixie',len:.1,fringe:'blunt',vol:1.4},
+  {n:'Buzz Cut',era:'2020s',kind:'buzz',len:0,fringe:'none',vol:1},
+  {n:'Twists',era:'2020s',kind:'twists',len:.12,fringe:'none',vol:1},
+  {n:'Claw-clip Twist',era:'2020s',kind:'bun',len:0,fringe:'curtain',vol:1,clip:1},
+  {n:'Puff',era:'2020s',kind:'puff',len:0,fringe:'none',vol:1},
+  {n:'Middle-part Bob',era:'2020s',kind:'bob',len:.17,fringe:'none',vol:1,part:'mid'}
+];
+const HAIR_CUTS=[['',1,1,0],['Short',.7,1,0],['Long',1.35,1,0],['Big',1,1.35,0],['Sleek',1,.8,0],['Choppy',1,1.05,.3],['Messy',1.05,1.2,.45]];
+const HAIR_MODES=['solid','solid','tips','two','money','streak'];
+const HAIR_PRESETS=(()=>{
+  const out=[],seen=new Set();let k=0;
+  while(out.length<1000&&k<20000){
+    const bi=k%HAIR_BASES.length,round=Math.floor(k/HAIR_BASES.length),b=HAIR_BASES[bi];
+    const cut=HAIR_CUTS[(round+bi)%HAIR_CUTS.length];
+    const lenless=['bun','spacebuns','afro','puff','buzz'].includes(b.kind);
+    const cutName=lenless&&(cut[0]==='Short'||cut[0]==='Long')?'':cut[0];
+    const c1=HAIR_ALL[(round*7+bi*3)%HAIR_ALL.length],c2=HAIR_ALL[(round*11+bi*5+9)%HAIR_ALL.length];
+    let mode=HAIR_MODES[(round*5+bi)%HAIR_MODES.length];if(c2===c1||b.kind==='buzz')mode='solid';
+    const col=mode==='tips'?`${c2[0]}-tipped ${c1[0]}`:mode==='two'?`${c1[0]} & ${c2[0]}`:mode==='money'?`${c1[0]} + ${c2[0]} Money Piece`:mode==='streak'?`${c1[0]} + ${c2[0]} Streak`:c1[0];
+    const name=`${col} ${cutName?cutName+' ':''}${b.n}`.replace(/\s+/g,' ');
+    k++;if(seen.has(name))continue;seen.add(name);
+    out.push({...b,id:out.length+1,name,base:b.n,len:b.len*cut[1],vol:b.vol*cut[2],jit:cut[3],c1:c1[1],c2:c2[1],mode,seed:k});
+  }
+  return out;
+})();
+const hairOf=id=>HAIR_PRESETS[id-1];
+const hairMain=()=>state.hairCol||(state.hairP?hairOf(state.hairP).c1:'#3a2417');
 const STYLES=['Toon','Retro'];
 const EYE_SHAPES=['Round','Almond','Sleepy','Sharp','Cat','Droopy','Sparkle','Happy','Wide','Narrow','Hooded','Upturned','Downturned','Fierce','Worried','Shocked','Dot','Hollow Iris','Star Pupil','Heart Pupil','Glassy','Teary','Wink L','Wink R','Smiling','Lashy','Doll','Heavy Lid','Squint','Glow','Two-tone','Double Shine','Monolid','Tired','Dizzy','Knocked Out','Determined','Soft','Feline','Starry'];
 const BROWS=['Soft','Straight','Thick','Arched','Fierce','Worried','Thin','Bushy','Short','Angled','Raised','Flat Thick'];
@@ -385,7 +448,7 @@ function loft(R,seg=10,caps=[true,true],opts={}){
 function mesh(geo,m,name){const o=new THREE.Mesh(geo,m);o.name=name;return o}
 
 /* ================= anatomy (stylised: long legs, narrow waist, slightly larger head) ================= */
-const state={eyeW:1,eyeH:1,browY:0,browGap:0,browTilt:0,browThick:1,customMouth:false,eyeY:0,eyeGap:12,eyeSize:1,eyeTilt:0,mouthY:0,mouthX:0,mouthSize:1,noseY:0,noseSize:1,customEyes:false,eyeShape:0,brow:0,mouth:0,mark:0,style:'Toon',frame:0,skin:2,hair:0,hairColor:1,eyes:0,height:1,build:1,shirt:0,pants:0,jacket:0,shoes:0,socks:0};
+const state={hairP:0,hairCol:null,hairLen:1,hairVol:1,eyeW:1,eyeH:1,browY:0,browGap:0,browTilt:0,browThick:1,customMouth:false,eyeY:0,eyeGap:12,eyeSize:1,eyeTilt:0,mouthY:0,mouthX:0,mouthSize:1,noseY:0,noseSize:1,customEyes:false,eyeShape:0,brow:0,mouth:0,mark:0,style:'Toon',frame:0,skin:2,hair:0,hairColor:1,eyes:0,height:1,build:1,shirt:0,pants:0,jacket:0,shoes:0,socks:0};
 const H0=1.585,HS=1.22,HV=1.08,HEADZ=.02,HY=y=>H0+(y-1.565)*HV;   // wider than tall = rounder anime head   // head-space helper (y measured on the original 1.565–1.828 head)
 const LEG_END=-.885;
 
@@ -589,7 +652,7 @@ function drawEyes(c,ey,skin,shapeIdx=state.eyeShape){
     else{c.translate(-x,-ey);one(sx,x)}
     c.restore()}
 }
-function browThumb(i){const key='b'+[i,state.hairColor,state.skin,state.frame].join(',');if(eyeThumbCache.has(key))return eyeThumbCache.get(key);
+function browThumb(i){const key='b'+[i,hairMain(),state.skin,state.frame].join(',');if(eyeThumbCache.has(key))return eyeThumbCache.get(key);
   const K=3,c=document.createElement('canvas');c.width=c.height=128*K;const x=c.getContext('2d');x.setTransform(K,0,0,K,0,0);x.fillStyle=SKINS[state.skin];x.fillRect(0,0,128,128);
   const keep=EA;EA={x:1,y:1};FACE_DEFAULTS=true;drawBrows(x,80,SKINS[state.skin],i);FACE_DEFAULTS=false;EA=keep;
   const o=document.createElement('canvas');o.width=168;o.height=60;o.getContext('2d').drawImage(c,36*K,58*K,56*K,20*K,0,0,168,60);const u=o.toDataURL();eyeThumbCache.set(key,u);return u}
@@ -607,7 +670,7 @@ function eyeThumb(i){
 }
 const BR=()=>FACE_DEFAULTS?{y:0,gap:0,tilt:0,thick:1}:{y:state.browY,gap:state.browGap,tilt:state.browTilt,thick:state.browThick};
 function drawBrows(c,ey,skin,idx=state.brow){
-  const st=BROWS[idx],col=HAIRC[state.hairColor],girl=state.frame===1,b=BR();
+  const st=BROWS[idx],col=hairMain(),girl=state.frame===1,b=BR();
   const prof={Soft:t=>-(1-t*t)*1.5,Straight:t=>0,Thick:t=>-(1-t*t),Arched:t=>-(1-Math.abs(t-.2))*3,Fierce:t=>(1-t)*2.2-1,Worried:t=>-(1-t)*2.2+1,
     Thin:t=>-(1-t*t)*1.2,Bushy:t=>-(1-t*t)*.8,Short:t=>-(1-t*t),Angled:t=>t<.3?-(t+1)*1.6:-(1.3*1.6)+(t-.3)*2.4,Raised:t=>-(1-t*t)*1.5-2,'Flat Thick':t=>0}[st];
   const base={Thick:2.2,Bushy:2.8,'Flat Thick':2.4,Thin:.6,Short:1.6}[st]??(girl&&st!=='Fierce'?.9:1.4);
@@ -753,59 +816,80 @@ function hairShell(yTop,yBot,off0,off1,arc,jag,extraZ=0){
 }
 /* ---------- anime hair: painted strands + clumps ---------- */
 const hairTexCache=new Map();
-function hairTex(col){
-  if(hairTexCache.has(col))return hairTexCache.get(col);
-  const c=document.createElement('canvas');c.width=64;c.height=128;const x=c.getContext('2d'),r=rng(col.length*97+parseInt(col.slice(1),16)%999);
+function hairTex(col,tip=null){
+  const key=col+'|'+tip;if(hairTexCache.has(key))return hairTexCache.get(key);
+  const c=document.createElement('canvas');c.width=64;c.height=128;const x=c.getContext('2d'),r=rng(parseInt(col.slice(1),16)%9999+7);
   const g=x.createLinearGradient(0,0,0,128);g.addColorStop(0,shade(col,.04));g.addColorStop(1,shade(col,-.12));x.fillStyle=g;x.fillRect(0,0,64,128);
-  for(let i=0;i<26;i++){x.fillStyle=`rgba(0,0,0,${.08+r()*.1})`;x.fillRect(Math.floor(r()*64),0,1,128)}           // strand lines
+  if(tip){const t=x.createLinearGradient(0,70,0,128);t.addColorStop(0,'rgba(0,0,0,0)');t.addColorStop(.45,tip);t.addColorStop(1,tip);x.fillStyle=t;x.fillRect(0,70,64,58)}   // v=0 (canvas bottom) is the tips
+  for(let i=0;i<26;i++){x.fillStyle=`rgba(0,0,0,${.08+r()*.1})`;x.fillRect(Math.floor(r()*64),0,1,128)}
   for(let i=0;i<10;i++){x.fillStyle=`rgba(255,255,255,${.05+r()*.06})`;x.fillRect(Math.floor(r()*64),0,1,128)}
-  x.fillStyle=shade(col,.13);for(let i=0;i<64;i+=2){const h=3+Math.floor(r()*6);x.fillRect(i,23+Math.floor(r()*3),2,h)}  // soft shine band ("angel ring")
-  const t=canvasTex(c,true);hairTexCache.set(col,t);return t;
+  x.fillStyle='rgba(255,255,255,.16)';for(let i=0;i<64;i+=2){const h=3+Math.floor(r()*6);x.fillRect(i,23+Math.floor(r()*3),2,h)}   // shine band
+  const t=canvasTex(c,true);hairTexCache.set(key,t);return t;
 }
 function buildHair(){
-  clear(G.hair);const st=HAIRS[state.hair];if(st==='None')return;
-  const col=HAIRC[state.hairColor],m=mat({map:hairTex(col),side:THREE.DoubleSide},'Hair'),H=G.hair,R=A.head,top=R.at(-1).y,P=Math.PI;
-  const r=rng(state.hair*31+7);
+  clear(G.hair);if(!state.hairP)return;
+  const p=hairOf(state.hairP),c1=state.hairCol||p.c1,c2=p.c2,H=G.hair,R=A.head,top=R.at(-1).y,PI=Math.PI;
+  const m1=mat({map:hairTex(c1,p.mode==='tips'?c2:null),side:THREE.DoubleSide},'Hair'),m2=mat({map:hairTex(c2),side:THREE.DoubleSide},'Hair2');
+  const L=p.len*state.hairLen,V=p.vol*state.hairVol,r=rng(p.seed*31+7),J=.25+p.jit;
   const onHead=(a,y,out=0)=>{const q=ringAt(R,HY(y));return[Math.sin(a)*(q.w+out),HY(y),Math.cos(a)*(q.d+out)+(q.z||0)]};
-  const cap=(from,off)=>loft(sub(R,HY(from),top,off),16,[false,true]);
-  // one clump: a flat, pointed lock that starts at angle a on the head and hangs down, bulging out then curling in/out
-  function clump(a,y,len,{w=.05,th=.018,out=.012,bulge=.014,sweep=0,curl=0,up=0}={}){
+  // a flat pointed lock rooted on the scalp at angle a (0 = front)
+  function clump(a,y,len,{w=.05,th=.016,out=.008,bulge=.01,sweep=0,curl=0,up=0}={}){
     const n=7,rs=[];
-    for(let i=0;i<=n;i++){const t=i/n;
-      rs.push({y:-len*t+up*t*t,w:Math.max(.002,w*Math.pow(1-t,.75)),d:Math.max(.0015,th*(1-.7*t)),x:sweep*t*t,z:out*t+bulge*Math.sin(P*t)+curl*t*t})}
-    const g=loft(rs,6,[true,false]);const p=onHead(a,y,.008);
-    g.applyMatrix4(new THREE.Matrix4().compose(new THREE.Vector3(...p),new THREE.Quaternion().setFromEuler(new THREE.Euler(0,a,0)),new THREE.Vector3(1,1,1)));
-    return g;
+    for(let i=0;i<=n;i++){const t=i/n;rs.push({y:-len*t+up*t*t,w:Math.max(.002,w*Math.pow(1-t,.75)),d:Math.max(.0015,th*(1-.7*t)),x:sweep*t*t,z:out*V*t+bulge*V*Math.sin(PI*t)+curl*t*t})}
+    const g=loft(rs,6,[true,false]);const q=onHead(a,y,.003);
+    g.applyMatrix4(new THREE.Matrix4().compose(new THREE.Vector3(...q),new THREE.Quaternion().setFromEuler(new THREE.Euler(0,a,0)),new THREE.Vector3(1,1,1)));return g;
   }
-  const ring=(a0,a1,n,y,len,o={},jit=.25)=>{const gs=[];for(let i=0;i<n;i++){const a=a0+(a1-a0)*(n===1?.5:i/(n-1));gs.push(clump(a,y,len*(1-jit/2+r()*jit),{...o,sweep:(o.sweep||0)+(r()-.5)*.012}))}return gs};
-  const fringe=(n=7,len=.085,sweep=0,spread=.95)=>ring(-spread,spread,n,1.825,len,{w:.048,th:.016,out:.004,bulge:.012,sweep,curl:.004},.35);
-  const done=(geos,name)=>{H.add(mesh(mergeGeometries(geos),m,name));geos.forEach(x=>x.dispose())};
-  const tube=(p,len,r0,r1,dx,dz,steps=6,seg=6)=>{const rs=[];for(let i=0;i<=steps;i++){const t=i/steps;rs.push({y:p[1]-len*t,w:r0+(r1-r0)*t,d:r0+(r1-r0)*t,x:p[0]+dx*t*t,z:p[2]+dz*t})}return loft(rs,seg)};
-  let G2=[];
-  if(st==='Buzz'){G2=[cap(1.722,.006)]}
-  if(st==='Bob'){G2=[cap(1.7,.022),...ring(.8,2*P-.8,15,1.79,.19,{w:.056,out:.014,bulge:.016,curl:-.012}),...fringe(7,.085)]}
-  if(st==='Pixie'){G2=[cap(1.7,.022),...ring(.85,2*P-.85,13,1.8,.11,{w:.05,out:.016,bulge:.012}),...fringe(6,.09,.04,.9)]}
-  if(st==='Long'){G2=[cap(1.7,.022),...ring(.85,2*P-.85,16,1.79,.42,{w:.058,out:.02,bulge:.02,curl:-.03}),...ring(1.5,2*P-1.5,7,1.74,.36,{w:.05,out:.03,bulge:.015}),...fringe(7,.08,-.01)]}
-  if(st==='Wolf Cut'){G2=[cap(1.7,.026),...ring(0,2*P,18,1.84,.1,{w:.05,out:.03,bulge:.02,up:.02}),...ring(.7,2*P-.7,14,1.77,.13,{w:.05,out:.02,bulge:.018}),...ring(1.6,2*P-1.6,8,1.7,.2,{w:.048,out:.012,bulge:.012,curl:.012}),...fringe(8,.09,0,1.05)]}
-  if(st==='Curtains'){G2=[cap(1.7,.022),...ring(.95,2*P-.95,13,1.79,.17,{w:.054,out:.014,bulge:.014}),
-      ...[1,-1].flatMap(sx=>ring(sx*.12,sx*1.0,5,1.83,.15,{w:.05,th:.016,out:.008,bulge:.014,sweep:sx*.03},.2))]}
-  if(st==='Ponytail'){G2=[cap(1.7,.016),...fringe(6,.07)];const p=onHead(P,1.77,.012);G2.push(tube([p[0],p[1],p[2]-.012],.38,.036,.012,0,-.07,9,8));
-    const band=mesh(new THREE.TorusGeometry(.032,.009,6,10),plain(shade(col,-.3),'HairTie'),'HairTie');band.position.set(p[0],p[1]-.02,p[2]-.014);band.rotation.x=P/2;H.add(band)}
-  if(st==='Twin Tails'){G2=[cap(1.7,.016),...fringe(7,.08)];for(const sx of [-1,1]){const p=onHead(sx*P*.62,1.79,.014);G2.push(tube(p,.44,.036,.01,sx*.08,-.03,9,8))}}
-  if(st==='Space Buns'){G2=[cap(1.7,.016),...fringe(7,.075)];for(const sx of [-1,1]){const b=new THREE.IcosahedronGeometry(.058,1);const p=onHead(sx*1.15,1.81,.022);b.translate(...p);G2.push(b)}}
-  if(st==='Bun'){G2=[cap(1.7,.014)];const b=new THREE.IcosahedronGeometry(.055,1);b.translate(0,HY(1.8),-.1);G2.push(b)}
-  if(st==='Puff'){const b=new THREE.IcosahedronGeometry(.15,1);b.scale(1,.88,1);b.translate(0,HY(1.775),-.02);G2=[b]}
-  if(st==='Braids'){G2=[cap(1.7,.016),...fringe(7,.075)];for(const sx of [-1,1]){const p=onHead(sx*P*.58,1.69,.012);
-      for(let i=0;i<9;i++){const g=new THREE.IcosahedronGeometry(.025-i*.0011,0);g.translate(p[0]+sx*.006*(i%2?1:-1),p[1]-i*.038,p[2]-.01);G2.push(g)}}}
-  if(st==='Dreads'){G2=[cap(1.7,.018)];const rr=rng(state.hairColor*13+7);
-    for(let i=0;i<26;i++){const a=.55+i/25*(2*P-1.1),row=i%2,p=onHead(a,1.78-row*.05,.016),len=.26+rr()*.12;G2.push(tube(p,len,.013,.009,Math.sin(a)*.025,Math.cos(a)*.025-.01,6,5))}
-    for(let i=0;i<7;i++){const a=-.55+i/6*1.1,p=onHead(a,1.81,.016);G2.push(tube(p,.07+rr()*.03,.012,.009,Math.sin(a)*.02,.03,4,5))}}
-  if(st==='Mohawk'){G2=[cap(1.722,.004)];
-    for(let i=0;i<8;i++){const a=-.5+i/7*2.0,y=HY(1.8)+Math.cos(a)*.055,z=Math.sin(a)*.1-.01;const g=new THREE.ConeGeometry(.035,.11,4);g.scale(.4,1,1);g.rotateX(a*.8);g.translate(0,y,z);G2.push(g)}}
-  if(st==='Spiky'){G2=[cap(1.7,.018),...ring(0,2*P,16,1.83,.1,{w:.05,out:.05,bulge:.01,up:.16})]}
-  // all pieces must share attributes to merge
-  G2=G2.map(g=>{const q=g.index?g.toNonIndexed():g;if(!q.attributes.uv){q.setAttribute('uv',new THREE.Float32BufferAttribute(new Float32Array(q.attributes.position.count*2),2))}if(!q.attributes.normal)q.computeVertexNormals();return q});
-  done(G2,'Hair');
+  const ring=(a0,a1,n,y,len,o={})=>{const gs=[];for(let i=0;i<n;i++){const a=a0+(a1-a0)*(n===1?.5:i/(n-1));
+    let sw=(o.sweep||0)+(r()-.5)*.012;if(p.part==='mid')sw+=Math.sign(Math.sin(a))*.012;if(p.part==='side')sw+=.012;
+    gs.push(clump(a,y,Math.max(.02,len*(1-J/2+r()*J)),{...o,sweep:sw}))}return gs};
+  const tube=(q,len,r0,r1,dx,dz,steps=6,seg=6)=>{const rs=[];for(let i=0;i<=steps;i++){const t=i/steps;rs.push({y:q[1]-len*t,w:r0+(r1-r0)*t,d:r0+(r1-r0)*t,x:q[0]+dx*t*t,z:q[2]+dz*t})}return loft(rs,seg)};
+  // snug scalp: crown cap down to the hairline + back/sides down to the nape (hugs the head, no helmet)
+  // natural hairline: crown cap above the forehead, temples come lower at the sides, back/sides down to the nape
+  const scalp=(nape=1.64,off=.007)=>[
+    loft(sub(R,HY(1.8),top,off),16,[false,true]),                                  // crown
+    loft(sub(R,HY(1.765),HY(1.802),off),16,[false,false],{arc:[.38,2*PI-.38]}),     // hairline curving down from the centre
+    loft(sub(R,HY(1.742),HY(1.767),off),16,[false,false],{arc:[.7,2*PI-.7]}),       // temples
+    loft(sub(R,HY(nape),HY(1.744),off),16,[false,false],{arc:[1.05,2*PI-1.05]})];   // sides + back to the nape
+  const A1=[],A2=[];   // geometry for colour 1 / colour 2
+  const fringe=()=>{const f=p.fringe;
+    if(f==='blunt')A1.push(...ring(-.95,.95,8,1.825,.075,{w:.05,curl:.004}));
+    if(f==='side')A1.push(...ring(-1.15,.55,7,1.832,Math.max(.1,L*.55),{w:.052,sweep:.035,curl:.006}));
+    if(f==='choppy')A1.push(...ring(-1,1,9,1.83,.09,{w:.048,curl:.004}));
+    if(f==='curtain')for(const sx of [-1,1])A1.push(...ring(sx*.12,sx*1.05,5,1.835,.14,{w:.05,sweep:sx*.03,curl:.006}));
+  };
+  const longLayers=(n,len,startA=.8)=>{for(let l=0;l<n;l++){const tgt=(l===0&&p.mode==='two')?A2:A1;
+    tgt.push(...ring(startA,2*PI-startA,13+l*2,1.79+l*.018,len*(1-l*.28),{w:.056,out:.01+l*.004,bulge:.012,curl:-.012}))}};
+  const k=p.kind;
+  if(k==='buzz')A1.push(...scalp(1.68,.004));
+  if(k==='layered'){A1.push(...scalp());longLayers(p.layers||2,L);fringe();if(p.spiky)A1.push(...ring(1.4,2*PI-1.4,8,1.84,.09,{w:.045,out:.05,up:.12}))}
+  if(k==='bob'){A1.push(...scalp());longLayers(2,L);fringe()}
+  if(k==='pixie'){A1.push(...scalp(1.68));A1.push(...ring(.85,2*PI-.85,13,1.8,L,{w:.05,out:.012,bulge:.01}));fringe()}
+  if(k==='wolf'){A1.push(...scalp());A1.push(...ring(0,2*PI,18,1.84,.1,{w:.05,out:.03,bulge:.016,up:.02}),...ring(.7,2*PI-.7,14,1.77,L*.6,{w:.05,out:.016,bulge:.014}));
+    (p.mode==='two'?A2:A1).push(...ring(1.6,2*PI-1.6,8,1.7,L*(p.mullet?1.6:1),{w:.048,out:.01,bulge:.01,curl:.012}));fringe()}
+  if(k==='spiky')A1.push(...scalp(1.7),...ring(0,2*PI,16,1.83,Math.max(.06,L),{w:.05,out:.05,bulge:.01,up:.16}));
+  if(k==='undercut'){A1.push(...scalp(1.7,.004),...ring(-1.3,1.3,9,1.845,Math.max(.07,L),{w:.05,out:.035,up:.07,curl:-.02}),...ring(2.2,4.1,6,1.84,.08,{w:.05,out:.02}))}
+  if(k==='mohawk'){A1.push(...scalp(1.7,.004));for(let i=0;i<8;i++){const a=-.5+i/7*2,g=new THREE.ConeGeometry(.035,.06+L*.5,4);g.scale(.4,1,1);g.rotateX(a*.8);g.translate(0,HY(1.8)+Math.cos(a)*.055,Math.sin(a)*.1-.01);A1.push(g)}}
+  if(k==='pony'||k==='halfup'){A1.push(...scalp(1.66));fringe();const q=onHead(PI,p.high?1.83:1.77,.012);A1.push(tube([q[0],q[1],q[2]-.012],Math.max(.12,L),.036*V,.012,0,-.07,9,8));
+    const band=mesh(new THREE.TorusGeometry(.032,.009,6,10),plain(shade(c1,-.3),'HairTie'),'HairTie');band.position.set(q[0],q[1]-.02,q[2]-.014);band.rotation.x=PI/2;H.add(band);
+    if(k==='halfup')longLayers(1,L)}
+  if(k==='twin'){A1.push(...scalp());fringe();for(const sx of [-1,1]){const q=onHead(sx*PI*.62,1.79,.014);A1.push(tube(q,Math.max(.12,L),.036*V,.01,sx*.08,-.03,9,8))}}
+  if(k==='bun'){A1.push(...scalp(1.68,.008));fringe();const b=new THREE.IcosahedronGeometry(.055*V,1),q=onHead(PI,p.high?1.86:1.79,.03);b.translate(...q);A1.push(b);
+    if(p.clip){const cl=mesh(new THREE.BoxGeometry(.07,.03,.03),plain(c2,'Clip'),'Clip');cl.position.set(q[0],q[1],q[2]-.035);H.add(cl)}}
+  if(k==='spacebuns'){A1.push(...scalp());fringe();for(const sx of [-1,1]){const b=new THREE.IcosahedronGeometry(.058*V,1);b.translate(...onHead(sx*1.15,1.81,.022));A1.push(b)}}
+  if(k==='braids'){A1.push(...scalp());fringe();for(const sx of [-1,1]){const q=onHead(sx*PI*.58,1.69,.012),n=Math.round(5+L*12);
+    for(let i=0;i<n;i++){const g=new THREE.IcosahedronGeometry(.025-i*.0008,0);g.translate(q[0]+sx*.006*(i%2?1:-1),q[1]-i*.038,q[2]-.01);A1.push(g)}}}
+  if(k==='locs'){A1.push(...scalp(1.66,.012));const n=p.thin?34:24;
+    for(let i=0;i<n;i++){const a=.5+i/(n-1)*(2*PI-1),row=i%2,q=onHead(a,1.79-row*.05,.014);(p.mode==='two'&&row?A2:A1).push(tube(q,L*(.85+r()*.3),p.thin?.008:.013,p.thin?.006:.009,Math.sin(a)*.025,Math.cos(a)*.025-.01,6,5))}
+    for(let i=0;i<7;i++){const a=-.5+i/6,q=onHead(a,1.81,.014);A1.push(tube(q,.07+r()*.03,p.thin?.008:.012,.008,Math.sin(a)*.02,.03,4,5))}}
+  if(k==='twists'){A1.push(...scalp(1.68,.012));for(let i=0;i<44;i++){const a=r()*2*PI,y=1.74+r()*.1,q=onHead(a,y,.012);A1.push(tube(q,L*(.6+r()*.6),.011,.007,Math.sin(a)*.02,Math.cos(a)*.02,4,5))}}
+  if(k==='afro'){const b=new THREE.IcosahedronGeometry(.16*V,1);b.scale(1,.9,1);b.translate(0,HY(1.775),-.02);A1.push(b)}
+  if(k==='puff'){A1.push(...scalp(1.7,.01));const b=new THREE.IcosahedronGeometry(.1*V,1);b.translate(0,HY(1.85),-.07);A1.push(b)}
+  // money piece / streak: bright front locks in colour 2
+  if(p.mode==='money')for(const sx of [-1,1])A2.push(clump(sx*.42,1.83,Math.max(.14,L*.7),{w:.05,sweep:sx*.02,out:.012}));
+  if(p.mode==='streak')A2.push(...ring(.35,.9,3,1.83,Math.max(.12,L*.8),{w:.05,out:.014}));
+  const norm=g=>{const q=g.index?g.toNonIndexed():g;if(!q.attributes.uv)q.setAttribute('uv',new THREE.Float32BufferAttribute(new Float32Array(q.attributes.position.count*2),2));if(!q.attributes.normal)q.computeVertexNormals();return q};
+  if(A1.length){H.add(mesh(mergeGeometries(A1.map(norm)),m1,'Hair'))}
+  if(A2.length){H.add(mesh(mergeGeometries(A2.map(norm)),m2,'HairAccent'))}
   outline(H);
 }
 /* ---------- drape: fabric hangs instead of hugging ---------- */
@@ -1047,8 +1131,8 @@ function buildJacket(){
   }
   outline(J);
 }
-const BUILD={shirt:buildShirt,pants:buildPants,jacket:buildJacket,shoes:buildShoes,socks:buildSocks};
-function buildAll(){A=anatomy();buildBody();buildHair();for(const k in BUILD)BUILD[k]();applyShape();updateWear()}
+const BUILD={hair:buildHair,shirt:buildShirt,pants:buildPants,jacket:buildJacket,shoes:buildShoes,socks:buildSocks};
+function buildAll(){A=anatomy();buildBody();for(const k in BUILD)BUILD[k]();applyShape();updateWear()}
 function applyShape(){root.scale.set(state.build,state.height,state.build);root.position.y=shoeLift()*state.height}
 
 /* ================= 3D clothing previews ================= */
@@ -1056,16 +1140,21 @@ const PREV=144;
 const thumbR=new THREE.WebGLRenderer({antialias:true,alpha:true,preserveDrawingBuffer:true});thumbR.setSize(PREV,PREV);thumbR.setPixelRatio(1);thumbR.outputColorSpace=THREE.SRGBColorSpace;
 const tScene=new THREE.Scene();tScene.add(new THREE.HemisphereLight(0xfff6fb,0x8a6a7a,1.7));{const d=new THREE.DirectionalLight(0xffffff,2.1);d.position.set(1.5,3,3);tScene.add(d)}
 const tCam=new THREE.PerspectiveCamera(30,1,.01,10);
-const SHOT={shirt:[[.5,1.33,1.55],[0,1.22,0]],jacket:[[.6,1.3,2.0],[0,1.12,0]],pants:[[.55,.85,2.15],[0,.6,0]],shoes:[[.32,.28,.55],[0,.04,.06]],socks:[[.42,.42,1.0],[0,.2,0]]};
+const SHOT={hair:[[.42,1.79,.66],[0,1.71,0]],shirt:[[.5,1.33,1.55],[0,1.22,0]],jacket:[[.6,1.3,2.0],[0,1.12,0]],pants:[[.55,.85,2.15],[0,.6,0]],shoes:[[.32,.28,.55],[0,.04,.06]],socks:[[.42,.42,1.0],[0,.2,0]]};
 const previewCache=new Map();let previewQueue=[],previewGen=0;
-function previewKey(cat,id){return cat+id+'|'+state.frame+state.style}
+const PKEY={hair:'hairP'};
+function previewKey(cat,id){return cat+id+'|'+state.frame+state.style+(cat==='hair'?'|'+state.skin+(state.hairCol||'')+state.hairLen+state.hairVol:'')}
+let tHead=null,tHeadKey='';
+function previewHead(){const k=state.frame+'|'+state.skin+'|'+state.style;if(tHead&&tHeadKey===k)return tHead;if(tHead){tScene.remove(tHead);clear(tHead)}
+  tHead=new THREE.Group();const sk=plain(SKINS[state.skin],'Skin');tHead.add(mesh(loft(A.head,16),sk,'Head'),mesh(loft(A.neck,8,[false,false]),sk,'Neck'));outline(tHead);tHeadKey=k;return tHead}
 function renderPreview(cat,id){
   const key=previewKey(cat,id);if(previewCache.has(key))return previewCache.get(key);
-  const live=G[cat],prev=state[cat];G[cat]=new THREE.Group();state[cat]=id;
+  const sk=PKEY[cat]||cat,live=G[cat],prev=state[sk];G[cat]=new THREE.Group();state[sk]=id;
+  const hd=cat==='hair'?previewHead():null;if(hd)tScene.add(hd);
   BUILD[cat]();tScene.add(G[cat]);
   tCam.position.set(...SHOT[cat][0]);tCam.lookAt(...SHOT[cat][1]);thumbR.render(tScene,tCam);
   const url=thumbR.domElement.toDataURL('image/png');
-  tScene.remove(G[cat]);clear(G[cat]);G[cat]=live;state[cat]=prev;applyShape();
+  tScene.remove(G[cat]);if(hd)tScene.remove(hd);clear(G[cat]);G[cat]=live;state[sk]=prev;applyShape();
   previewCache.set(key,url);return url;
 }
 function pumpPreviews(){
@@ -1075,13 +1164,13 @@ function pumpPreviews(){
 }
 // hover to try on, click to keep
 let tryCat=null,tryPrev=null;
-function tryOn(cat,id){if(tryCat===null){tryCat=cat;tryPrev=state[cat]}state[cat]=id;BUILD[cat]()}
-function tryOff(){if(tryCat===null)return;state[tryCat]=tryPrev;BUILD[tryCat]();tryCat=null;tryPrev=null}
+function tryOn(cat,id){const k=PKEY[cat]||cat;if(tryCat===null){tryCat=cat;tryPrev=state[k]}state[k]=id;BUILD[cat]()}
+function tryOff(){if(tryCat===null)return;state[PKEY[tryCat]||tryCat]=tryPrev;BUILD[tryCat]();tryCat=null;tryPrev=null}
 const canHover=matchMedia('(hover:hover)').matches;
 
 /* ================= UI ================= */
-const TABS=[['body','Body','🧍'],['face','Face','🙂'],['eyes','Eyes','👁️'],['brows','Brows','〰️'],['mouth','Mouth','👄'],['shirt','Shirts','👕'],['pants','Pants','👖'],['jacket','Jackets','🧥'],['shoes','Shoes','👟'],['socks','Socks','🧦']];
-const FACE_TABS=new Set(['face','eyes','brows','mouth']);
+const TABS=[['body','Body','🧍'],['face','Face','🙂'],['eyes','Eyes','👁️'],['brows','Brows','〰️'],['hair','Hair','💇'],['mouth','Mouth','👄'],['shirt','Shirts','👕'],['pants','Pants','👖'],['jacket','Jackets','🧥'],['shoes','Shoes','👟'],['socks','Socks','🧦']];
+const FACE_TABS=new Set(['face','eyes','brows','mouth','hair']);
 let tab='body',query='',cutFilter='';
 const tabsEl=document.getElementById('tabs'),pane=document.getElementById('pane');
 function renderTabs(){tabsEl.innerHTML='';for(const [k,l,ic] of TABS){const b=document.createElement('button');b.className='tab'+(tab===k?' on':'');b.innerHTML=`<span class="ic">${ic}</span>${gl(l)}`;b.onclick=()=>{tryOff();tab=k;query='';cutFilter='';renderTabs();renderPane();if(FACE_TABS.has(k))view('face')};tabsEl.appendChild(b)}}
@@ -1201,13 +1290,44 @@ function renderPane(){
       colors:[['Line',mix(skin,'#4a1c22',.75)],['Inside','#6a2630'],['Tongue','#e07a86'],['Teeth','#fbf8f6'],['Lip',lip],['Lip light',shade(lip,.15)],['Skin',skin],['Eraser',null]]}));
     return;
   }
+  if(tab==='hair'){
+    let era=window.__hairEra||'All',base=window.__hairBase||'All',q=window.__hairQ||'';
+    pane.appendChild(el(`<div class="ph"><h2>${gl('Hair')}</h2><span>${gl(HAIR_PRESETS.length.toLocaleString()+' styles · 2000s → now')}</span></div>`));
+    const cur=state.hairP?hairOf(state.hairP).name:'No hair';
+    pane.appendChild(el(`<p class="hint">Wearing: <b>${cur}</b> · hover a card to try it on</p>`));
+    const s1=el(`<input class="search" placeholder="Search: wolf, emo, pink, braids, curtain…">`);s1.value=q;pane.appendChild(s1);
+    const ef=el('<div class="filters"></div>');['All','2000s','2010s','2020s'].forEach(e=>{const b=el(`<button class="chip${e===era?' on':''}">${gl(e==='All'?'All eras':e)}</button>`);b.onclick=()=>{era=window.__hairEra=e;ef.querySelectorAll('.chip').forEach(x=>x.classList.toggle('on',x===b));fill()};ef.appendChild(b)});pane.appendChild(ef);
+    const sel=el(`<select class="search"><option>All</option>${HAIR_BASES.map(b=>`<option>${b.n}</option>`).join('')}</select>`);sel.value=base;sel.onchange=()=>{base=window.__hairBase=sel.value;fill()};pane.appendChild(sel);
+    const tune=boxOf('Tweak',fs('Length','hairLen',.5,1.6,.01,false),fs('Volume','hairVol',.6,1.5,.01,false));
+    tune.querySelectorAll('input').forEach(i=>{i.oninput=()=>{state[i.closest('.row').querySelector('label').innerText.trim()==='Length'?'hairLen':'hairVol']=+i.value;later(buildHair)}});
+    const sw=el(`<div class="row"><label>${gl('Recolor (optional)')}</label><div class="sw"></div></div>`);
+    HAIR_ALL.forEach(([n,c])=>{const b=el(`<button title="${n}" style="background:${c}" class="${state.hairCol===c?'on':''}"></button>`);b.onclick=()=>{state.hairCol=c;buildHair();buildBody();renderPane()};sw.lastChild.appendChild(b)});
+    const keep=el(`<button class="chip">${gl('Use preset colours')}</button>`);keep.onclick=()=>{state.hairCol=null;buildHair();buildBody();renderPane()};sw.appendChild(keep);
+    tune.appendChild(sw);pane.appendChild(tune);
+    const cnt=el('<p class="count"></p>');pane.appendChild(cnt);
+    const grid=el('<div class="grid hairgrid"></div>');pane.appendChild(grid);
+    // only render 3D previews for cards scrolled into view
+    const io=new IntersectionObserver(es=>{for(const e of es)if(e.isIntersecting){io.unobserve(e.target);const id=+e.target.dataset.id,img=e.target.querySelector('img');
+      const c=previewCache.get(previewKey('hair',id));if(c)img.src=c;else{previewQueue.push({cat:'hair',id,img});requestAnimationFrame(pumpPreviews)}}},{root:pane,rootMargin:'200px'});
+    function fill(){
+      grid.innerHTML='';previewGen++;previewQueue=[];const qq=s1.value.trim().toLowerCase();
+      const items=HAIR_PRESETS.filter(h=>(era==='All'||h.era===era)&&(base==='All'||h.base===base)&&(!qq||h.name.toLowerCase().includes(qq)||h.base.toLowerCase().includes(qq)));
+      cnt.innerHTML=gl(`${items.length} styles`);
+      const none=el(`<button class="card${!state.hairP?' on':''}"><div class="none">${gl('Bald')}</div><b>${gl('—')}</b><i>No hair</i></button>`);none.onclick=()=>{state.hairP=0;tryCat=null;buildHair();renderPane()};grid.appendChild(none);
+      for(const h of items){const b=el(`<button class="card${state.hairP===h.id?' on':''}" data-id="${h.id}" title="${h.name}"><span class="tryon">try on</span><img alt="${h.name}" src="data:image/gif;base64,R0lGODlhAQABAAAAACw="><b>${gl('#'+h.id)}</b><i>${h.name}</i><em class="era">${h.era}</em></button>`);
+        b.onclick=()=>{tryCat=null;tryPrev=null;state.hairP=h.id;buildHair();buildBody();renderPane()};
+        if(canHover){b.onmouseenter=()=>tryOn('hair',h.id);b.onmouseleave=tryOff}
+        grid.appendChild(b);io.observe(b)}
+    }
+    s1.oninput=()=>{q=window.__hairQ=s1.value;fill()};
+    fill();return;
+  }
   if(tab==='body'){
     pane.appendChild(el(`<div class="ph"><h2>${gl('Body')}</h2><span>${gl('Base mannequin')}</span></div>`));
     pane.appendChild(chips('Render style',STYLES,'style',buildAll,true));
     pane.appendChild(chips('Gender',FRAMES,'frame',buildAll));
     pane.appendChild(swatches('Skin tone',SKINS,'skin',buildBody));
-    pane.appendChild(chips('Hair',HAIRS,'hair',buildHair));
-    pane.appendChild(swatches('Hair color',HAIRC,'hairColor',()=>{buildHair();buildBody()}));
+    pane.appendChild(el(`<p class="hint">Hair has its own tab on the left — 1,000 styles.</p>`));
     pane.appendChild(slider('Height','height',.9,1.1));
     pane.appendChild(slider('Build','build',.88,1.18));
     return;
@@ -1252,10 +1372,10 @@ function toast(t){toastEl.textContent=t;toastEl.classList.add('show');clearTimeo
 const pickId=k=>{const L=CAT[k];return L[Math.floor(Math.random()*L.length)].id};
 document.getElementById('random').onclick=()=>{
   const r=n=>Math.floor(Math.random()*n);
-  Object.assign(state,{eyeShape:r(EYE_SHAPES.length),brow:r(BROWS.length),mouth:r(MOUTHS.length),mark:Math.random()<.6?0:r(MARKS.length),frame:r(2),skin:r(SKINS.length),hair:1+r(HAIRS.length-1),hairColor:r(HAIRC.length),eyes:r(EYES.length),shirt:pickId('shirt'),pants:pickId('pants'),jacket:Math.random()<.4?pickId('jacket'):0,shoes:pickId('shoes'),socks:pickId('socks')});
+  Object.assign(state,{eyeShape:r(EYE_SHAPES.length),brow:r(BROWS.length),mouth:r(MOUTHS.length),mark:Math.random()<.6?0:r(MARKS.length),frame:r(2),skin:r(SKINS.length),hairP:1+r(HAIR_PRESETS.length),hairCol:null,eyes:r(EYES.length),shirt:pickId('shirt'),pants:pickId('pants'),jacket:Math.random()<.4?pickId('jacket'):0,shoes:pickId('shoes'),socks:pickId('socks')});
   buildAll();renderPane();
 };
-document.getElementById('reset').onclick=()=>{for(const k in BUILD)state[k]=0;buildAll();renderPane()};
+document.getElementById('reset').onclick=()=>{for(const k of ['shirt','pants','jacket','shoes','socks'])state[k]=0;buildAll();renderPane()};
 
 /* ================= GLB export ================= */
 let downloads=null;
